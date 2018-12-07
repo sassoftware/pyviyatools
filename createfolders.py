@@ -7,7 +7,7 @@
 #
 # Change History
 #
-# sasgnn 30oct2018 Initial development
+# 30oct2018 Initial development
 #
 # Format of csv file is two columns
 # Column 1 is the full path to the folder
