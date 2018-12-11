@@ -6,18 +6,9 @@ The  pyviyatools are a set of command-line tools that call the SAS Viya REST API
 
 The tools are a package of files and should be downloaded as such. The individual files are not useable without the package.
 
-The tools should be installed on the same machine that hosts the Viya command-line interfaces(CLI).
+The tools should be installed on the same machine that hosts the Viya command-line interfaces(CLI). The following command will install a copy of the tools in a sub-directory(pyviyatools) of the current directory.
 
-1. Under [pyviyatools] (https://gitlab.sas.com/sasadmintools/viya/pyviyatools)select the **Download** icon (looks like a cloud with a down arrow) 
-2. Select **Download tar.gz**
-3. In Linux terminal window change directory to the location where you downloaded the tar file
-4. Use the following command to install the tools. In the filename replace *????* with the alpha-numeric string in your file and the directory */mydir/pyviyatools* with an existing directory where you would like to install the tools then execute: 
-
-    *tar -xvf "pyviyatools-master-????.tar.gz" -C /mydir/pyviyatools --strip-components=1*
-
-5. Add the execute permission to scripts by running 
-
-    *chmod ug+x /mydir/pyviyatools/**
+*git clone https://github.com/sassoftware/pyviyatools.git*
 
 **Authenticate**
 
