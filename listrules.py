@@ -89,17 +89,17 @@ elif output_style=='csv':
       for column in desired_output_columns:
         # Add a comma to the output string, even if we will not output anything else, unless this is the very first desired output column
         if column is not desired_output_columns[0]: outstr=outstr+','
-        if column in item:
+        if column=='setting':
+          # The setting value is derived from two columns: type and condition.
+          if 'condition' in item:
+            #print("Condition found")
+            outstr=outstr+'conditional '+item['type']
+          else:
+            outstr=outstr+item['type']
+        elif column in item:
           # This column is in the results item for this rule
           # Most columns are straight strings, but a few need special handling
-          if column=='setting':
-            # The setting value is derived from two columns: type and condition.
-            if 'condition' in item:
-              #print("Condition found")
-              outstr=outstr+'conditional '+item['type']
-            else:
-              outstr=outstr+item['type']
-          elif column in ['condition','description','reason']:
+          if column in ['condition','description','reason']:
             # The these strings can have values whcih contain commas, need we to quote them to avoid the commas being interpreted as column separators in the CSV
             outstr=outstr+'"'+item[column]+'"'
           elif column=='permissions':
@@ -121,3 +121,4 @@ elif output_style=='csv':
       print(outstr)
 else:
   print "output_style can be json, simple or csv. You specified " + output_style + " which is invalid."
+
