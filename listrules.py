@@ -7,6 +7,7 @@
 # listrulesforidentity  
 #
 # Change History
+# December 2018 - Added custom CSV output code, which writes out consistent columns in a specific order for the result rules JSON
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -42,6 +43,10 @@ output_style=args.output
 # set the limit high so that all data is returned
 limitval=10000
 
+# Define columns we want to output for each rule item (whether the item has a value for that column or not)
+desired_output_columns=['objectUri','containerUri','principalType','principal','setting','permissions','description','reason','createdBy','createdTimestamp','modifiedBy','modifiedTimestamp','condition','matchParams','mediaType','enabled','version']
+valid_permissions=['read','update','delete','secure','add','remove','create']
+
 # build the request depending on what options were passed in
 if ident.lower()=='authenticatedusers': ident='authenticatedUsers'
 
@@ -65,8 +70,54 @@ else: reqval=reqval+'&limit='+str(limitval)
 reqtype='get'
 
 #make the rest call
-result=callrestapi(reqval,reqtype)
+rules_result_json=callrestapi(reqval,reqtype)
 
-#print the result
-printresult(result,output_style)
+#print(rules_result_json)
+#print('rules_result_json is a '+type(rules_result_json).__name__+' object') #rules_result_json is a dict object
 
+#print the result if output style is json or simple
+if output_style in ['json','simple']:
+  printresult(rules_result_json,output_style)
+elif output_style=='csv':
+  # Print a header row
+  print(','.join(map(str,desired_output_columns)))
+  if 'items' in rules_result_json:
+    #print "There are " + str(rules_result_json['count']) + " rules"
+    for item in rules_result_json['items']:
+      outstr=''
+      #print(item)
+      for column in desired_output_columns:
+        # Add a comma to the output string, even if we will not output anything else, unless this is the very first desired output column
+        if column is not desired_output_columns[0]: outstr=outstr+','
+        if column in item:
+          # This column is in the results item for this rule
+          # Most columns are straight strings, but a few need special handling
+          if column=='setting':
+            # The setting value is derived from two columns: type and condition.
+            if 'condition' in item:
+              #print("Condition found")
+              outstr=outstr+'conditional '+item['type']
+            else:
+              outstr=outstr+item['type']
+          elif column in ['condition','description','reason']:
+            # The these strings can have values whcih contain commas, need we to quote them to avoid the commas being interpreted as column separators in the CSV
+            outstr=outstr+'"'+item[column]+'"'
+          elif column=='permissions':
+            # Construct a string listing each permission in the correct order, separated by spaces and surrounded by square brackets
+            outstr=outstr+'['
+            permstr=''
+            # Output permissions in the order we choose, not the order they appear in the result item
+            for permission in valid_permissions:
+              for result_permission in item['permissions']:
+                if permission == result_permission:
+                  # Add a space to separate permissions if this isn't the first permission
+                  if not permstr=='': permstr=permstr+' '
+                  permstr=permstr+result_permission
+            outstr=outstr+permstr+']'
+          else:
+            # Normal column
+            # Some columns contain non-string values: matchParams and enabled are boolean, version is integer. Convert everything to a string.
+            outstr=outstr+str(item[column])
+      print(outstr)
+else:
+  print "output_style can be json, simple or csv. You specified " + output_style + " which is invalid."
