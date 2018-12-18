@@ -30,6 +30,7 @@
 #  23oct2018 Added print csv
 #  28oct2018 Added stop on error to be able to override stopping processing when an error occurs
 #  20nov2018 Updated so that multiple profiles can be used
+#  20dec2018 Fixed standard csv output
 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -54,6 +55,7 @@ import sys
 import json
 import pprint
 import os
+import collections
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -298,6 +300,7 @@ def getinputjson(input_file):
 # take the complex json and create a simple print of the results
 # change history
 #   01dec2017 initial development
+#   20dec2018 simple output now alphibetical order by key
     
 def simpleresults(resultdata):
 
@@ -317,8 +320,14 @@ def simpleresults(resultdata):
         
             print ("=====Item ",i,"=======")
             
-            pairs=resultdata['items'][i]
-    
+            origpairs=resultdata['items'][i]
+            
+            test=origpairs.get('description') 
+            if test==None: origpairs['description']='None'
+            
+            pairs=collections.OrderedDict(sorted(origpairs.items()))
+                                        
+                                      
             for key,val in pairs.items():
         
                if key != 'links': 
@@ -343,12 +352,12 @@ def simpleresults(resultdata):
 # tableresults
 # take the complex json and create a simple table of the results
 # change history
-#   01aug2018 initial development
+#   01aug2018  initial development
+#   19dece2018 print  csv in column orderwith only common columns  
 
-def csvresults(resultdata):
+def csvresults(resultdata,columns=[]):
 
-    #print(resultdata)
-    
+      
     if 'items' in resultdata:
     
         total_items=resultdata['count']
@@ -357,40 +366,85 @@ def csvresults(resultdata):
         
         if total_items == 0: print("Note: No items returned.")
             
-        for i in range(0,returned_items):    
+        for i in range(0,returned_items):  
+        
                
-            pairs=resultdata['items'][i]
-          
-            #test=pairs.get('description') 
-            #if test==None: pairs['description']='None'
-                                    
+            origpairs=resultdata['items'][i]
+            
+            # create an ordered dictionary
+            pairs=collections.OrderedDict()
+            
+            # loop thru the column list and insert to a new dictionary in that order
+            # this ensures that colums appear in this order in the csv
+            for keylabel in columns:
+                
+                # get the value for the current column
+                curval=origpairs.get(keylabel)
+                
+                if curval != None:
+                   pairs[keylabel] = curval
+                else:
+                   pairs[keylabel] = 'None' 
+                                                                
+            numvals=len(columns)
+            z=0
+            
+            # print header row of column names
             for key,val in pairs.items():
+                            
+                z=z+1            
+                
+                # seperate with comma except last item
+                if z==numvals: sep=''
+                else: sep=','
     
-                if i==0: print(key,',',end="")
+                if i==0 and key in columns: print(key,sep,end="")
                 
             print("\n",end="")
-                
+            
+            z=0
+            
+            # print rows
             for key,val in pairs.items():
+             
+                # seperate with comma except last item
+                z=z+1
+                if z==numvals: sep=''
+                else: sep=','
         
-               if key != 'links':                    
-                  print('"',val,'",',end="")
-                   
+                if key !=  'links' and key in columns: print('"'+str(val)+'"'+sep, end="")
+         
+        
         print("\n",end="")
         
             
     elif 'id' in resultdata:  #one item returned by rest call
-              
+        
+        numvals=len(resultdata.items())
+        z=0
+        
         for key,val in resultdata.items():
         
-               if key != 'links': 
-                   print(key,',',end="")
+            # seperate with comma except last item
+            z=z+1
+            if z==numvals: sep=''
+            else: sep=','
+        
+            if key != 'links': print(key,sep,end="")
                    
         print("\n",end="")
         
+        
+        z=0
+        
         for key,val in resultdata.items():
         
-               if key != 'links': 
-                   print('"',val,'",',end="")
+            # seperate with comma except last item
+            z=z+1
+            if z==numvals: sep=''
+            else: sep=','
+            
+            if key != 'links': print('"'+str(val)+'"'+sep,end="")
                    
         print("\n",end="")
             
@@ -418,8 +472,10 @@ def file_accessible(filepath, mode):
 # prints the results in the style requested 
 # change history
 #   28oct2018 initial development
+#   22dec2018 add csv columns only relevent for csv output, defaults provided but can be overriden when called
 
-def printresult(result,output_style):
+def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"]):
+
     
     # print rest call results
     if type(result) is dict:
@@ -427,7 +483,7 @@ def printresult(result,output_style):
         if output_style=='simple':
             simpleresults(result)
         elif output_style=='csv':
-            csvresults(result)
+            csvresults(result,columns=colsforcsv)
         else:
             print(json.dumps(result,indent=2))
     else: print(result) 
