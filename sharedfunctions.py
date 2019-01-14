@@ -31,6 +31,7 @@
 #  28oct2018 Added stop on error to be able to override stopping processing when an error occurs
 #  20nov2018 Updated so that multiple profiles can be used
 #  20dec2018 Fixed standard csv output
+#  14JAN2019 Added getpath
 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -575,3 +576,33 @@ def getprofileinfo(myprofile):
         
         
     
+# getpath
+# when a Viya objectURI is passed in return the path
+# change history
+#   14JAN2019 initial development
+
+def getpath(objecturi):
+
+    # build the request parameters
+    reqval='/folders/ancestors?childUri='+objecturi
+    reqtype='get'
+    accept='application/vnd.sas.content.folder.ancestor+json'
+
+    ancestors_result_json=callrestapi(reqval,reqtype,accept)
+    #print(ancestors_result_json)
+
+    if not 'ancestors' in ancestors_result_json:
+        print("NOTE: Could not get ancestor folders of ObjectURI '"+objecturi+"'.")
+        path=None
+    else:
+        ancestors = ancestors_result_json['ancestors']
+
+        path=''
+
+        #For each principle's section in the explanations section of the data returned from the REST API call...
+        for ancestor in ancestors:
+            path=ancestor['name']+'/'+path
+        path='/'+path
+
+    return path
+
