@@ -179,3 +179,10 @@ id=$(grep "Id  " /tmp/folderid.txt | tr -s ' ' | cut -f3 -d " ")
 ./explainaccess.py -u /folders/folders/$id --header -p -c true
 echo
 
+echo "Get the path of a folder"
+./getpath.py -u /folders/folders/$id
+echo
+
+echo "List members of a folder, with paths for each member"
+./listmemberswithpath.py -u /folders/folders/$id -r
+echo
