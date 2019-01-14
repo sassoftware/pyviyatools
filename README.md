@@ -27,7 +27,7 @@ The following python libraries are used:
 * netrc
 * subprocess
 * platform
-* argeparse
+* argparse
 
 
 ### Installing
@@ -38,9 +38,9 @@ Please use the installation intructions in the file INSTALL.md  [INSTALL.md](INS
 
 The pyviya tools use the sas-admin auth CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. 
 
-This process is documented in the SAS Viya Administration guide here.
-
-http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
+This process is documented in the SAS Viya Administration guide here:  
+Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
+Viya 3.4: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.4&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
 
 #### Creating a Profile and Logging on
 
@@ -102,6 +102,8 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **updatedomain.py** Load a set of userids and passwords to a Viya domain from a csv file
 * **createfolders.py** Create a set of Viya folders from a csv file 
 * **explainaccess.py** Explains access for a folder, object or service endpoint
+* **getpath.py** Return path of folder, report, or other object in folder
+* **listmemberswithpath.py** lists members of a folder, recursively if desired
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
                    
@@ -229,10 +231,20 @@ FORMAT OF CSV file folder path (parents must exist), description
 *./explainaccess.py -u /SASEnvironmentManager/dashboard --header -l read update delete secure add remove create*
 
 \#Explain direct and indirect permissions on a report, reducing the permissions reported to just read, update, delete and secure, since none of add, remove or create are applicable to a report.   
-*./explainaccess.py -u /reports/reports/*folder_id *--header -l read update delete secure*
+*./explainaccess.py -u /reports/reports/id --header -l read update delete secure*
 
 \#Explain direct and indirect permissions on a folder expressed as a URI. Keep the default permissions list, but for completeness we must also specify -c true to request conveyed permissions be displayed, as they are not displayed by default for URIs.   
-*./explainaccess.py -u /folders/folders/*folder_id *--header -p -c true*
+*./explainaccess.py -u /folders/folders/id --header -p -c true*
+
+\# Get folder path for an object (can be a folder, report or any other object which has a folder path)  
+*./getpath.py -u /folders/folders/id*  
+*./getpath.py -u /reports/reports/id*  
+
+\# Return list of members of a folder identified by objectURI  
+*./listmemberswithpath.py -u /folders/folders/id*  
+
+\# Return list of all members of a folder identified by objectURI, recursively searching subfolders  
+*./listmemberswithpath.py -u /folders/folders/id -r*
 
 **Troubleshooting**
 
