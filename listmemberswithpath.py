@@ -30,14 +30,11 @@
 #  limitations under the License.
 #
 
-
-clidir='/opt/sas/viya/home/bin/'
 debug=False
 
 # Import Python modules
 import argparse
 import sys
-
 from sharedfunctions import callrestapi,getpath
 
 # Define exception handler so that we only output trace info from errors when in debug mode

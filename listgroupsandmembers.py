@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# listcaslibs.py
+# listgroupsandmembers.py
 # January 2019
 #
 # Usage:
-# listcaslibs.py [--noheader] [-d]
+# listgroupsandmembers.py [--noheader] [-d]
 #
 # Examples:
 #
-# 1. Return list of all CAS libraries on all servers
-#        ./listcaslibs.py
+# 1. Return list of all groups and all their members
+#        ./listgroupsandmembers.py
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -52,31 +52,40 @@ debug=args.debug
 
 # Print header row unless noheader argument was specified
 if not noheader:
-    print('server,caslib')
-    
-endpoint='/casManagement/servers'
+    print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
+
+endpoint='/identities/groups'
 method='get'
 
 #make the rest call
-serverlist_result_json=callrestapi(endpoint,method)
+groupslist_result_json=callrestapi(endpoint,method)
 
 if debug:
-    print(serverlist_result_json)
-    print('serverlist_result_json is a '+type(serverlist_result_json).__name__+' object') #serverlist_result_json is a dict object
+    print(groupslist_result_json)
+    print('groupslist_result_json is a '+type(groupslist_result_json).__name__+' object') #groupslist_result_json is a dict object
 
-servers = serverlist_result_json['items']
+groups = groupslist_result_json['items']
 
-for server in servers:
-    servername=server['name']
+for group in groups:
+    groupid=group['id']
+    groupname=group['name']
+    grouptype=group['type']
+    groupproviderid=group['providerId']
 
-    # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true'
+    # List the members of this group
+    endpoint='/identities/groups/'+groupid+'/members'
     method='get'
-    caslibs_result_json=callrestapi(endpoint,method)
+    members_result_json=callrestapi(endpoint,method)
     if debug:
-        print(caslibs_result_json)
-        print('caslibs_result_json is a '+type(caslibs_result_json).__name__+' object') #caslibs_result_json is a dict object
-    caslibs=caslibs_result_json['items']
+        print(members_result_json)
+        print('members_result_json is a '+type(members_result_json).__name__+' object') #members_result_json is a dict object
 
-    for caslib in caslibs:
-        print(server['name']+','+caslib['name'])
+    members=members_result_json['items']
+    
+    for member in members:
+        memberid=member['id']
+        membername=member['name']
+        membertype=member['type']
+        memberproviderid=member['providerId']
+
+        print(groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+','+membername+','+membertype+','+memberproviderid)

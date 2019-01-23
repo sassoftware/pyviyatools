@@ -35,6 +35,10 @@
 # 01Jun2018 Initial version after refactoring tools
 # 18Oct2018 updated gerrulid test because -o changed to -u 
 # 03Dec2018 Added tests for explainaccess.py
+# 23Jan2019 Added tests for six new tools (listcaslibs.py, listcastables.py,
+            listcaslibsandeffectiveaccess.py,
+            listcastablesandeffectiveaccess.py, listmemberswithpath.py,
+            listgroupsandmembers.py)
 #
 #
 # Copyright 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -185,4 +189,32 @@ echo
 
 echo "List members of a folder, with paths for each member"
 ./listmemberswithpath.py -u /folders/folders/$id -r
+echo
+
+echo "Return list of all CAS libraries on all servers"
+./listcaslibs.py
+echo
+
+echo "Return list of all CAS tables in all CAS libraries on all servers"
+./listcastables.py
+echo
+
+echo "Return list of all effective access on all CAS libraries on all servers"
+./listcaslibsandeffectiveaccess.py
+echo
+
+echo "Return list of all effective access on all CAS tables in all CAS libraries on all servers"
+./listcastablesandeffectiveaccess.py
+echo
+
+echo "Return list of members of a folder identified by objectURI"
+./listmemberswithpath.py -u /folders/folders/$id
+echo
+
+echo "Return list of all members of a folder identified by objectURI, recursively searching subfolders"
+./listmemberswithpath.py -u /folders/folders/$id -r
+echo
+
+echo "Return list of all groups and all their members"
+./listgroupsandmembers.py
 echo

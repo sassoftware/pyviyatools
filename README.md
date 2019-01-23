@@ -104,6 +104,12 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **explainaccess.py** Explains access for a folder, object or service endpoint
 * **getpath.py** Return path of folder, report, or other object in folder
 * **listmemberswithpath.py** lists members of a folder, recursively if desired
+* **listcaslibs.py** Return list of all CAS libraries on all servers
+* **listcastables.py** Return list of all CAS tables in all CAS libraries on all servers
+* **listcaslibsandeffectiveaccess.py** Return list of all effective access on all CAS libraries on all servers
+* **listcastablesandeffectiveaccess.py** Return list of all effective access on all CAS tables in all CAS libraries on all servers
+* **listmemberswithpath.py** Return list of members of a folder identified by objectURI
+* **listgroupsandmembers.py** Return list of all groups and all their members
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
                    
@@ -245,6 +251,28 @@ FORMAT OF CSV file folder path (parents must exist), description
 
 \# Return list of all members of a folder identified by objectURI, recursively searching subfolders  
 *./listmemberswithpath.py -u /folders/folders/id -r*
+
+\# Return list of all CAS libraries on all servers
+*./listcaslibs.py*
+
+\# Return list of all CAS tables in all CAS libraries on all servers
+*./listcastables.py*
+
+\# Return list of all effective access on all CAS libraries on all servers
+*./listcaslibsandeffectiveaccess.py*
+
+\# Return list of all effective access on all CAS tables in all CAS libraries on all servers
+*./listcastablesandeffectiveaccess.py*
+
+\# Return list of members of a folder identified by objectURI
+*./listmemberswithpath.py -u /folders/folders/id*
+
+\# Return list of all members of a folder identified by objectURI, recursively searching subfolders
+*./listmemberswithpath.py -u /folders/folders/id -r*
+
+\# Return list of all groups and all their members
+*./listgroupsandmembers.py*
+
 
 **Troubleshooting**
 
