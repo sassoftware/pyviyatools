@@ -99,17 +99,16 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **listrules.py** list authorization rules subset on a principal and/or a uri
 * **loginviauthinfo.py** use an authinfo file to authenticate to the CLI
 * **updateprefences.py** update preferences for a user or group of users
-* **updatedomain.py** Load a set of userids and passwords to a Viya domain from a csv file
-* **createfolders.py** Create a set of Viya folders from a csv file 
-* **explainaccess.py** Explains access for a folder, object or service endpoint
-* **getpath.py** Return path of folder, report, or other object in folder
+* **updatedomain.py** load a set of userids and passwords to a Viya domain from a csv file
+* **createfolders.py** create a set of Viya folders from a csv file 
+* **explainaccess.py** explains access for a folder, object or service endpoint
+* **getpath.py** return path of folder, report, or other object in folder
 * **listmemberswithpath.py** lists members of a folder, recursively if desired
-* **listcaslibs.py** Return list of all CAS libraries on all servers
-* **listcastables.py** Return list of all CAS tables in all CAS libraries on all servers
-* **listcaslibsandeffectiveaccess.py** Return list of all effective access on all CAS libraries on all servers
-* **listcastablesandeffectiveaccess.py** Return list of all effective access on all CAS tables in all CAS libraries on all servers
-* **listmemberswithpath.py** Return list of members of a folder identified by objectURI
-* **listgroupsandmembers.py** Return list of all groups and all their members
+* **listcaslibs.py** list all CAS libraries on all servers
+* **listcastables.py** list all CAS tables in all CAS libraries on all servers
+* **listcaslibsandeffectiveaccess.py** list all effective access on all CAS libraries on all servers
+* **listcastablesandeffectiveaccess.py** list all effective access on all CAS tables in all CAS libraries on all servers
+* **listgroupsandmembers.py** list all groups and all their members
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
                    
@@ -252,25 +251,25 @@ FORMAT OF CSV file folder path (parents must exist), description
 \# Return list of all members of a folder identified by objectURI, recursively searching subfolders  
 *./listmemberswithpath.py -u /folders/folders/id -r*
 
-\# Return list of all CAS libraries on all servers
+\# Return list of all CAS libraries on all servers  
 *./listcaslibs.py*
 
-\# Return list of all CAS tables in all CAS libraries on all servers
+\# Return list of all CAS tables in all CAS libraries on all servers  
 *./listcastables.py*
 
-\# Return list of all effective access on all CAS libraries on all servers
+\# Return list of all effective access on all CAS libraries on all servers  
 *./listcaslibsandeffectiveaccess.py*
 
-\# Return list of all effective access on all CAS tables in all CAS libraries on all servers
+\# Return list of all effective access on all CAS tables in all CAS libraries on all servers  
 *./listcastablesandeffectiveaccess.py*
 
-\# Return list of members of a folder identified by objectURI
+\# Return list of members of a folder identified by objectURI  
 *./listmemberswithpath.py -u /folders/folders/id*
 
-\# Return list of all members of a folder identified by objectURI, recursively searching subfolders
+\# Return list of all members of a folder identified by objectURI, recursively searching subfolders  
 *./listmemberswithpath.py -u /folders/folders/id -r*
 
-\# Return list of all groups and all their members
+\# Return list of all groups and all their members  
 *./listgroupsandmembers.py*
 
 

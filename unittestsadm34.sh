@@ -36,9 +36,9 @@
 # 18Oct2018 updated gerrulid test because -o changed to -u 
 # 03Dec2018 Added tests for explainaccess.py
 # 23Jan2019 Added tests for six new tools (listcaslibs.py, listcastables.py,
-            listcaslibsandeffectiveaccess.py,
-            listcastablesandeffectiveaccess.py, listmemberswithpath.py,
-            listgroupsandmembers.py)
+#           listcaslibsandeffectiveaccess.py,
+#           listcastablesandeffectiveaccess.py, listmemberswithpath.py,
+#           listgroupsandmembers.py)
 #
 #
 # Copyright 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
