@@ -8,6 +8,7 @@
 #
 # Change History
 # December 2018 - Added custom CSV output code, which writes out consistent columns in a specific order for the result rules JSON
+# January 2019 - Added 'id' to list of desired output columns
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -44,7 +45,7 @@ output_style=args.output
 limitval=10000
 
 # Define columns we want to output for each rule item (whether the item has a value for that column or not)
-desired_output_columns=['objectUri','containerUri','principalType','principal','setting','permissions','description','reason','createdBy','createdTimestamp','modifiedBy','modifiedTimestamp','condition','matchParams','mediaType','enabled','version']
+desired_output_columns=['objectUri','containerUri','principalType','principal','setting','permissions','description','reason','createdBy','createdTimestamp','modifiedBy','modifiedTimestamp','condition','matchParams','mediaType','enabled','version','id']
 valid_permissions=['read','update','delete','secure','add','remove','create']
 
 # build the request depending on what options were passed in
