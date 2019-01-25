@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# listcaslibs.py
+# listcaslibsandeffectiveaccess.py
 # January 2019
 #
 # Usage:
-# listcaslibs.py [--noheader] [-d]
+# listcaslibsandeffectiveaccess.py [--noheader] [-d]
 #
 # Examples:
 #
-# 1. Return list of all CAS libraries on all servers
-#        ./listcaslibs.py
+# 1. Return list of all effective access on all CAS libraries on all servers
+#        ./listcaslibsandeffectiveaccess.py
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -29,6 +29,7 @@
 
 debug=False
 
+
 # Import Python modules
 import argparse
 import sys
@@ -43,6 +44,9 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
 
 sys.excepthook = exception_handler
 
+identity_cols=['identity','identityType']
+permissions=['readInfo','select','limitedPromote','promote','createTable','dropTable','deleteSource','insert','update','delete','alterTable','alterCaslib','manageAccess']
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
@@ -52,8 +56,8 @@ debug=args.debug
 
 # Print header row unless noheader argument was specified
 if not noheader:
-    print('server,caslib')
-    
+    print('server,caslib,'+','.join(map(str, identity_cols))+','+','.join(map(str, permissions)))
+
 endpoint='/casManagement/servers'
 method='get'
 
@@ -79,4 +83,26 @@ for server in servers:
     caslibs=caslibs_result_json['items']
 
     for caslib in caslibs:
-        print(server['name']+','+caslib['name'])
+        caslibname=caslib['name']
+        #print(servername+','+caslibname)
+      
+        # Get effective Access Controls on this caslib
+        endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective'
+        method='get'
+        caslibaccess_result_json=callrestapi(endpoint,method)
+
+        #print(caslibaccess_result_json)
+        for ai in caslibaccess_result_json['items']:
+            output=servername+','+caslibname
+            for col in identity_cols:
+                if col in ai:
+                     output=output+','+ai[col]
+                else:
+                     output=output+','
+            for col in permissions:
+                if col in ai:
+                     output=output+','+ai[col]
+                else:
+                     output=output+','
+            print output
+        

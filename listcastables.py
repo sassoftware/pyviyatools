@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# listcaslibs.py
+# listcastables.py
 # January 2019
 #
 # Usage:
-# listcaslibs.py [--noheader] [-d]
+# listcastables.py [--noheader] [-d]
 #
 # Examples:
 #
-# 1. Return list of all CAS libraries on all servers
-#        ./listcaslibs.py
+# 1. Return list of all CAS tables in all CAS libraries on all servers
+#        ./listcastables.py
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -52,8 +52,8 @@ debug=args.debug
 
 # Print header row unless noheader argument was specified
 if not noheader:
-    print('server,caslib')
-    
+    print('server,caslib,table')
+
 endpoint='/casManagement/servers'
 method='get'
 
@@ -68,6 +68,7 @@ servers = serverlist_result_json['items']
 
 for server in servers:
     servername=server['name']
+    #print(servername)
 
     # List the caslibs in this server
     endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true'
@@ -79,4 +80,30 @@ for server in servers:
     caslibs=caslibs_result_json['items']
 
     for caslib in caslibs:
-        print(server['name']+','+caslib['name'])
+        caslibname=caslib['name']
+        #print('a: '+servername+','+caslibname)
+
+        # List the tables in the caslib
+        endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true'
+        method='get'
+        #print('about to list tables')
+
+        tables_result_json=callrestapi(endpoint,method,stoponerror=False)
+
+        if debug:
+            print(tables_result_json)
+            print('tables_result_json is a '+type(tables_result_json).__name__+' object') #tables_result_json is a dict object
+        if tables_result_json is not None:
+            if tables_result_json['count']==0:
+                print(servername+','+caslibname+',[0 tables]')
+            if 'items' not in tables_result_json:
+                print(servername+','+caslibname+','+tables_result_json['message'])
+            else:
+                tables=tables_result_json['items']
+
+                for table in tables:
+                    tablename=table['name']
+                    print(servername+','+caslibname+','+tablename)
+        else:
+            #tables_result_json is None
+            print(servername+','+caslibname+',[error getting tables]')
