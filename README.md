@@ -263,6 +263,7 @@ FORMAT OF CSV file folder path (parents must exist), description
 \# Return list of all effective access on all CAS tables in all CAS libraries on all servers  
 *./listcastablesandeffectiveaccess.py*
 
+
 \# Return list of members of a folder identified by objectURI  
 *./listmemberswithpath.py -u /folders/folders/id*
 
@@ -288,6 +289,7 @@ To see the current setup, including python and package versions, environment var
 If you get this error : Login failed. Error with security certificate.
 
 Set the environment variable for the SSL certificate file. For example:
+
 export SSL_CERT_FILE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
 
 
@@ -296,6 +298,7 @@ Raise SSLError(e, request=request)
 requests.exceptions.SSLError: HTTPSConnectionPool(host='intviya01.race.sas.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, u'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)'),))
 
 Set the environment variable for the SSL certificate file. For example:
+
 export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
 
 
