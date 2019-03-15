@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # exportfoldertree.py
-# March 20187
+# March 2018
 #
 # Pass in a directory and this tool will export the complete viya folder
 # structure to a sub-directory named for the current date and time
@@ -12,7 +12,7 @@
 # Change History
 #
 #
-# Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License);
 #  you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 
 # Import Python modules
 
-import argparse, sys, subprocess, uuid, string, time, os
+import argparse, sys, subprocess, uuid, time, os
 
 from sharedfunctions import getfolderid, callrestapi
 
@@ -67,25 +67,30 @@ if 'items' in resultdata:
     returned_items=len(resultdata['items'])
         
     if total_items == 0: print("Note: No items returned.")
+    else:
+     
+        # export each folder and download the package file to the directory
+		
+	for i in range(0,returned_items):   
+			
+	     id=resultdata['items'][i]["id"]
+             package_name=str(uuid.uuid1())
+	     json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
+					
+	     command=clidir+'sas-admin transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
+	     print(command)     
+	     subprocess.call(command, shell=True)
 
-    # export each folder and download the package file to the directory
-            
-    for i in range(0,returned_items):   
-        id=resultdata['items'][i]["id"]
-        package_name=str(uuid.uuid1())
-        command=clidir+'sas-admin transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
-        print(command)     
-        subprocess.call(command, shell=True)
-
-        reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'                
-        package_info=callrestapi(reqval,reqtype)
-        
-        package_id=package_info['items'][0]['id']
-        
-        completefile=os.path.join(path,package_name+'.json')
-        command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id    
-        print(command)
-        subprocess.call(command, shell=True)
+	     reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'                
+	     package_info=callrestapi(reqval,reqtype)
+			
+	     package_id=package_info['items'][0]['id']
+			
+	     completefile=os.path.join(path,json_name+'.json')
+	     command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id    
+	     print(command)
+	     subprocess.call(command, shell=True)
 
 print("NOTE: Viya root folders exported to json files in "+path) 
          
+
