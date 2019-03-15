@@ -52,7 +52,7 @@ basedir=args.directory
 #dirname="D_"+time.strftime('%Y-%m-%dT%H:%M:%S',now)
 #path=os.path.join(basedir,dirname)
 
-# now just use the directory the user specifies
+# I now just use the directory the user specifies
 path=basedir
 if not os.path.exists(path): os.makedirs(path)
 
