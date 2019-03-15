@@ -42,15 +42,18 @@ clidir='/opt/sas/viya/home/bin/'
 
 
 # get input parameters	
-parser = argparse.ArgumentParser(description="Delete a folder and its sub-folders")
+parser = argparse.ArgumentParser(description="Export the complete Viya folder tree")
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 args= parser.parse_args()
 basedir=args.directory
 
-# create output directory
-now=time.localtime()
-dirname="D_"+time.strftime('%Y-%m-%dT%H:%M:%S',now)
-path=os.path.join(basedir,dirname)
+# create output directory: was giving the directory a name
+#now=time.localtime()
+#dirname="D_"+time.strftime('%Y-%m-%dT%H:%M:%S',now)
+#path=os.path.join(basedir,dirname)
+
+# now just use the directory the user specifies
+path=basedir
 if not os.path.exists(path): os.makedirs(path)
 
 # retrieve root folders
