@@ -29,7 +29,7 @@
 
 # Import Python modules
 
-import argparse, sys, subprocess, uuid, time, os
+import argparse, sys, subprocess, uuid, time, os, glob
 
 from sharedfunctions import getfolderid, callrestapi
 
@@ -55,6 +55,10 @@ basedir=args.directory
 # I now just use the directory the user specifies
 path=basedir
 if not os.path.exists(path): os.makedirs(path)
+else: 
+    filelist=glob.glob(path+"/*.json")
+    for file in filelist:
+        os.remove(file)
 
 # retrieve root folders
 reqtype='get'
