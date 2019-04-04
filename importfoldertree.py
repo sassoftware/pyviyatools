@@ -39,9 +39,9 @@ version=int(str(sys.version_info[0]))
 if not quietmode:
 
 	if version  > 2:
-		areyousure=input("If content from the packages already exists it will be replaced. Continue? (Y)")
+		areyousure=input("WARNING: If content from the packages already exists in folders it will be replaced. Continue? (Y)")
 	else:
-		areyousure=raw_input("If content from the packages already exists it will be replaced. Continue? (Y)") 
+		areyousure=raw_input("WARNING:If content from the packages already exists in folders it will be replaced. Continue? (Y)") 
 else:
 	areyousure="Y"
 
