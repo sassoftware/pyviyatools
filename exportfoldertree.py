@@ -45,6 +45,7 @@ parser.add_argument("-d","--directory", help="Directory for Export",required='Tr
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 args= parser.parse_args()
 basedir=args.directory
+quietmode=args.quiet
 
 # create output directory: was giving the directory a name
 #now=time.localtime()
@@ -53,11 +54,12 @@ basedir=args.directory
 # I now just use the directory the user specifies
 
 # if the quiet mode flag is not passed then prompt to continue
-if not quitemode:
-	 if version  > 2:
-            areyousure=input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)")
-        else:
-            areyousure=raw_input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)") 
+if not quietmode:
+
+	if version  > 2:
+		 areyousure=input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)")
+	else:
+		areyousure=raw_input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)") 
 else:
 	areyousure="Y"
 
@@ -90,7 +92,7 @@ if areyousure.upper() =='Y':
 			for i in range(0,returned_items):   
 				
 				id=resultdata['items'][i]["id"]
-					package_name=str(uuid.uuid1())
+				package_name=str(uuid.uuid1())
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
 							
 				command=clidir+'sas-admin transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
@@ -109,6 +111,6 @@ if areyousure.upper() =='Y':
 
 	print("NOTE: Viya root folders exported to json files in "+path)
 
-else: 
-	print"NOTE: Operation cancelled")
+else:
+	 print("NOTE: Operation cancelled")
 
