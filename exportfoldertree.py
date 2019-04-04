@@ -54,13 +54,13 @@ if os.path.exists(basedir):
 	if not quietmode:
 
 		if version  > 2:
-			areyousure=input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)")
+			areyousure=input("The folder exists any existing json files in it will be deleted. Continue? (Y)")
 		else:
-			areyousure=raw_input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)") 
+			areyousure=raw_input("The folder already exists any existing json files in it will be deleted. Continue? (Y)") 
 	else:
 		areyousure="Y"
 
-else: areyousure-"Y" 
+else: areyousure="Y" 
 
 # prompt is Y if user selected Y, its a new directory, or user selected quiet mode
 if areyousure.upper() =='Y':
