@@ -24,7 +24,7 @@ from sharedfunctions import callrestapi
 clidir='/opt/sas/viya/home/bin/'
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Delete a folder and its sub-folders")
+parser = argparse.ArgumentParser(description="Import JSON files from directory")
 parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
 args= parser.parse_args()
 basedir=args.directory
@@ -35,10 +35,11 @@ if os.path.isdir(basedir):
 	# loop files in the directory
 	for filename in os.listdir( basedir ):
 
+		# only process json files
 	    if filename.lower().endswith('.json'):
 		
    		    # upload the json package
-			command=clidir+'sas-admin transfer upload --file '+os.path.join(basedir,filename)+'> /tmp/packageid.json'
+            command=clidir+'sas-admin transfer upload --file '+os.path.join(basedir,filename)+'> /tmp/packageid.json'
 			print(command)
 			subprocess.call(command, shell=True)
 			 
@@ -56,5 +57,6 @@ if os.path.isdir(basedir):
 			
 			subprocess.call(command, shell=True)
 			print("NOTE: Viya root folders imported from json files in "+basedir)
+
 else: print("ERROR: Directory does not exist")
 

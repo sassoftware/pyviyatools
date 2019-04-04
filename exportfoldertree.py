@@ -28,7 +28,6 @@
 #
 
 # Import Python modules
-
 import argparse, sys, subprocess, uuid, time, os, glob
 
 from sharedfunctions import getfolderid, callrestapi
@@ -47,26 +46,28 @@ args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 
-# create output directory: was giving the directory a name
-#now=time.localtime()
-#dirname="D_"+time.strftime('%Y-%m-%dT%H:%M:%S',now)
-#path=os.path.join(basedir,dirname)
-# I now just use the directory the user specifies
 
-# if the quiet mode flag is not passed then prompt to continue
-if not quietmode:
+# prompt if directory exists because existing json files are deleted
+if os.path.exists(basedir):
 
-	if version  > 2:
-		 areyousure=input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)")
+	# if the quiet mode flag is not passed then prompt to continue
+	if not quietmode:
+
+		if version  > 2:
+			areyousure=input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)")
+		else:
+			areyousure=raw_input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)") 
 	else:
-		areyousure=raw_input("If the folder already exists any existing json files in it will be deleted. Continue? (Y)") 
-else:
-	areyousure="Y"
+		areyousure="Y"
 
+else: areyousure-"Y" 
 
+# prompt is Y if user selected Y, its a new directory, or user selected quiet mode
 if areyousure.upper() =='Y':
 
 	path=basedir
+
+	# create directory if it doesn't exist
 	if not os.path.exists(path): os.makedirs(path)
 	else: 
 		filelist=glob.glob(path+"/*.json")
@@ -77,7 +78,6 @@ if areyousure.upper() =='Y':
 	reqtype='get'
 	reqval='/folders/rootFolders'
 	resultdata=callrestapi(reqval,reqtype)
-
 
 	# loop root folders
 	if 'items' in resultdata:
