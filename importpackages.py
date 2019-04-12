@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# importfoldertree.py March 2018
+# importpackages.py
+# March 2018
 #
 # Pass in a directory and this tool will import all the json files in the directory. It depends on the admin CLI
 #
@@ -15,6 +16,9 @@
 #
 #  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
 #  OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+#
+# change log
+# renamed to importpackages.py to be more descriptive of actual usage
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json 
