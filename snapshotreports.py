@@ -37,10 +37,34 @@ clidir='/opt/sas/viya/home/bin/'
 parser = argparse.ArgumentParser(description="Export the complete Viya folder tree")
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
+parser.add_argument("-d","--hours", help="Reports changed in the how many days",default='1')
+parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
+parser.add_argument("-n","--name", help="Name contains",default=None)
+
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 
+
+# calculate time period for files
+now=dt.today()-td(days=int(daysolder))
+subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
+datefilter="le(creationTimeStamp,"+subset_date+")"
+
+# create a list for filter conditions
+filtercond=[]
+
+# there is always a number of days, the default is zero
+filtercond.append(datefilter)
+
+if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
+if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if puri!=None: filtercond.append("contains(parentUri,'"+puri+"')")
+
+
+# add the start and end and comma delimit the filter
+delimiter = ','
+completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # prompt if directory exists because existing json files are deleted
 if os.path.exists(basedir):
@@ -71,7 +95,8 @@ if areyousure.upper() =='Y':
 
 	# retrieve all reports in the system
 	reqtype='get'
-	reqval='/reports/reports'
+	reqval='/reports/reports?filter="+completefilter+"&limit=10000'
+
 	resultdata=callrestapi(reqval,reqtype)
 
 	# loop root reports
@@ -89,8 +114,8 @@ if areyousure.upper() =='Y':
 				id=resultdata['items'][i]["id"]
 				package_name=str(uuid.uuid1())
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
-                                json_name=json_name.replace("(","_")
-                                json_name=json_name.replace(")","_")
+                json_name=json_name.replace("(","_")
+                json_name=json_name.replace(")","_")
 
 							
 				command=clidir+'sas-admin transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
