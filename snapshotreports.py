@@ -99,7 +99,7 @@ if areyousure.upper() =='Y':
 	# retrieve all reports in the system
 	reqtype='get'
 	reqval='/reports/reports?filter='+completefilter+'&limit=10000'
-        print(reqval)
+    
 	resultdata=callrestapi(reqval,reqtype)
 
 	# loop root reports
