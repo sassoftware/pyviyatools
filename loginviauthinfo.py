@@ -5,9 +5,19 @@
 # installed in the default location 
 #
 # usage python loginviauthinfo.py
+#              loginviauthinfo.py -f /tmp/myfile
+#
+#
+# Authinfo file users .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
+#
+# Example
+#
+# default user sasadm1 password mypass
+# machine sasviya01.race.sas.com user sasadm2 password mpass2
 #
 # Change History
 #
+# 25AUG2019 modified to logon to the host in the profile and support multiple lines iin authinfo
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -45,15 +55,12 @@ parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",d
 args = parser.parse_args()
 authfile=args.file
 
-#host=platform.node()
-
 # Read from the authinfo file in your home directory
 fname=os.path.join(os.path.expanduser('~'),authfile)
 
+# get current profile from ENV variable or if not set use default
 myprofile=os.environ.get("SAS_CLI_PROFILE","Default")
 print("Logging in with profile: ",myprofile )
-
-credential_file=os.path.join(os.path.expanduser('~'),'.sas','credentials.json')
 
 # get hostname from profile
 endpointfile=os.path.join(os.path.expanduser('~'),'.sas','config.json')
