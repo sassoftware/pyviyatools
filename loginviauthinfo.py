@@ -48,6 +48,7 @@ clidir='/opt/sas/viya/home/bin/'
 #clidir='c:\\admincli\\'
 
 debug=0
+profileexists=0
 
 # get input parameters	
 parser = argparse.ArgumentParser(description="Authinfo File")
@@ -90,22 +91,28 @@ if not badprofile:
         urlparts=urlparse(data[myprofile]['sas-endpoint'])
         host=urlparts.netloc
         print("Getting Credentials for: "+host)
-    else:
-        host='default'
+        profileexists=1
 
-# based on the hostname get the credentials and login
-if os.path.isfile(fname):
+    else: #without a profile don't know the hostname
+        profileexists=0
+        print("ERROR: profile "+myprofile+" does not exist. Recreate profile with sas-admin profile init.")
 
-    secrets = netrc.netrc(fname)
-    username, account, password = secrets.authenticators( host )
 
-    if debug:
-       print('user: '+username)
-       print('profile: '+myprofile)
-       print('host: '+host)
+if profileexists:
 
-    command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
-    subprocess.call(command, shell=True)
+    # based on the hostname get the credentials and login
+    if os.path.isfile(fname):
+
+       secrets = netrc.netrc(fname)
+       username, account, password = secrets.authenticators( host )
+
+       if debug:
+          print('user: '+username)
+          print('profile: '+myprofile)
+          print('host: '+host)
+
+       command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
+       subprocess.call(command, shell=True)
     
-else:
-    print('ERROR: '+fname+' does not exist') 
+    else:
+       print('ERROR: '+fname+' does not exist') 
