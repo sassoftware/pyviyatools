@@ -29,10 +29,15 @@ import subprocess
 import platform
 import os
 import argparse
+import json
+from sharedfunctions import file_accessible
+from urlparse import urlparse
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
 clidir='/opt/sas/viya/home/bin/'
 #clidir='c:\\admincli\\'
+
+debug=0
 
 # get input parameters	
 parser = argparse.ArgumentParser(description="Authinfo File")
@@ -40,19 +45,59 @@ parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",d
 args = parser.parse_args()
 authfile=args.file
 
-host=platform.node()
+#host=platform.node()
 
 # Read from the authinfo file in your home directory
 fname=os.path.join(os.path.expanduser('~'),authfile)
 
-cur_profile=os.environ.get("SAS_CLI_PROFILE","Default")
-print("Logging in with profile: ",cur_profile )
+myprofile=os.environ.get("SAS_CLI_PROFILE","Default")
+print("Logging in with profile: ",myprofile )
 
+credential_file=os.path.join(os.path.expanduser('~'),'.sas','credentials.json')
+
+# get hostname from profile
+endpointfile=os.path.join(os.path.expanduser('~'),'.sas','config.json')
+access_file=file_accessible(endpointfile,'r')
+badprofile=0
+
+#profile does not exist
+if access_file==False:
+    badprofile=1 
+    host='default'
+
+
+#profile is empty file
+if os.stat(endpointfile).st_size==0: 
+    badprofile=1
+    host='default'
+
+# get json from profile
+
+if not badprofile:
+
+    with open(endpointfile) as json_file:
+        data = json.load(json_file)
+
+    # get the hostname from the current profile
+    if myprofile in data:
+        urlparts=urlparse(data[myprofile]['sas-endpoint'])
+        host=urlparts.netloc
+        print("Getting Credentials for: "+host)
+    else:
+        host='default'
+
+# based on the hostname get the credentials and login
 if os.path.isfile(fname):
 
     secrets = netrc.netrc(fname)
     username, account, password = secrets.authenticators( host )
-    command=clidir+'sas-admin --profile '+cur_profile+ ' auth login -u '+username+ ' -p '+password
+
+    if debug:
+       print('user: '+username)
+       print('profile: '+myprofile)
+       print('host: '+host)
+
+    command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
     subprocess.call(command, shell=True)
     
 else:
