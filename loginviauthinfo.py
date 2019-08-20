@@ -10,14 +10,15 @@
 #
 # Authinfo file users .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
 #
-# Example
+# Example of file. Firt line specifies the default userid and password if no machine is specified. Second line specifies a machine and the
+# userid and password for that machine,
 #
 # default user sasadm1 password mypass
 # machine sasviya01.race.sas.com user sasadm2 password mpass2
 #
 # Change History
 #
-# 25AUG2019 modified to logon to the host in the profile and support multiple lines iin authinfo
+# 25AUG2019 modified to logon to the host in the profile and support multiple lines in authinfo
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
