@@ -5,9 +5,20 @@
 # installed in the default location 
 #
 # usage python loginviauthinfo.py
+#              loginviauthinfo.py -f /tmp/myfile
+#
+#
+# Authinfo file users .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
+#
+# Example of file. Firt line specifies the default userid and password if no machine is specified. Second line specifies a machine and the
+# userid and password for that machine,
+#
+# default user sasadm1 password mypass
+# machine sasviya01.race.sas.com user sasadm2 password mpass2
 #
 # Change History
 #
+# 25AUG2019 modified to logon to the host in the profile and support multiple lines in authinfo
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -29,10 +40,16 @@ import subprocess
 import platform
 import os
 import argparse
+import json
+from sharedfunctions import file_accessible
+from urlparse import urlparse
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
 clidir='/opt/sas/viya/home/bin/'
 #clidir='c:\\admincli\\'
+
+debug=0
+profileexists=0
 
 # get input parameters	
 parser = argparse.ArgumentParser(description="Authinfo File")
@@ -40,20 +57,63 @@ parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",d
 args = parser.parse_args()
 authfile=args.file
 
-host=platform.node()
-
 # Read from the authinfo file in your home directory
 fname=os.path.join(os.path.expanduser('~'),authfile)
 
-cur_profile=os.environ.get("SAS_CLI_PROFILE","Default")
-print("Logging in with profile: ",cur_profile )
+# get current profile from ENV variable or if not set use default
+myprofile=os.environ.get("SAS_CLI_PROFILE","Default")
+print("Logging in with profile: ",myprofile )
 
-if os.path.isfile(fname):
+# get hostname from profile
+endpointfile=os.path.join(os.path.expanduser('~'),'.sas','config.json')
+access_file=file_accessible(endpointfile,'r')
+badprofile=0
 
-    secrets = netrc.netrc(fname)
-    username, account, password = secrets.authenticators( host )
-    command=clidir+'sas-admin --profile '+cur_profile+ ' auth login -u '+username+ ' -p '+password
-    subprocess.call(command, shell=True)
+#profile does not exist
+if access_file==False:
+    badprofile=1 
+    host='default'
+
+
+#profile is empty file
+if os.stat(endpointfile).st_size==0: 
+    badprofile=1
+    host='default'
+
+# get json from profile
+
+if not badprofile:
+
+    with open(endpointfile) as json_file:
+        data = json.load(json_file)
+
+    # get the hostname from the current profile
+    if myprofile in data:
+        urlparts=urlparse(data[myprofile]['sas-endpoint'])
+        host=urlparts.netloc
+        print("Getting Credentials for: "+host)
+        profileexists=1
+
+    else: #without a profile don't know the hostname
+        profileexists=0
+        print("ERROR: profile "+myprofile+" does not exist. Recreate profile with sas-admin profile init.")
+
+
+if profileexists:
+
+    # based on the hostname get the credentials and login
+    if os.path.isfile(fname):
+
+       secrets = netrc.netrc(fname)
+       username, account, password = secrets.authenticators( host )
+
+       if debug:
+          print('user: '+username)
+          print('profile: '+myprofile)
+          print('host: '+host)
+
+       command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
+       subprocess.call(command, shell=True)
     
-else:
-	print('ERROR: '+fname+' does not exist') 
+    else:
+       print('ERROR: '+fname+' does not exist') 
