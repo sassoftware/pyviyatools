@@ -35,6 +35,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
+parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
@@ -47,7 +48,13 @@ nameval=args.name
 puri=args.parent
 path=args.path
 dodelete=args.delete
+pfolder=args.parentfolder
 
+
+if puri !=None and pfolder !=None: 
+   print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
+   print("ERROR: Use -pf for folder parents and -p for service parents.")
+   sys.exit()
 
 if dodelete:
 

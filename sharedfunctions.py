@@ -606,3 +606,22 @@ def getpath(objecturi):
 
     return path
 
+def getidsanduris(resultdata):
+
+    resultdict={}
+    
+    resultdict['ids']=[]
+    resultdict['uris']=[]
+    
+    if 'items' in resultdata:
+    
+        total_items=resultdata['count']
+        returned_items=len(resultdata['items'])
+        if total_items == 0: print("Note: No items returned.")
+         
+        for i in range(0,returned_items): 
+                                
+           resultdict['ids'].append(resultdata['items'][i]['id'])
+           resultdict['uris'].append(resultdata['items'][i]['uri'])
+                             
+    return resultdict
