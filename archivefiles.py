@@ -19,9 +19,10 @@
 #  express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
 
-import argparse , datetime, os, time, json, sys
-from sharedfunctions import callrestapi,printresult
+import argparse , datetime, os, time, json, sys, pickle
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
 from datetime import datetime as dt, timedelta as td
+
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -65,7 +66,7 @@ if dodelete:
 
    if areyousure !='Y': dodelete=False
 
-# content filter
+#content filter
 #contentfilter='in(contentType,"application/vnd.sas.collection","text/plain","application/vnd.sas.collection+json","text/plain;charset=UTF-8","application/octet-stream")'
 
 # calculate time period for files
@@ -81,17 +82,53 @@ filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
 if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
-if puri!=None: filtercond.append("contains(parentUri,'"+puri+"')")
-
-# add the start and end and comma delimit the filter
-delimiter = ','
-completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # set the request type
 reqtype='get'
-reqval="/files/files?filter="+completefilter+"&limit=10000"
+delimiter = ','
 
-#print(reqval)
+# process items not in folders
+if puri!=None: 
+   filtercond.append("contains(parentUri,'"+puri+"')")
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+     
+# process items in folders
+if pfolder!=None:
+
+   folderid=getfolderid(pfolder)[0]     
+   # add the start and end and comma delimit the filter
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&limit=10000"
+   
+   files_in_folder=callrestapi(reqval,reqtype)
+      
+   #now get the file objects using the ids returned
+   iddict=getidsanduris(files_in_folder)
+   
+   # get the uris of the files   
+   uris=iddict['uris']
+   
+   #get id, need to do this because only the uri of the folder is returned
+   
+   idlist=[]
+   
+   for item in uris:
+       
+       vallist=item.rsplit('/')
+       idlist.append(vallist[-1])
+    
+   #inclause = ','.join(map(str, ids))
+   inclause=(', '.join("'" + item + "'" for item in idlist))
+   
+   filtercond.append("in(id,"+inclause+")")
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   #print(completefilter)
+   reqval="/files/files?filter="+completefilter+"&limit=10000"
+   
+   #make the rest call using the callrestapi function
+   files_result_json=callrestapi(reqval,reqtype)
 
 #create a directory with a name of the timestamp only if running in execmodeute mode
 newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
@@ -99,17 +136,15 @@ newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
 archivepath=os.path.join(path,newdirname )
 if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
-
-#make the rest call using the callrestapi function. You can have one or many calls
-files_result_json=callrestapi(reqval,reqtype)
-
 files = files_result_json['items']
+
 if len(files):
    if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
 for file in files:
 
    fileid=file['id']
+   contenttype=file['contentType']
    
    filename=file['name'] 
    archivefile=os.path.join(archivepath,filename )
@@ -118,22 +153,35 @@ for file in files:
    reqval="/files/files/"+fileid+"/content"
    
    content=callrestapi(reqval,reqtype)
-         
-   if type(content) is dict:
-	  
-      with open(archivefile, 'w') as fp:
-         json.dump(content,fp,indent=4)
-	
-      fp.close()
-    	      
-   elif type(content) is unicode:
-      
-       with open(archivefile, 'w') as fp:
-          fp.write(content.encode('utf8'))          
-	
-       fp.close()
-   else: print('NOTE: ',filename,' content type not supported')
    
+   out_type='w'
+   
+   # decide on write style w+b is binary w is text
+   if contenttype.startswith('application/vn'): 
+   
+      out_type="wb"
+      #print(type(content)) 
+      
+      print('NOTE: '+filename+' content type not supported')
+      
+   else:
+            
+       if type(content) is dict:
+          
+          with open(archivefile, out_type) as fp:
+             json.dump(content,fp,indent=4)
+        
+          fp.close()
+                  
+       elif type(content) is unicode:
+          
+           with open(archivefile, out_type) as fp:
+              fp.write(content.encode('utf8'))          
+        
+           fp.close()
+       
+       else: print('NOTE: '+filename+' content type not supported')
+       
    if dodelete:
 
       reqtype='delete'

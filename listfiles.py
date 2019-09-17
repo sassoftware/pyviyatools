@@ -74,14 +74,10 @@ delimiter = ','
 # process items not in folders
 if puri!=None: 
    filtercond.append("contains(parentUri,'"+puri+"')")
-   # add the start and end and comma delimit the filter
-   
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
-   # print the following columns for csv output
-   
-   
-
+   files_result_json=callrestapi(reqval,reqtype)
+     
 # process items in folders
 if pfolder!=None:
 
@@ -91,8 +87,7 @@ if pfolder!=None:
    reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
    
    files_in_folder=callrestapi(reqval,reqtype)
-   
-     
+      
    #now get the file objects using the ids returned
    iddict=getidsanduris(files_in_folder)
    
@@ -115,8 +110,7 @@ if pfolder!=None:
    completefilter = 'and('+delimiter.join(filtercond)+')'
    #print(completefilter)
    reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
-   #print(reqval)
-  
+   
    #make the rest call using the callrestapi function
    files_result_json=callrestapi(reqval,reqtype)
 
