@@ -7,6 +7,8 @@
 # Change History
 #
 # 27JAN2019 Comments added
+# 20SEP2019 Do not write out binary files
+# 20SEP2019 Accept parent folder as a parameter
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -19,10 +21,9 @@
 #  express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
 
-import argparse , datetime, os, time, json, sys, pickle
+import argparse , datetime, os, time, json, sys
 from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
 from datetime import datetime as dt, timedelta as td
-
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -51,12 +52,13 @@ path=args.path
 dodelete=args.delete
 pfolder=args.parentfolder
 
-
+# you can subset by parenturi or parentfolder but not both
 if puri !=None and pfolder !=None: 
    print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
    print("ERROR: Use -pf for folder parents and -p for service parents.")
    sys.exit()
 
+# prompt if delete is requested
 if dodelete:
 
    if version  > 2:
@@ -66,8 +68,6 @@ if dodelete:
 
    if areyousure !='Y': dodelete=False
 
-#content filter
-#contentfilter='in(contentType,"application/vnd.sas.collection","text/plain","application/vnd.sas.collection+json","text/plain;charset=UTF-8","application/octet-stream")'
 
 # calculate time period for files
 now=dt.today()-td(days=int(daysolder))
@@ -111,7 +111,6 @@ if pfolder!=None:
    uris=iddict['uris']
    
    #get id, need to do this because only the uri of the folder is returned
-   
    idlist=[]
    
    for item in uris:
@@ -141,6 +140,10 @@ files = files_result_json['items']
 if len(files):
    if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
+# list that contains files that can be archived
+passlist=[]
+
+# process each file
 for file in files:
 
    fileid=file['id']
@@ -155,16 +158,16 @@ for file in files:
    content=callrestapi(reqval,reqtype)
    
    out_type='w'
-   
+      
    # decide on write style w+b is binary w is text
-   if contenttype.startswith('application/vn'): 
+   # currently cannot process binary files
+   if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
    
       out_type="wb"
-      #print(type(content)) 
-      
-      print('NOTE: '+filename+' content type not supported')
+      print('NOTE: '+filename+' of content type ' +contenttype+' not supported')
       
    else:
+   # if files is not binary write it to the archive
             
        if type(content) is dict:
           
@@ -172,6 +175,7 @@ for file in files:
              json.dump(content,fp,indent=4)
         
           fp.close()
+          passlist.append(filename)
                   
        elif type(content) is unicode:
           
@@ -179,19 +183,21 @@ for file in files:
               fp.write(content.encode('utf8'))          
         
            fp.close()
+           passlist.append(filename)
        
        else: print('NOTE: '+filename+' content type not supported')
        
-   if dodelete:
+       # delete requested
+       if dodelete:
 
-      reqtype='delete'
-      reqval="/files/files/"+fileid
-	           
-      callrestapi(reqval,reqtype)
+          reqtype='delete'
+          reqval="/files/files/"+fileid
+                   
+          callrestapi(reqval,reqtype)
       
 
-if len(files):	  
+if len(passlist):	  
    print('NOTE: files archived to the directory '+archivepath)
    if dodelete: print('NOTE: files deleted from Viya.')
 else:
-   print('NOTE: No files found')
+   print('NOTE: No files that can be processed were found.')

@@ -32,7 +32,7 @@
 #  20nov2018 Updated so that multiple profiles can be used
 #  20dec2018 Fixed standard csv output
 #  14JAN2019 Added getpath
-
+#  20SEP2019 Added getidsanduris
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -606,13 +606,18 @@ def getpath(objecturi):
 
     return path
 
+# getidsanduris
+# given a result json structure, return a dictionary with a list of id's and uri's 
+# change history
+#   01dec2017 initial development
+
 def getidsanduris(resultdata):
 
     resultdict={}
-    
     resultdict['ids']=[]
     resultdict['uris']=[]
     
+    # loop the result and add a list of ids and uris to the returned dictionary
     if 'items' in resultdata:
     
         total_items=resultdata['count']

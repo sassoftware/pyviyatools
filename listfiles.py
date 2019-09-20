@@ -48,6 +48,7 @@ nameval=args.name
 puri=args.parent
 pfolder=args.parentfolder
 
+# you can subset by parenturi or parentfolder but not both
 if puri !=None and pfolder !=None: 
    print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
    print("ERROR: Use -pf for folder parents and -p for service parents.")
