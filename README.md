@@ -6,7 +6,8 @@ The pyviyatools are a set of command-line tools that call the SAS Viya REST API'
 
 ### Documentation
 
-You can find the SAS Open API's documented: https://developer.sas.com/apis/rest/ 
+You can find the SAS Open API's documented here: https://developer.sas.com/apis/rest/ 
+Sample REST API calls here: https://github.com/sassoftware/devsascom-rest-api-samples
 
 Some other useful links
 
