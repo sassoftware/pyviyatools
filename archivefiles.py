@@ -7,6 +7,8 @@
 # Change History
 #
 # 27JAN2019 Comments added
+# 20SEP2019 Do not write out binary files
+# 20SEP2019 Accept parent folder as a parameter
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -20,7 +22,7 @@
 #
 
 import argparse , datetime, os, time, json, sys
-from sharedfunctions import callrestapi,printresult
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
 from datetime import datetime as dt, timedelta as td
 
 # get python version
@@ -35,6 +37,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
+parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
@@ -47,8 +50,15 @@ nameval=args.name
 puri=args.parent
 path=args.path
 dodelete=args.delete
+pfolder=args.parentfolder
 
+# you can subset by parenturi or parentfolder but not both
+if puri !=None and pfolder !=None: 
+   print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
+   print("ERROR: Use -pf for folder parents and -p for service parents.")
+   sys.exit()
 
+# prompt if delete is requested
 if dodelete:
 
    if version  > 2:
@@ -58,8 +68,6 @@ if dodelete:
 
    if areyousure !='Y': dodelete=False
 
-# content filter
-#contentfilter='in(contentType,"application/vnd.sas.collection","text/plain","application/vnd.sas.collection+json","text/plain;charset=UTF-8","application/octet-stream")'
 
 # calculate time period for files
 now=dt.today()-td(days=int(daysolder))
@@ -74,17 +82,52 @@ filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
 if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
-if puri!=None: filtercond.append("contains(parentUri,'"+puri+"')")
-
-# add the start and end and comma delimit the filter
-delimiter = ','
-completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # set the request type
 reqtype='get'
-reqval="/files/files?filter="+completefilter+"&limit=10000"
+delimiter = ','
 
-#print(reqval)
+# process items not in folders
+if puri!=None: 
+   filtercond.append("contains(parentUri,'"+puri+"')")
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+     
+# process items in folders
+if pfolder!=None:
+
+   folderid=getfolderid(pfolder)[0]     
+   # add the start and end and comma delimit the filter
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&limit=10000"
+   
+   files_in_folder=callrestapi(reqval,reqtype)
+      
+   #now get the file objects using the ids returned
+   iddict=getidsanduris(files_in_folder)
+   
+   # get the uris of the files   
+   uris=iddict['uris']
+   
+   #get id, need to do this because only the uri of the folder is returned
+   idlist=[]
+   
+   for item in uris:
+       
+       vallist=item.rsplit('/')
+       idlist.append(vallist[-1])
+    
+   #inclause = ','.join(map(str, ids))
+   inclause=(', '.join("'" + item + "'" for item in idlist))
+   
+   filtercond.append("in(id,"+inclause+")")
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   #print(completefilter)
+   reqval="/files/files?filter="+completefilter+"&limit=10000"
+   
+   #make the rest call using the callrestapi function
+   files_result_json=callrestapi(reqval,reqtype)
 
 #create a directory with a name of the timestamp only if running in execmodeute mode
 newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
@@ -92,17 +135,19 @@ newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
 archivepath=os.path.join(path,newdirname )
 if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
-
-#make the rest call using the callrestapi function. You can have one or many calls
-files_result_json=callrestapi(reqval,reqtype)
-
 files = files_result_json['items']
+
 if len(files):
    if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
+# list that contains files that can be archived
+passlist=[]
+
+# process each file
 for file in files:
 
    fileid=file['id']
+   contenttype=file['contentType']
    
    filename=file['name'] 
    archivefile=os.path.join(archivepath,filename )
@@ -111,32 +156,48 @@ for file in files:
    reqval="/files/files/"+fileid+"/content"
    
    content=callrestapi(reqval,reqtype)
-         
-   if type(content) is dict:
-	  
-      with open(archivefile, 'w') as fp:
-         json.dump(content,fp,indent=4)
-	
-      fp.close()
-    	      
-   elif type(content) is unicode:
-      
-       with open(archivefile, 'w') as fp:
-          fp.write(content.encode('utf8'))          
-	
-       fp.close()
-   else: print('NOTE: ',filename,' content type not supported')
    
-   if dodelete:
+   out_type='w'
+      
+   # decide on write style w+b is binary w is text
+   # currently cannot process binary files
+   if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
+   
+      out_type="wb"
+      print('NOTE: '+filename+' of content type ' +contenttype+' not supported')
+      
+   else:
+   # if files is not binary write it to the archive
+            
+       if type(content) is dict:
+          
+          with open(archivefile, out_type) as fp:
+             json.dump(content,fp,indent=4)
+        
+          fp.close()
+          passlist.append(filename)
+                  
+       elif type(content) is unicode:
+          
+           with open(archivefile, out_type) as fp:
+              fp.write(content.encode('utf8'))          
+        
+           fp.close()
+           passlist.append(filename)
+       
+       else: print('NOTE: '+filename+' content type not supported')
+       
+       # delete requested
+       if dodelete:
 
-      reqtype='delete'
-      reqval="/files/files/"+fileid
-	           
-      callrestapi(reqval,reqtype)
+          reqtype='delete'
+          reqval="/files/files/"+fileid
+                   
+          callrestapi(reqval,reqtype)
       
 
-if len(files):	  
+if len(passlist):	  
    print('NOTE: files archived to the directory '+archivepath)
    if dodelete: print('NOTE: files deleted from Viya.')
 else:
-   print('NOTE: No files found')
+   print('NOTE: No files that can be processed were found.')
