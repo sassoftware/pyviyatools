@@ -4,12 +4,13 @@
 # listcaslibs.py December 2017
 #
 # listcaslibs an example of how easy it is to build a new tool. This tool is not really needed as you can do this easily with the CLI
-# it is here for demo purposes. It lists the caslibs and there details accepting the cas server as a parameter
+# it is here for demo purposes. It lists the caslibs and their details accepting the cas server as a parameter
 #
 #
 # Change History
 #
 # 27JAN2017 Comments added
+# 15OCT2019 Changed endpoint to /dataSources/providers/
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -40,7 +41,7 @@ output_style=args.output
 reqtype='get'
 
 # set the endpoint to call
-reqval='/casManagement/servers/'+casserver+'/caslibs'
+reqval='/dataSources/providers/cas/sources/'+casserver+'/children'
 
 #make the rest call using the callrestapi function. You can have one or many calls
 caslib_result_json=callrestapi(reqval,reqtype)
