@@ -29,6 +29,7 @@ The following python libraries are used:
 * subprocess
 * platform
 * argparse
+* urlparse
 
 
 ### Installing
