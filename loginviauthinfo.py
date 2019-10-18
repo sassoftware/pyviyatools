@@ -20,6 +20,7 @@
 #
 # 25AUG2019 modified to logon to the host in the profile and support multiple lines in authinfo
 # 10OCT2019 minor edits to header, no code changes
+# 18OCT2019 quote the password in the CLI step to deal with special characters
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -113,7 +114,8 @@ if profileexists:
           print('profile: '+myprofile)
           print('host: '+host)
 
-       command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
+       #command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
+       command=clidir+"sas-admin  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
        subprocess.call(command, shell=True)
     
     else:
