@@ -44,7 +44,11 @@ import os
 import argparse
 import json
 from sharedfunctions import file_accessible
-from urlparse import urlparse
+
+from future.standard_library import install_aliases
+install_aliases()
+
+from urllib.parse import urlparse
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
 clidir='/opt/sas/viya/home/bin/'
