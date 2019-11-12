@@ -37,18 +37,23 @@
 #  limitations under the License.
 #
 from __future__ import print_function
+
 import netrc
 import subprocess
 import platform
 import os
 import argparse
 import json
+
 from sharedfunctions import file_accessible
 
-from future.standard_library import install_aliases
-install_aliases()
+try:
+    # Python 3
+    from urllib.parse import urlparse
+except ImportError:
+    # Python 2
+    from urlparse import urlparse
 
-from urllib.parse import urlparse
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
 clidir='/opt/sas/viya/home/bin/'
