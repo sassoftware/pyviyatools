@@ -8,7 +8,7 @@
 #              loginviauthinfo.py -f /tmp/myfile
 #
 #
-# Authinfo file users .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
+# Authinfo file uses .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
 #
 # Example of file. First line specifies the default userid and password if no machine is specified. Second line specifies a machine and the
 # userid and password for that machine,
@@ -58,10 +58,10 @@ except ImportError:
 
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-#clidir='/opt/sas/viya/home/bin/'
-clidir='c:\\admincli\\'
+clidir='/opt/sas/viya/home/bin/'
+#clidir='c:\\admincli\\'
 
-debug=1
+debug=0
 profileexists=0
 
 # get input parameters	
