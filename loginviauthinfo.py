@@ -21,6 +21,8 @@
 # 25AUG2019 modified to logon to the host in the profile and support multiple lines in authinfo
 # 10OCT2019 minor edits to header, no code changes
 # 18OCT2019 quote the password in the CLI step to deal with special characters
+# 12NOV2019 do quote the password for windows
+# 12NOV2019 deal with urlparse on python 3
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -56,10 +58,10 @@ except ImportError:
 
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
-#clidir='c:\\admincli\\'
+#clidir='/opt/sas/viya/home/bin/'
+clidir='c:\\admincli\\'
 
-debug=0
+debug=1
 profileexists=0
 
 # get input parameters	
@@ -122,9 +124,10 @@ if profileexists:
           print('user: '+username)
           print('profile: '+myprofile)
           print('host: '+host)
-
-       #command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
-       command=clidir+"sas-admin  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
+          
+       #quote the password string for posix systems
+       if (os.name =='posix'): command=clidir+"sas-admin  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
+       else: command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password 
        subprocess.call(command, shell=True)
     
     else:
