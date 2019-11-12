@@ -58,8 +58,8 @@ except ImportError:
 
 
 # CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-#clidir='/opt/sas/viya/home/bin/'
-clidir='c:\\admincli\\'
+clidir='/opt/sas/viya/home/bin/'
+#clidir='c:\\admincli\\'
 
 debug=1
 profileexists=0
