@@ -77,7 +77,7 @@ if areyousure.upper() =='Y':
 				print(command)
 
 				subprocess.call(command, shell=True)
-				print("NOTE: Viya root folders imported from json files in "+basedir)
+				print("NOTE: Viya content imported from json files in "+basedir)
 
 	else: print("ERROR: Directory does not exist")
 else:
