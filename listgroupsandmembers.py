@@ -112,15 +112,16 @@ for group in groups:
                 print(user_details_json)
                 print('user_details_json is a '+type(user_details_json).__name__+' object') #user_details_json is a dict object
 
-            user_emails=user_details_json['emailAddresses']
-            user_email_string=''
+            if 'emailAddresses' in user_details_json:
+                user_emails=user_details_json['emailAddresses']
+                user_email_string=''
     
-            for email in user_emails:
-                email_address=email['value']
-                if user_email_string!='':
-                    user_email_string=user_email_string+';'
-                user_email_string=user_email_string+email_address
+                for email in user_emails:
+                    email_address=email['value']
+                    if user_email_string!='':
+                        user_email_string=user_email_string+';'
+                    user_email_string=user_email_string+email_address
         
-            output=output+user_email_string
+                output=output+user_email_string
             
         print(output)
