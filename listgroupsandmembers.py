@@ -5,14 +5,18 @@
 # January 2019
 #
 # Usage:
-# listgroupsandmembers.py [--noheader] [-d]
+# listgroupsandmembers.py [--noheader] [-e] [-d]
 #
 # Examples:
 #
 # 1. Return list of all groups and all their members
 #        ./listgroupsandmembers.py
 #
-# Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# 2. Return list of all groups and all their members, including email
+#    address for members
+#        ./listgroupsandmembers.py -e
+#
+# Copyright © 2020, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License);
 #  you may not use this file except in compliance with the License.
@@ -45,14 +49,19 @@ sys.excepthook = exception_handler
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
+parser.add_argument("-e","--email", action='store_true', help="Show email addresses for users")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 args = parser.parse_args()
 noheader=args.noheader
 debug=args.debug
+show_email=args.email
 
 # Print header row unless noheader argument was specified
 if not noheader:
-    print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
+    if show_email:
+        print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid,email')
+    else:
+        print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
 
 endpoint='/identities/groups'
 method='get'
@@ -87,5 +96,32 @@ for group in groups:
         membername=member['name']
         membertype=member['type']
         memberproviderid=member['providerId']
+        user_email_string=''
+        output=groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+','+membername+','+membertype+','+memberproviderid
+        
+        if show_email:
+            output=output+','
+            
+        if membertype=='user' and show_email:
+                
+            # List the members of this group
+            endpoint='/identities/users/'+memberid
+            method='get'
+            user_details_json=callrestapi(endpoint,method)
+            if debug:
+                print(user_details_json)
+                print('user_details_json is a '+type(user_details_json).__name__+' object') #user_details_json is a dict object
 
-        print(groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+','+membername+','+membertype+','+memberproviderid)
+            if 'emailAddresses' in user_details_json:
+                user_emails=user_details_json['emailAddresses']
+                user_email_string=''
+    
+                for email in user_emails:
+                    email_address=email['value']
+                    if user_email_string!='':
+                        user_email_string=user_email_string+';'
+                    user_email_string=user_email_string+email_address
+        
+                output=output+user_email_string
+            
+        print(output)
