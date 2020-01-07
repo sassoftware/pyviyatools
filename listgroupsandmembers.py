@@ -90,20 +90,20 @@ for group in groups:
         print('members_result_json is a '+type(members_result_json).__name__+' object') #members_result_json is a dict object
 
     members=members_result_json['items']
-    
+
     for member in members:
         memberid=member['id']
         membername=member['name']
         membertype=member['type']
         memberproviderid=member['providerId']
         user_email_string=''
-        output=groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+','+membername+','+membertype+','+memberproviderid
-        
+        output=groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+',"'+membername+'",'+membertype+','+memberproviderid
+
         if show_email:
             output=output+','
-            
+
         if membertype=='user' and show_email:
-                
+
             # List the members of this group
             endpoint='/identities/users/'+memberid
             method='get'
@@ -115,13 +115,13 @@ for group in groups:
             if 'emailAddresses' in user_details_json:
                 user_emails=user_details_json['emailAddresses']
                 user_email_string=''
-    
+
                 for email in user_emails:
                     email_address=email['value']
                     if user_email_string!='':
                         user_email_string=user_email_string+';'
                     user_email_string=user_email_string+email_address
-        
+
                 output=output+user_email_string
-            
+
         print(output)
