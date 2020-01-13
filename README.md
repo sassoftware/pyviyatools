@@ -88,7 +88,7 @@ You must pass a method and endpoint. You can optionally pass json, content type 
 
 **List of some of the Additional Tools Available**
 
-Additional tools provide more complex functionality by combining multiple calls to the callrestapi function, and post-processing the outpuit that is returned.
+Additional tools provide more complex functionality by combining multiple calls to the callrestapi function, and post-processing the output that is returned.
 
 * **getfolderid** returns the id of the folder based on the full folder path
 * **deletefolder** deletes a folder based on the full folder path
@@ -111,6 +111,7 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **listcaslibsandeffectiveaccess.py** list all effective access on all CAS libraries on all servers
 * **listcastablesandeffectiveaccess.py** list all effective access on all CAS tables in all CAS libraries on all servers
 * **listgroupsandmembers.py** list all groups and all their members
+* **getauditrecords.py** lists audit records from SAS Infrastructure Data Server in CSV or JSON format using REST calls.
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
                    
