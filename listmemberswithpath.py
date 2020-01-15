@@ -67,7 +67,9 @@ if not objecturi.startswith("/folders/folders/"):
 #See Folders API documentation in swagger at http://swagger.na.sas.com/apis/folders/v1/apidoc.html#op:getAncestors
 endpoint=objecturi+'/members'
 if recursive:
-    endpoint=endpoint+'?recursive=true'
+    endpoint=endpoint+'?recursive=true&limit=10000'
+else:
+    endpoint=endpoint+'?limit=10000'
 method='get'
 
 #make the rest call
