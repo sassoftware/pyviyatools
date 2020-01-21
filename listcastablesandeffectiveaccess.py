@@ -74,7 +74,7 @@ for server in servers:
     servername=server['name']
 
     # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true'
+    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'
     method='get'
     caslibs_result_json=callrestapi(endpoint,method)
     if debug:
@@ -87,7 +87,7 @@ for server in servers:
         #print(servername+','+caslibname)
         
         # Get the tables in the caslib
-        endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true'
+        endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true&limit=10000'
         method='get'
         #print('about to list tables')
 
