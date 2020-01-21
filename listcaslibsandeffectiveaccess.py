@@ -74,7 +74,7 @@ for server in servers:
     servername=server['name']
 
     # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true'
+    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'
     method='get'
     caslibs_result_json=callrestapi(endpoint,method)
     if debug:
@@ -87,7 +87,7 @@ for server in servers:
         #print(servername+','+caslibname)
       
         # Get effective Access Controls on this caslib
-        endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective'
+        endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective&limit=10000'
         method='get'
         caslibaccess_result_json=callrestapi(endpoint,method)
 
