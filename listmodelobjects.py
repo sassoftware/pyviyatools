@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# listmodels.py January 2020
-#
+# listmodelobjects.py February 2020
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -25,7 +24,7 @@ from datetime import datetime as dt, timedelta as td
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-n","--name", help="Name contains",default=None)
-#parser.add_argument("-c","--type", help="Content Type (e.g modelRepository, project or model",default=None)
+parser.add_argument("-c","--type", help="Content Type (model, project or repository)",default='model')
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='name')
@@ -37,7 +36,7 @@ daysolder=args.days
 modby=args.modifiedby
 sortby=args.sortby
 nameval=args.name
-
+typeval=args.type
 
 # calculate time period for models
 now=dt.today()-td(days=int(daysolder))
@@ -46,7 +45,6 @@ datefilter="le(creationTimeStamp,"+subset_date+")"
 
 # create a list for filter conditions
 filtercond=[]
-
 
 # there is always a number of days (default is to show all)
 filtercond.append(datefilter)
@@ -57,14 +55,16 @@ if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
 if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
 completefilter = 'and('+delimiter.join(filtercond)+')'
 
-# prepare the request
+# prepare the request according to content type
 reqtype='get'
-reqval="/modelRepository/models"+completefilter+"&sortBy="+sortby
+if typeval=='model': reqval="/modelRepository/models?"+completefilter+"&sortBy="+sortby
+if typeval=='project': reqval="/modelRepository/projects?"+completefilter+"&sortBy="+sortby
+if typeval=='repository': reqval="/modelRepository/repositories?"+completefilter+"&sortBy="+sortby
 
 # Make call, and process & print results
 files_result_json=callrestapi(reqval,reqtype)
 print("-------------------------------------")
-print("Retrieving list of models")
+print("Listing "+typeval+" objects")
 print("-------------------------------------")
 printresult(files_result_json,output_style)
 
