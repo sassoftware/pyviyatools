@@ -112,7 +112,7 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **listcastablesandeffectiveaccess.py** list all effective access on all CAS tables in all CAS libraries on all servers
 * **listgroupsandmembers.py** list all groups and all their members
 * **getauditrecords.py** lists audit records from SAS Infrastructure Data Server in CSV or JSON format using REST calls.
-* **listmodels.py** lists basic information about models in all model repositories.
+* **listmodelobjects.py** lists basic information about model content (models, projects and repositories).
 
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
