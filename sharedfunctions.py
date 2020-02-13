@@ -148,6 +148,7 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 # when a Viya content path is passed in return the id, path and uri
 # change history
 #   01dec2017 initial development
+#   08Feb2020 return full json as 4 item in list that is returned
 
 def getfolderid(path):
     
@@ -167,7 +168,7 @@ def getfolderid(path):
         targetname=result['name']
         targeturi="/folders/folders/"+targetid
                 
-    return [targetid,targeturi,targetname]
+    return [targetid,targeturi,targetname,result]
   
     
 # getbaseurl

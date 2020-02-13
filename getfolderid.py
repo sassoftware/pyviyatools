@@ -9,7 +9,8 @@
 #
 # Change History
 #
-# 27JAN2017 Comments added    
+# 27JAN2017 Comments added  
+# 08FEB2020 Added the option to return full json     
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -29,19 +30,27 @@
 
 import argparse
 
-from sharedfunctions import getfolderid
+from sharedfunctions import getfolderid, printresult
 
 # setup command-line arguements    
 parser = argparse.ArgumentParser()
 parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder.",required='True')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='simple')
+
 args = parser.parse_args()
 path_to_folder=args.folderpath
+output_style=args.output
 
 # call the get folderid function and pass it the entered path
 targets=getfolderid(path_to_folder)
 
-#print results if any are returned
-if targets[0] is not None:
-    print("Id  = "+targets[0])
-    print("URI = "+targets[1])
-    print("Path = "+targets[2])
+# default simple output style prints with original print method
+# but can also choose json or csv
+if output_style=='simple':
+
+    #print results if any are returned
+    if targets[0] is not None:
+        print("Id  = "+targets[0])
+        print("URI = "+targets[1])
+        print("Path = "+targets[2])
+else: printresult(targets[3],output_style)
