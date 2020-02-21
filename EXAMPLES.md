@@ -245,7 +245,7 @@ importpackages.py -d /tmp/mypackage -q
 # read log files from job execution and add archive them to an os directory
 ./archivefiles.py -n log -d 6 -p /job -fp /tmp 
 ```
-**archivefiles.py**
+**snapshotreports.py**
 
 ```bash
 #his tool will export all the reports in your viya system to there own
@@ -253,3 +253,29 @@ importpackages.py -d /tmp/mypackage -q
 
 ./snapshotreports.py -c 10 -d ~/snapshot 
 ```
+
+**creategroups.py**
+
+```bash
+# create custom groups and add members using a csv file as input
+# you can also add members to existing groups
+#
+# if the group already exists it will not be added and the http response is printed
+# if the user does not exist it will not be added to the group and the http response is printed
+# if the user is already a member of the group it will not be added to the group and the http response is printed
+#
+# none of the above conditions will prevent the processing of additional items in the csv
+
+./creategroups.py" -f /tmp/newgroups.csv
+
+Format of csv file is four columns
+Column 1 group id 
+Column 2 group name 
+Column 3 is a description
+Column 4 member id
+
+For example:
+group2,"Group 2","My Group 2"
+group3,"Group 3","My Group3",geladm
+group1,"Group 1","group 1"
+```  
