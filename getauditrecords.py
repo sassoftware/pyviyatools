@@ -44,7 +44,7 @@ parser.add_argument("-u","--user", help="Filter by Username",default=None)
 parser.add_argument("-A","--after", help="Filter entries that are created after the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
 parser.add_argument("-B","--before", help="Filter entries that are created before the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
 parser.add_argument("-S","--sortby", help="Sort the output ascending by this field",default='timeStamp')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='csv')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='csv')
 
 args = parser.parse_args()
 appname=args.application

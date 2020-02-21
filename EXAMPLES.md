@@ -55,6 +55,12 @@ The following examples are Linux.
 ./getfolderid.py -f /gelcontent  
 ```
 
+**getruleid.py**
+
+```bash
+getruleid.py -u /SASVisualAnalytics/** -p "authenticatedUsers" 
+```
+
 **deletefolder.py**
 
 ```bash
@@ -238,4 +244,12 @@ importpackages.py -d /tmp/mypackage -q
 ```bash
 # read log files from job execution and add archive them to an os directory
 ./archivefiles.py -n log -d 6 -p /job -fp /tmp 
+```
+**archivefiles.py**
+
+```bash
+#his tool will export all the reports in your viya system to there own
+# individual json file in a directory
+
+./snapshotreports.py -c 10 -d ~/snapshot 
 ```

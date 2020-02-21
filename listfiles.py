@@ -37,7 +37,7 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 output_style=args.output

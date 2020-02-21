@@ -4,6 +4,18 @@
 # snapshotreports.py
 # April 2019
 #
+# this tool will export all the reports in your viya system to there own
+# individual json file in a directory.
+#
+# The purpose of the tools is to be able to have a granular backup of reports
+# so that you could restore an individual report to a system. Something that 
+# is not currently supported by Viya backup or promotion
+#
+# example
+# 
+# save each to their own package all reports that have changed in the last 10 days
+# snapshotreports.py -c 10 -d ~/snapshot 
+#
 # Change History
 #
 #
@@ -119,8 +131,7 @@ if areyousure.upper() =='Y':
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
 
 				json_name=json_name.replace("(","_")
-                                json_name=json_name.replace(")","_")
-
+				json_name=json_name.replace(")","_")
 							
 				command=clidir+'sas-admin transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 				print(command)     

@@ -4,7 +4,7 @@
 # listrules.py
 # August 2018
 #
-# listrulesforidentity  
+# listrules  
 #
 # Change History
 # December 2018 - Added custom CSV output code, which writes out consistent columns in a specific order for the result rules JSON
@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description="List rules for a principal and/or 
 
 parser.add_argument("-u","--uri", help="Enter a string that the objecturi contains.",default="none")
 parser.add_argument("-p","--principal", help="Enter the identity name or authenticatedUsers, everyone or guest",default='none')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 objuri=args.uri
