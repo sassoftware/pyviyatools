@@ -35,7 +35,7 @@ from sharedfunctions import getfolderid, printresult
 # setup command-line arguements    
 parser = argparse.ArgumentParser()
 parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder.",required='True')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='simple')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='csv')
 
 args = parser.parse_args()
 path_to_folder=args.folderpath
