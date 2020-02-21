@@ -1,4 +1,4 @@
-#!/usr/bin/python
+##!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # lisfiles.py January 2018
@@ -48,6 +48,8 @@ nameval=args.name
 puri=args.parent
 pfolder=args.parentfolder
 
+files_result_json=None
+
 # you can subset by parenturi or parentfolder but not both
 if puri !=None and pfolder !=None: 
    print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
@@ -80,7 +82,7 @@ if puri!=None:
    files_result_json=callrestapi(reqval,reqtype)
      
 # process items in folders
-if pfolder!=None:
+elif pfolder!=None:
 
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
@@ -114,10 +116,18 @@ if pfolder!=None:
    
    #make the rest call using the callrestapi function
    files_result_json=callrestapi(reqval,reqtype)
+else:
+   completefilter = 'and('+delimiter.join(filtercond)+')'
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
 
 cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
 # print result
-printresult(files_result_json,output_style,cols)
+
+if files_result_json == None:
+   print("No files returned by query")
+else:
+   printresult(files_result_json,output_style,cols)
  
    
  
