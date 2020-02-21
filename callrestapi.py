@@ -18,6 +18,7 @@
 # 08JUN2018 Print json instead of pprint of easier result parsing
 # 08OCT2018 make printed json pretty 
 # 26OCT2018 call print function 
+# 20FEB2020 support simplejson
 
 
 #
@@ -48,7 +49,7 @@ parser.add_argument("-m","--method", help="Enter the REST method.",default="get"
 parser.add_argument("-i","--inputfile",help="Enter the full path to an input json file",default=None)
 parser.add_argument("-a","--accepttype",help="Enter REST Content Type you want returned e.g application/vnd.sas.identity.basic+json",default="application/json")
 parser.add_argument("-c","--contenttype",help="Enter REST Content Type for POST e.g application/vnd.sas.identity.basic+json",default="application/json")
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("-t","--text", help="Display Simple Text Results.", action='store_true')
 
 args = parser.parse_args()
