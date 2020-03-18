@@ -8,6 +8,7 @@
 #
 # Change History
 #
+# 12feb2020 added --output text to the import command so that status will show
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -73,7 +74,7 @@ if areyousure.upper() =='Y':
 
 				# get the packageid and import the package
 				packageid=package_data["id"]
-				command=clidir+'sas-admin -q transfer import --id '+packageid
+				command=clidir+'sas-admin --output text -q transfer import --id '+packageid
 				print(command)
 
 				subprocess.call(command, shell=True)

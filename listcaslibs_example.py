@@ -32,7 +32,7 @@ from sharedfunctions import callrestapi,printresult
 
 parser = argparse.ArgumentParser() 
 parser.add_argument("-s","--server", help="The CAS SERVER.",required='True',default="cas-shared-default")
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='csv')
 args = parser.parse_args()
 casserver=args.server
 output_style=args.output
@@ -41,7 +41,7 @@ output_style=args.output
 reqtype='get'
 
 # set the endpoint to call
-reqval='/dataSources/providers/cas/sources/'+casserver+'/children'
+reqval='/dataSources/providers/cas/sources/'+casserver+'/children?&limit=100000'
 
 #make the rest call using the callrestapi function. You can have one or many calls
 caslib_result_json=callrestapi(reqval,reqtype)

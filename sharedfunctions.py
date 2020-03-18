@@ -148,6 +148,7 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 # when a Viya content path is passed in return the id, path and uri
 # change history
 #   01dec2017 initial development
+#   08Feb2020 return full json as 4 item in list that is returned
 
 def getfolderid(path):
     
@@ -167,7 +168,7 @@ def getfolderid(path):
         targetname=result['name']
         targeturi="/folders/folders/"+targetid
                 
-    return [targetid,targeturi,targetname]
+    return [targetid,targeturi,targetname,result]
   
     
 # getbaseurl
@@ -474,6 +475,7 @@ def file_accessible(filepath, mode):
 # change history
 #   28oct2018 initial development
 #   22dec2018 add csv columns only relevent for csv output, defaults provided but can be overriden when called
+#   20feb2020 add simplejson output style
 
 def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"]):
 
@@ -483,6 +485,8 @@ def printresult(result,output_style,colsforcsv=["id","name","type","description"
         
         if output_style=='simple':
             simpleresults(result)
+        elif output_style=='simplejson':
+            simplejsonresults(result)
         elif output_style=='csv':
             csvresults(result,columns=colsforcsv)
         else:
@@ -630,3 +634,36 @@ def getidsanduris(resultdata):
            resultdict['uris'].append(resultdata['items'][i]['uri'])
                              
     return resultdict
+
+
+# simplejsonresults
+# given a result json structure, remove all the "links" items
+# this will return a more readable json output 
+# change history
+#   20feb2020 initial development
+      
+def simplejsonresults(resultdata):
+
+      
+    if 'items' in resultdata:   # list of items returned by rest call
+    
+        for key in list(resultdata): 
+            if key == 'links':  del resultdata[key] 
+
+        total_items=resultdata['count']
+        returned_items=len(resultdata['items'])
+        
+        if total_items == 0: print("Note: No items returned.")
+            
+        for i in range(0,returned_items):  
+                       
+            for key in list(resultdata['items'][i]):
+                if key=='links':                   
+                     del resultdata['items'][i][key]
+            
+        print(json.dumps(resultdata,indent=2))
+
+    elif 'id' in resultdata:  #one item returned by rest call
+
+        del resultdata['links'] 
+        print(json.dumps(resultdata,indent=2))

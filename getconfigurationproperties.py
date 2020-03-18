@@ -38,7 +38,7 @@ from sharedfunctions import callrestapi, printresult
     
 parser = argparse.ArgumentParser(description="Return a set of configuration properties")
 parser.add_argument("-c","--configuration", help="Enter the configuration definition.",required='True')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 configurationdef=args.configuration

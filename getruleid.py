@@ -5,11 +5,14 @@
 # December 2017
 #
 # getruleid pass in a uri and identity and return the rule id
+# for example
+# getruleid.py -u /SASVisualAnalytics/** -p "authenticatedUsers" 
 #
 # Change History
 #
 #  27JAN2017 Comments added 
 #  18JUN2018 Output JSON  
+#  20Feb2020 make identity a required parameter
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -34,8 +37,8 @@ from sharedfunctions import callrestapi, printresult
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-u","--objecturi", help="Enter the objecturi.",required='True')
-parser.add_argument("-p","--principal", help="Enter the identity name or authenticatedUsers, everyone or guest")
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='json')
+parser.add_argument("-p","--principal", help="Enter the identity name or authenticatedUsers, everyone or guest",required='True')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 objuri=args.objecturi
@@ -52,8 +55,6 @@ else:
 reqtype='get'
 
 result=callrestapi(reqval,reqtype)
-
-#print("ruleid= "+result['items'][0]['id'])
 
 # print rest call results
 printresult(result,output_style)
