@@ -279,3 +279,28 @@ group2,"Group 2","My Group 2"
 group3,"Group 3","My Group3",geladm
 group1,"Group 1","group 1"
 ```  
+
+**applyfolderauthorization.py**
+
+```bash
+# create folder authorization rules using a csv file as input
+#
+# if the rule already exists it will not be added and the response (from the CLI command) is printed
+#
+
+./applyfolderauthorization.py" -f /tmp/folderauths.csv
+
+Format of input csv file is 6 columns
+Column 1 is the full path to the folder
+Column 2 is the principal type 
+Column 3 is the principal name
+Column 4 is the access setting (grant or prohibit)
+Column 5 is the permissions on the folder
+Column 6 is the conveyed permissions on the folder's contents 
+
+For example:
+/gelcontent/GELCorp/Marketing/Reports,group,Marketing,grant,"read,add,remove","read,update,add,remove"
+/gelcontent/GELCorp/Marketing/Reports,user,Douglas,grant,"read,update,add,remove,delete,secure","read,update,add,remove,delete,secure"
+/gelcontent/GELCorp/Marketing/Analyses,group,Marketing,grant,"read,add,remove","read,update,add,delete"
+/gelcontent/GELCorp/Marketing/Work in Progress,group,Marketing,grant,"read,update,add,remove,delete,secure","read,update,add,remove,delete,secure"
+```  
