@@ -266,7 +266,7 @@ importpackages.py -d /tmp/mypackage -q
 #
 # none of the above conditions will prevent the processing of additional items in the csv
 
-./creategroups.py" -f /tmp/newgroups.csv
+./creategroups.py -f /tmp/newgroups.csv
 
 Format of csv file is four columns
 Column 1 group id 
@@ -288,7 +288,7 @@ group1,"Group 1","group 1"
 # if the rule already exists it will not be added and the response (from the CLI command) is printed
 #
 
-./applyfolderauthorization.py" -f /tmp/folderauths.csv
+./applyfolderauthorization.py -f /tmp/folderauths.csv
 
 Format of input csv file is 6 columns
 Column 1 is the full path to the folder
@@ -299,8 +299,8 @@ Column 5 is the permissions on the folder
 Column 6 is the conveyed permissions on the folder's contents 
 
 For example:
-/gelcontent/GELCorp/Marketing/Reports,group,Marketing,grant,"read,add,remove","read,update,add,remove"
+/gelcontent/GELCorp/Marketing/Reports,group,Marketing,grant,"read,add,remove","read,update,delete,add,remove"
 /gelcontent/GELCorp/Marketing/Reports,user,Douglas,grant,"read,update,add,remove,delete,secure","read,update,add,remove,delete,secure"
-/gelcontent/GELCorp/Marketing/Analyses,group,Marketing,grant,"read,add,remove","read,update,add,delete"
+/gelcontent/GELCorp/Marketing/Analyses,group,Marketing,grant,"read,add,remove","read,update,delete,add,remove"
 /gelcontent/GELCorp/Marketing/Work in Progress,group,Marketing,grant,"read,update,add,remove,delete,secure","read,update,add,remove,delete,secure"
 ```  
