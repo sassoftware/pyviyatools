@@ -106,6 +106,25 @@ INPUT JSON must be formatted as the endpoint expects. Example:
 }  
 ```
 
+**createpublishdest.py**
+
+```bash
+# List all existing publishing destinations
+ ./callrestapi.py -m get -e /modelPublish/destinations -o simple
+ 
+# Create new publishing destinations - one example each for CAS, Hadoop and Teradata
+./createpublishdest.py cas -n newcasdest -s cas-shared-default -c mycaslib -t thetable
+./createpublishdest.py hadoop -n newhadoopdest -s cas-shared-default -c myhadoop -hd /mydir
+./createpublishdest.py teradata -n newtddest -s cas-shared-default -c mycaslib  -dt teratable -db tera2
+```
+
+**deletepublishdest.py**
+
+```bash
+# Delete publishing destination
+./deletepublishdest.py -n newcasdest
+```
+
 **testfolderaccess.py**
 
 ```bash
