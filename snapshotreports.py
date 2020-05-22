@@ -51,7 +51,7 @@ clidir='/opt/sas/viya/home/bin/'
 parser = argparse.ArgumentParser(description="Export Viya Reports each to its own unique transfer package")
 parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
-parser.add_argument("-c","--changeddays", help="Reports changed in the how many days?",default='1')
+parser.add_argument("-c","--changeddays", help="Reports changed in the how many days (defaults to 1 day)?",default='1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default=None)
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
