@@ -63,7 +63,7 @@ if not noheader:
     else:
         print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
 
-endpoint='/identities/groups'
+endpoint='/identities/groups?limit=10000'
 method='get'
 
 #make the rest call
@@ -82,7 +82,7 @@ for group in groups:
     groupproviderid=group['providerId']
 
     # List the members of this group
-    endpoint='/identities/groups/'+groupid+'/members'
+    endpoint='/identities/groups/'+groupid+'/members?limit=10000'
     method='get'
     members_result_json=callrestapi(endpoint,method)
     if debug:
@@ -105,7 +105,7 @@ for group in groups:
         if membertype=='user' and show_email:
 
             # List the members of this group
-            endpoint='/identities/users/'+memberid
+            endpoint='/identities/users/'+memberid+'?limit=10000'
             method='get'
             user_details_json=callrestapi(endpoint,method)
             if debug:
