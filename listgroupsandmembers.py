@@ -81,47 +81,49 @@ for group in groups:
     grouptype=group['type']
     groupproviderid=group['providerId']
 
-    # List the members of this group
-    endpoint='/identities/groups/'+groupid+'/members?limit=10000'
-    method='get'
-    members_result_json=callrestapi(endpoint,method)
-    if debug:
-        print(members_result_json)
-        print('members_result_json is a '+type(members_result_json).__name__+' object') #members_result_json is a dict object
+    if groupid!="": # Skip groups with empty id (this has been seen at least once at a customer site), because we cannot fetch their members.
+    
+        # List the members of this group
+        endpoint='/identities/groups/'+groupid+'/members?limit=10000'
+        method='get'
+        members_result_json=callrestapi(endpoint,method)
+        if debug:
+            print(members_result_json)
+            print('members_result_json is a '+type(members_result_json).__name__+' object') #members_result_json is a dict object
 
-    members=members_result_json['items']
+        members=members_result_json['items']
 
-    for member in members:
-        memberid=member['id']
-        membername=member['name']
-        membertype=member['type']
-        memberproviderid=member['providerId']
-        user_email_string=''
-        output=groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+',"'+membername+'",'+membertype+','+memberproviderid
+        for member in members:
+            memberid=member['id']
+            membername=member['name']
+            membertype=member['type']
+            memberproviderid=member['providerId']
+            user_email_string=''
+            output=groupid+','+groupname+','+grouptype+','+groupproviderid+','+memberid+',"'+membername+'",'+membertype+','+memberproviderid
 
-        if show_email:
-            output=output+','
+            if show_email:
+                output=output+','
 
-        if membertype=='user' and show_email:
+            if membertype=='user' and show_email:
 
-            # List the members of this group
-            endpoint='/identities/users/'+memberid+'?limit=10000'
-            method='get'
-            user_details_json=callrestapi(endpoint,method)
-            if debug:
-                print(user_details_json)
-                print('user_details_json is a '+type(user_details_json).__name__+' object') #user_details_json is a dict object
+                # List the members of this group
+                endpoint='/identities/users/'+memberid+'?limit=10000'
+                method='get'
+                user_details_json=callrestapi(endpoint,method)
+                if debug:
+                    print(user_details_json)
+                    print('user_details_json is a '+type(user_details_json).__name__+' object') #user_details_json is a dict object
 
-            if 'emailAddresses' in user_details_json:
-                user_emails=user_details_json['emailAddresses']
-                user_email_string=''
+                if 'emailAddresses' in user_details_json:
+                    user_emails=user_details_json['emailAddresses']
+                    user_email_string=''
 
-                for email in user_emails:
-                    email_address=email['value']
-                    if user_email_string!='':
-                        user_email_string=user_email_string+';'
-                    user_email_string=user_email_string+email_address
+                    for email in user_emails:
+                        email_address=email['value']
+                        if user_email_string!='':
+                            user_email_string=user_email_string+';'
+                        user_email_string=user_email_string+email_address
 
-                output=output+user_email_string
+                    output=output+user_email_string
 
-        print(output)
+            print(output)
