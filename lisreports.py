@@ -90,5 +90,5 @@ if 'items' in resultdata:
 				print(resultdata)
 
 else:
-	 print("NOTE: Operation cancelled")
+	 print("NOTE: Operation cancelled.")
 
