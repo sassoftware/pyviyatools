@@ -6,7 +6,6 @@
 #
 # this tool will list all the reports in your viya system
 #
-#
 # Change History
 #
 # Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
