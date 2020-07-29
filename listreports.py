@@ -4,7 +4,8 @@
 # listtreports.py
 # June 2020
 #
-# this tool will list all the reports in your viya system
+# this tool will list all the reports in your viya system. It will show
+# the full path to the report
 #
 # Change History
 #
@@ -26,7 +27,7 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath
+from sharedfunctions import getfolderid, callrestapi, getpath, printresult
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -38,19 +39,29 @@ clidir='/opt/sas/viya/home/bin/'
 parser = argparse.ArgumentParser(description="List Viya Reports")
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
+parser.add_argument("-c","--changeddays", help="Reports changed in the how many days (defaults to 5 years)?",default='1825')
+parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default=None)
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='csv')
 
 args= parser.parse_args()
-basedir=args.directory
-quietmode=args.quiet
-
 nameval=args.name
 folderpath=args.folderpath
+changeddays=args.changeddays
+modby=args.modifiedby
+output_style=args.output
 
+# calculate time period for files
+now=dt.today()-td(days=int(changeddays))
+subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
+datefilter="ge(modifiedTimeStamp,"+subset_date+")"
 
 # create a list for filter conditions
 filtercond=[]
 
-# there is always a number of days, the default is zero
+# there is always a number of days, the default is 1825
+filtercond.append(datefilter)
+if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
 
@@ -73,21 +84,15 @@ if 'items' in resultdata:
 
 	if total_items == 0: print("Note: No items returned.")
 	else:
-		# export each folder and download the package file to the directory
+		# get the path for each report and add it to the result set
 
 		for i in range(0,returned_items):
 
 			id=resultdata['items'][i]["id"]
-
+			name=resultdata['items'][i]["name"]
 			path_to_report=getpath("/reports/reports/"+id)
 
-			if path_to_report.startswith(folderpath):
+			if path_to_report.startswith(folderpath): resultdata['items'][i]["fullreport"]=path_to_report+name
 
-				path_to_report=path_to_report.replace("/","_")
-
-				print(path_to_report)
-				print(resultdata)
-
-else:
-	 print("NOTE: Operation cancelled.")
+		printresult(resultdata,output_style,colsforcsv=["id","fullreport","type","description","creationTimeStamp","modifiedTimeStamp"])
 
