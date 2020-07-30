@@ -36,7 +36,7 @@ version=int(str(sys.version_info[0]))
 clidir='/opt/sas/viya/home/bin/'
 
 # get input parameters
-parser = argparse.ArgumentParser(description="List Viya Reports")
+parser = argparse.ArgumentParser(description="List Viya Reports and their folder path.")
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
 parser.add_argument("-c","--changeddays", help="Reports changed in the how many days (defaults to 5 years)?",default='1825')
@@ -80,19 +80,31 @@ if 'items' in resultdata:
 
 	total_items=resultdata['count']
 
-	returned_items=len(resultdata['items'])
+	itemlist=resultdata['items']
+
+	returned_items=len(itemlist)
+
+
 
 	if total_items == 0: print("Note: No items returned.")
 	else:
 		# get the path for each report and add it to the result set
+		# this is not very efficient. I will try to improve it
 
 		for i in range(0,returned_items):
 
-			id=resultdata['items'][i]["id"]
-			name=resultdata['items'][i]["name"]
+			id=itemlist[i]["id"]
+			name=itemlist[i]["name"]
 			path_to_report=getpath("/reports/reports/"+id)
 
-			if path_to_report.startswith(folderpath): resultdata['items'][i]["fullreport"]=path_to_report+name
+			# add the path as an attribute of flag for delete
+			if path_to_report.startswith(folderpath): itemlist[i]["fullreport"]=path_to_report+name
+			else: itemlist[i]["fullreport"]='delete'
+
+     	# remove non matches before printing
+		newlist = [i for i in itemlist if not (i['fullreport'] == 'delete')]
+		resultdata['items']=newlist
+		resultdata['count']=len(newlist)
 
 		printresult(resultdata,output_style,colsforcsv=["id","fullreport","type","description","creationTimeStamp","modifiedTimeStamp"])
 
