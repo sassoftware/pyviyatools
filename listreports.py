@@ -81,10 +81,7 @@ if 'items' in resultdata:
 	total_items=resultdata['count']
 
 	itemlist=resultdata['items']
-
 	returned_items=len(itemlist)
-
-
 
 	if total_items == 0: print("Note: No items returned.")
 	else:
