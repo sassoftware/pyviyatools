@@ -20,6 +20,7 @@
 #
 # 16may2020 add folder path to report name
 # 16may2020 allow to subset reports exported by the path of the report folder
+# 07aug2020 add option to auto delete transport files after download completes
 #
 # Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -40,6 +41,7 @@
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
 from sharedfunctions import getfolderid, callrestapi, getpath
+from subprocess import Popen,PIPE
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -55,10 +57,12 @@ parser.add_argument("-c","--changeddays", help="Reports changed in the how many 
 parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default=None)
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
+parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+autotranferremove=args.tranferremove
 
 changeddays=args.changeddays
 modby=args.modifiedby
@@ -161,6 +165,9 @@ if areyousure.upper() =='Y':
 					command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
 					print(command)
 					subprocess.call(command, shell=True)
+					if autotranferremove:
+						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
+						remTransferObject = Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=PIPE, stdout=PIPE, shell=True).stdin.write('Y\n'.encode('utf-8'))
 
 			print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
 
