@@ -22,7 +22,7 @@
 # 16may2020 allow to subset reports exported by the path of the report folder
 # 07aug2020 add option to auto delete transport files after download completes
 #
-# Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License);
 #  you may not use this file except in compliance with the License.
@@ -165,11 +165,15 @@ if areyousure.upper() =='Y':
 					command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
 					print(command)
 					subprocess.call(command, shell=True)
+					#time.sleep(1)
 					if autotranferremove:
 						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
-						remTransferObject = Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=PIPE, stdout=PIPE, shell=True).stdin.write('Y\n'.encode('utf-8'))
+						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						output, _ = remTransferObject.communicate(b'Y\n')   
+						remTransferObject.wait()
 
-			print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
+
+					print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
 
 
 else:
