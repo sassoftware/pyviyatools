@@ -20,7 +20,7 @@
 #
 # 16may2020 add folder path to report name
 # 16may2020 allow to subset reports exported by the path of the report folder
-# 07aug2020 add option to auto delete transport files after download completes
+# 10aug2020 add option to auto delete transport file after download completes
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -41,7 +41,6 @@
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
 from sharedfunctions import getfolderid, callrestapi, getpath
-from subprocess import Popen,PIPE
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -169,7 +168,7 @@ if areyousure.upper() =='Y':
 					if autotranferremove:
 						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
 						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-						output, _ = remTransferObject.communicate(b'Y\n')   
+						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')   
 						remTransferObject.wait()
 
 
@@ -178,5 +177,3 @@ if areyousure.upper() =='Y':
 
 else:
 	 print("NOTE: Operation cancelled")
-
-
