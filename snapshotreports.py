@@ -168,7 +168,7 @@ if areyousure.upper() =='Y':
 					if autotranferremove:
 						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
 						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')   
+						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
 						remTransferObject.wait()
 
 
