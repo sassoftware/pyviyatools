@@ -20,8 +20,9 @@
 #
 # 16may2020 add folder path to report name
 # 16may2020 allow to subset reports exported by the path of the report folder
+# 10aug2020 add option to auto delete transport file after download completes
 #
-# Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License);
 #  you may not use this file except in compliance with the License.
@@ -55,10 +56,12 @@ parser.add_argument("-c","--changeddays", help="Reports changed in the how many 
 parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default=None)
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
+parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+autotranferremove=args.tranferremove
 
 changeddays=args.changeddays
 modby=args.modifiedby
@@ -161,11 +164,16 @@ if areyousure.upper() =='Y':
 					command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
 					print(command)
 					subprocess.call(command, shell=True)
+					#time.sleep(1)
+					if autotranferremove:
+						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
+						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')   
+						remTransferObject.wait()
 
-			print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
+
+					print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
 
 
 else:
 	 print("NOTE: Operation cancelled")
-
-
