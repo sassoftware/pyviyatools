@@ -5,7 +5,7 @@
 # January 2019
 #
 # Usage:
-# listcastablesandeffectiveaccess.py [--noheader] [-d]
+# listcastablesandeffectiveaccess.py [--noheader] [--rowlevelsecurity] [--sourcetables] [-d]
 #
 # Examples:
 #
@@ -49,14 +49,22 @@ permissions=['readInfo','select','limitedPromote','promote','createTable','dropT
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
+parser.add_argument("--rowlevelsecurity", action='store_true', help="Get row level security (i.e. table filters on the select permission)")
+parser.add_argument("--sourcetables", action='store_true', help="Get effective permissions for source tables, rather than in-memory tables which is the default")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 args = parser.parse_args()
 noheader=args.noheader
+rowlevelsecurity=args.rowlevelsecurity
+sourcetables=args.sourcetables
 debug=args.debug
 
+if rowlevelsecurity:
+    permissions.append("tableFilter")
+    
 # Print header row unless noheader argument was specified
 if not noheader:
     print('server,caslib,table,'+','.join(map(str, identity_cols))+','+','.join(map(str, permissions)))
+
 
 endpoint='/casManagement/servers'
 method='get'
@@ -105,6 +113,11 @@ for server in servers:
                 tables=tables_result_json['items']
                 for table in tables:
                     tablename=table['name']
+                    # We have the in-memory table name, but if the user requested it, try to use the source table name instead
+                    if sourcetables and 'tableReference' in table:
+                        if 'sourceTableName' in table['tableReference']:
+                            tablename=table['tableReference']['sourceTableName']                        
+                    
                     # Get effective Access Controls on this table
                     endpoint='/casAccessManagement/servers/'+servername+'/caslibs/'+caslibname+'/tableControls/'+tablename+'?accessControlType=effective'
                     method='get'
@@ -115,16 +128,15 @@ for server in servers:
                         output=servername+','+caslibname+','+tablename
                         for col in identity_cols:
                             if col in ai:
-                                 output=output+','+ai[col]
+                                output=output+','+ai[col]
                             else:
-                                 output=output+','
+                                output=output+','
                         for col in permissions:
                             if col in ai:
-                                 output=output+','+ai[col]
+                                output=output+','+ai[col]
                             else:
-                                 output=output+','
+                                output=output+','
                         print output
         else:
             #tables_result_json is None
             print(servername+','+caslibname+',[error getting tables]')
-        
