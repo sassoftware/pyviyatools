@@ -17,7 +17,7 @@ Some other useful links
 
 ### Prerequisites
 
-The tools requires either python 2 or python 3.
+The tools require either python 2 or python 3.
 
 The following python libraries are used:
 
@@ -41,17 +41,19 @@ Please use the installation intructions in the file [INSTALL.md](INSTALL.md)
 The pyviya tools use the sas-admin auth CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. 
 
 This process is documented in the SAS Viya Administration guide here:  
-Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
-Viya 3.4: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.4&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
+
+* Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
+* Viya 3.4: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.4&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
+* Viya 3.5: https://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.5&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 
 #### Creating a Profile and Logging on
 
 The tool will automatically use the default profile.
  
 1. To create a profile as a SAS Administrator logon to the machine that contains the Viya CLI's 
-2. Run */opt/sas/viya/home/bin/sas-admin profile init* and when prompter enter the base endpoint of your Viya server for example: http://myviyaserver.blah.com. You may enter your personal preference at the other prompts. 
+2. Run `/opt/sas/viya/home/bin/sas-admin profile init` and when prompted enter the base endpoint of your Viya server for example: http://myviyaserver.blah.com. You may enter your personal preference at the other prompts. 
 3. After you create the profile there are two options to authenticate
- * Run */opt/sas/viya/home/bin/sas-admin auth login* to authenticate to Viya enter the userid and password of the SAS Administrator when prompted.
+ * Run `/opt/sas/viya/home/bin/sas-admin auth login` to authenticate to Viya enter the userid and password of the SAS Administrator when prompted.
  *  Create an .authinfo file in your home directory with your userid and password and use **loginviauthinfo.py** to authenticate with the credentials in the file (you can use different authinfo files with the -f option) 
 
 The CLI allows for multiple profiles. To use a profile other than the default profile, for example newprofile
@@ -130,17 +132,17 @@ The most common problem is an expired access token. You may see a message like:
 
     {"errorCode":0,"message":"Cannot convert access token to JSON","details":["traceId: 6bca23b2b3a2cfda","path: /folders/folders"],"remediation":null,"links":[ ],"version":2,"httpStatusCode":401}
 
-To fix the problem generate a new access token /opt/sas/viya/home/bin/sas-admin auth login 
+To fix the problem generate a new access token: `/opt/sas/viya/home/bin/sas-admin auth login`
 
 To see the current setup, including python and package versions, environment variable settings, profile information and current user. Run
 
-*python showsetup.py*
+`python showsetup.py`
 
 If you get this error : Login failed. Error with security certificate.
 
 Set the environment variable for the SSL certificate file. For example:
 
-export SSL_CERT_FILE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
+`export SSL_CERT_FILE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem`
 
 
 If you get this error:
@@ -149,7 +151,7 @@ requests.exceptions.SSLError: HTTPSConnectionPool(host='intviya01.race.sas.com',
 
 Set the environment variable for the SSL certificate file. For example:
 
-export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
+`export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem`
 
 
 ## Developing with the existing functions
@@ -165,7 +167,7 @@ The file sharedfunctions.py contains a set of generic functions that make it eas
 * data: optionally a python dictionary created from the json for the rest request
 * stoponerror: whether the function will stop all further processing if an error occurs (default 0 to not stop)
 
-We suggest you use listcaslibs_example.py as a simple example to copy from if you wish to develop your own python scripts, and are new to Python or some of the concepts we have used. If one of the other existing tools is similar to what you want, of course you could use that as the basis for a new tool too.
+We suggest you use [listcaslibs_example.py](listcaslibs_example.py) as a simple example to copy from if you wish to develop your own python scripts, and are new to Python or some of the concepts we have used. If one of the other existing tools is similar to what you want, of course you could use that as the basis for a new tool too.
 
 ## Contributing
 
