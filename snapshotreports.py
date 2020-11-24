@@ -45,8 +45,17 @@ from sharedfunctions import getfolderid, callrestapi, getpath
 # get python version
 version=int(str(sys.version_info[0]))
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get python version
+version=int(str(sys.version_info[0]))
+
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export Viya Reports each to its own unique transfer package")
@@ -151,7 +160,7 @@ if areyousure.upper() =='Y':
 					json_name=json_name.replace(")","_")
 					json_name=json_name.replace(" ","-")
 
-					command=clidir+'sas-admin transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
+					command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 					print(command)
 					subprocess.call(command, shell=True)
 
@@ -161,12 +170,12 @@ if areyousure.upper() =='Y':
 					package_id=package_info['items'][0]['id']
 
 					completefile=os.path.join(path,json_name+'.json')
-					command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
+					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 					print(command)
 					subprocess.call(command, shell=True)
 					#time.sleep(1)
 					if autotranferremove:
-						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
+						print(clicommand+' transfer delete --id '+package_id+"\n")
 						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
 						remTransferObject.wait()

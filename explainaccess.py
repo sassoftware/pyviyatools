@@ -21,7 +21,7 @@
 # 4. As 1. with a header row and the folder path, which is useful if you concatenate sets of results in one file
 #        ./explainaccess.py -f /folderA/folderB -p --header
 #
-# 5. As 1. showing only rows which include a direct grant or prohibit 
+# 5. As 1. showing only rows which include a direct grant or prohibit
 #        ./explainaccess.py -f /folderA/folderB --direct_only
 #
 # 6. Explain direct and indirect permissions on a service endpoint. Note in the results that there are no conveyed permissions.
@@ -35,7 +35,7 @@
 #    since none of add, remove or create are applicable to a report.
 #        ./explainaccess.py -u /reports/reports/e2e0e601-b5a9-4601-829a-c5137f7441c6 --header -l read update delete secure
 #
-# 9. Explain direct and indirect permissions on a folder expressed as a URI. Keep the default permissions list, but for completeness 
+# 9. Explain direct and indirect permissions on a folder expressed as a URI. Keep the default permissions list, but for completeness
 #    we must also specify -c true to request conveyed permissions be displayed, as they are not displayed by default for URIs.
 #        ./explainaccess.py -u /folders/folders/9145d26a-2c0d-4523-8835-ad186bb57fa6 --header -p -c true
 #
@@ -54,8 +54,17 @@
 #  limitations under the License.
 #
 
+# get python version
+version=int(str(sys.version_info[0]))
 
-clidir='/opt/sas/viya/home/bin/'
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
 debug=False
 direct_only=False
 valid_permissions=['read','update','delete','secure','add','remove','create']
@@ -119,7 +128,7 @@ for permission in permissions:
   if permission not in valid_permissions:
     raise Exception(permission+' is not the name of a permission. Valid permissions are: '+' '.join(map(str, valid_permissions)))
 
-# Two ways this program can be used: for a folder, or for a URI.    
+# Two ways this program can be used: for a folder, or for a URI.
 if path_to_folder:
     getfolderid_result_json=getfolderid(path_to_folder)
 
@@ -141,7 +150,7 @@ if path_to_folder:
         convey=False
     else:
         convey=True
-    
+
 else:
     explainuri=objecturi
     # This tool explains the permissions of any object.
@@ -161,7 +170,7 @@ else:
     else:
         convey=False
 
-        
+
 #Use the /authorization/decision endpoint to ask for an explanation of the rules that are relevant to principals on this URI
 #See Authorization API documentation in swagger at http://swagger.na.sas.com/apis/authorization/v4/apidoc.html#op:createExplanation
 endpoint='/authorization/decision'
@@ -215,7 +224,7 @@ for pi in e:
                 # Permissions on object
                 for permission in permissions:
                     # Not all objects have all the permissions
-                    # Note that some objects do have permissions which are not meaningful for that object. 
+                    # Note that some objects do have permissions which are not meaningful for that object.
                     # E.g. SASAdministrators are granted Add and Remove on reports, by an OOTB rule which grants SASAdministrators all permissions (including Add and Remove) on /**.
                     # Meanwhile, Add and Remove are not shown in the View or Edit Authotizations dialogs for reports in EV etc.
                     # So, while it may be correct for the /authorization/decisions endpoint to explain that SASAdministrators are granted Add and Remove on a report,
@@ -271,7 +280,7 @@ for pi in e:
             else:
                 # This permission was absent from the expanation for this principal
                 outstr=outstr+','
-        # Conveyed permissions 
+        # Conveyed permissions
         if convey:
             for permission in permissions:
                 # Not all objects have all the permissions

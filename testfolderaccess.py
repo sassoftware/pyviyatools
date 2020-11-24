@@ -24,8 +24,17 @@
 #  limitations under the License.
 #
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get python version
+version=int(str(sys.version_info[0]))
+
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
 debug=False
 
 # Import Python modules

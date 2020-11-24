@@ -23,8 +23,19 @@
 #  limitations under the License.
 #
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get python version
+version=int(str(sys.version_info[0]))
+
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
+
+
 debug=False
 defaultBackupScheduleName="DEFAULT_BACKUP_SCHEDULE"
 newScheduleName="BINARY_BACKUP_SCHEDULE"
@@ -104,7 +115,7 @@ if debug:
     print('jobExecutionRequest_json:')
     print(jobExecutionRequest_json)
 
-# STEP 3 of 4: Get the href to submit the job from the create jobExecution response 
+# STEP 3 of 4: Get the href to submit the job from the create jobExecution response
 
 links=jobExecutionRequest_json['links']
 href_found=False
