@@ -32,11 +32,6 @@ from sharedfunctions import getfolderid, callrestapi, getpath, printresult, geta
 # get python version
 version=int(str(sys.version_info[0]))
 
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
 # get input parameters
 parser = argparse.ArgumentParser(description="List Viya Reports and their folder path.")
 parser.add_argument("-n","--name", help="Name contains?",default=None)
