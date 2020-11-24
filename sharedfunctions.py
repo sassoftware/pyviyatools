@@ -675,7 +675,7 @@ def simplejsonresults(resultdata):
 #   20nov2020 initial development
 
 
-def getapplicationproperties:
+def getapplicationproperties():
 
     # get the path for the script file this is where the properties file will bbe
     thepath=os.path.split(inspect.getsourcefile(lambda:0))
