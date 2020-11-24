@@ -41,7 +41,7 @@ propertylist=getapplicationproperties()
 clidir=propertylist["sascli.location"]
 cliexe=propertylist["sascli.executable"]
 
-cli_command=os.path.join(clidir,cliexe)
+clicommand=os.path.join(clidir,cliexe)
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export the complete Viya folder tree")
@@ -100,7 +100,7 @@ if areyousure.upper() =='Y':
 				package_name=str(uuid.uuid1())
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
 
-				command=clidir+'sas-admin transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
+				command=clicommand+" transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
 				print(command)
 				subprocess.call(command, shell=True)
 
@@ -110,7 +110,7 @@ if areyousure.upper() =='Y':
 				package_id=package_info['items'][0]['id']
 
 				completefile=os.path.join(path,json_name+'.json')
-				command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
+				command=clicommand+" transfer download --file '+completefile+' --id '+package_id
 				print(command)
 				subprocess.call(command, shell=True)
 
