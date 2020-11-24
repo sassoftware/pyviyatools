@@ -44,7 +44,7 @@ import subprocess
 import json
 import sys
 
-from sharedfunctions import getfolderid,callrestapi
+from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):

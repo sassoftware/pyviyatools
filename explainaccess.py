@@ -54,6 +54,14 @@
 #  limitations under the License.
 #
 
+# Import Python modules
+
+import argparse
+import subprocess
+import json
+import sys
+from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
+
 # get python version
 version=int(str(sys.version_info[0]))
 
@@ -72,15 +80,6 @@ default_permissions=['read','update','delete','secure','add','remove']
 #direct_permission_suffix=u"\u2666" #Black diamond suit symbol - ok in stdout, seems to cause problems with other tools
 direct_permission_suffix='*'
 
-
-# Import Python modules
-
-import argparse
-import subprocess
-import json
-import sys
-
-from sharedfunctions import getfolderid,callrestapi
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):

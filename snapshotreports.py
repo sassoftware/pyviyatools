@@ -40,7 +40,7 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties
 
 # get python version
 version=int(str(sys.version_info[0]))

@@ -38,7 +38,8 @@ import csv
 import os
 import json
 import subprocess
-from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult
+import sys
+from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult,getapplicationproperties
 
 # get cli location from properties
 propertylist=getapplicationproperties()
