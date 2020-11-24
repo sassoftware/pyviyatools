@@ -24,6 +24,17 @@
 #  limitations under the License.
 #
 
+
+# Import Python modules
+
+import argparse
+import subprocess
+import json
+import sys
+
+from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
+
+
 # get python version
 version=int(str(sys.version_info[0]))
 
@@ -36,15 +47,6 @@ cliexe=propertylist["sascli.executable"]
 clicommand=os.path.join(clidir,cliexe)
 
 debug=False
-
-# Import Python modules
-
-import argparse
-import subprocess
-import json
-import sys
-
-from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
