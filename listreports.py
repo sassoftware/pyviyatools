@@ -27,13 +27,14 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath, printresult
+from sharedfunctions import getfolderid, callrestapi, getpath, printresult, getapplicationproperties
 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
 
 # get input parameters
 parser = argparse.ArgumentParser(description="List Viya Reports and their folder path.")

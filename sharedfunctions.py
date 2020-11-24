@@ -669,6 +669,12 @@ def simplejsonresults(resultdata):
         print(json.dumps(resultdata,indent=2))
 
 
+
+
+# getapplicationproperties
+#   20nov2020 initial development
+
+
 def getapplicationproperties:
 
     # get the path for the script file this is where the properties file will bbe
