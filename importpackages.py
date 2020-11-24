@@ -67,7 +67,7 @@ if areyousure.upper() =='Y':
 			if filename.lower().endswith('.json'):
 
 				#upload the json package
-				command=clidir+'sas-admin transfer upload --file '+os.path.join(basedir,filename)+'> /tmp/packageid.json'
+				command=clicommand+' transfer upload --file '+os.path.join(basedir,filename)+'> /tmp/packageid.json'
 				print(command)
 				subprocess.call(command, shell=True)
 
@@ -79,7 +79,7 @@ if areyousure.upper() =='Y':
 
 				# get the packageid and import the package
 				packageid=package_data["id"]
-				command=clidir+'sas-admin --output text -q transfer import --id '+packageid
+				command=clicommand+' --output text -q transfer import --id '+packageid
 				print(command)
 
 				subprocess.call(command, shell=True)
