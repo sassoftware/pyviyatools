@@ -8,7 +8,7 @@
 #
 # Change History
 #
-# 30OCT2018 first version    
+# 30OCT2018 first version
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -36,17 +36,17 @@
 ####################################################################
 #### POSSIBLE VALUES                                            ####
 ####################################################################
-#### sas.welcome.suppress = true/false                          #### 
-#### sas.drive.show.pinned = true/false                         #### 
-#### VA.geo.drivedistance.unit = kilometers/miles               #### 
-#### OpenUI.Theme.Default = sas_corporate/sas_inspire/sas_hcb   #### 
+#### sas.welcome.suppress = true/false                          ####
+#### sas.drive.show.pinned = true/false                         ####
+#### VA.geo.drivedistance.unit = kilometers/miles               ####
+#### OpenUI.Theme.Default = sas_corporate/sas_inspire/sas_hcb   ####
 ####################################################################
 
 import argparse
 from sharedfunctions import callrestapi
 
 parser = argparse.ArgumentParser(description="Update user preferences for a user or a group of users")
-parser.add_argument("-t", "--target", help="Type the target of the update: user or group", required=True, choices=['user', 'group'])
+parser.add_argument("-t", "--target", help="Type the target of the update: user or group", required=True, choices=['user', 'group','all'])
 parser.add_argument("-tn", "--targetname", help="ID of the user or group to which the update applies.", required=True)
 parser.add_argument("-pi", "--preferenceid", help="ID of the preference to be updated", required=True)
 parser.add_argument("-pv", "--preferencevalue", help="Value to be set for the preference", required=True)
@@ -59,41 +59,64 @@ preferenceValue = args.preferencevalue
 
 json= {"application": "SAS Visual Analytics", "version": 1,"id": preferenceID ,"value": preferenceValue}
 
+
+# apply for all users
+if target=='all' :
+
+    reqtype='get'
+    reqval='/identities/users/'
+    resultdata=callrestapi(reqval,reqtype)
+
+    reqtype="put"
+
+    if 'items' in resultdata:
+
+        returned_items=len(resultdata['items'])
+        for i in range(0,returned_items):
+
+           id=resultdata['items'][i]['id']
+           type=resultdata['items'][i]['type']
+
+           if type=="user":
+               reqval="/preferences/preferences/"+ id +"/" + preferenceID
+               result=callrestapi(reqval, reqtype,data=json,stoponerror=0)
+               print("Updating Preference "+reqval+" = "+preferenceValue)
+
+
 # Function to update preference of a specific user
 if target == 'user' :
-    
+
     userID=targetName
-    
+
     reqtype='get'
     reqval="/identities/users/"+userID
-        
+
     userexist=callrestapi(reqval,reqtype)
-      
+
     reqtype="put"
     reqval="/preferences/preferences/"+ userID +"/" + preferenceID
     result=callrestapi(reqval,reqtype,data=json)
     print("Updating Preference "+reqval+" = "+preferenceValue)
-    
-   
+
+
 else: # Execute actual code to update the preference for a user or a group
-    
+
     reqtype='get'
-    reqval='/identities/groups/'+ targetName +'/members?limit=1000'
-    resultdata=callrestapi(reqval,reqtype)
-    
+    reqval='/identities/groups/'+ targetName +'/members?limit=1000&depth=-1'
+    resultdata=callrestapi(reqval,reqtype,contentType="application/vnd.sas.identity.group.member.flat")
+
     reqtype="put"
-    
+
     if 'items' in resultdata:
-    
+
         returned_items=len(resultdata['items'])
-        for i in range(0,returned_items):    
-        
-           id=resultdata['items'][i]['id']    
+        for i in range(0,returned_items):
+
+           id=resultdata['items'][i]['id']
            type=resultdata['items'][i]['type']
-           
+
            if type=="user":
                reqval="/preferences/preferences/"+ id +"/" + preferenceID
                result=callrestapi(reqval, reqtype,data=json,stoponerror=0)
-               print(result)
                print("Updating Preference "+reqval+" = "+preferenceValue)
            else: print("Cannot set preferences for a group "+id )
