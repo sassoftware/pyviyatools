@@ -15,18 +15,23 @@
 #  Licensed under the Apache License, Version 2.0 (the License); you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 #  OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
 # change log
 # renamed to importpackages.py to be more descriptive of actual usage
 #
 # Import Python modules
-import argparse, sys, subprocess, os, json 
+import argparse, sys, subprocess, os, json
 from sharedfunctions import callrestapi
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
@@ -36,7 +41,7 @@ args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 
-# get python version  
+# get python version
 version=int(str(sys.version_info[0]))
 
 
@@ -46,7 +51,7 @@ if not quietmode:
 	if version  > 2:
 		areyousure=input("WARNING: If content from the packages already exists in folders it will be replaced. Continue? (Y)")
 	else:
-		areyousure=raw_input("WARNING:If content from the packages already exists in folders it will be replaced. Continue? (Y)") 
+		areyousure=raw_input("WARNING:If content from the packages already exists in folders it will be replaced. Continue? (Y)")
 else:
 	areyousure="Y"
 

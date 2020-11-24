@@ -45,9 +45,6 @@ from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationpro
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get python version
-version=int(str(sys.version_info[0]))
-
 # get cli location from properties
 propertylist=getapplicationproperties()
 
