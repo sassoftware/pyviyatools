@@ -60,7 +60,7 @@ preferenceValue = args.preferencevalue
 json= {"application": "SAS Visual Analytics", "version": 1,"id": preferenceID ,"value": preferenceValue}
 
 
-# apply for all users
+# apply for all users in a deployment
 if target=='all' :
 
     reqtype='get'
