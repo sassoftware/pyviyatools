@@ -35,6 +35,7 @@ version=int(str(sys.version_info[0]))
 propertylist=getapplicationproperties()
 
 clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
 
 # get input parameters
 parser = argparse.ArgumentParser(description="List Viya Reports and their folder path.")
