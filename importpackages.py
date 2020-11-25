@@ -23,7 +23,7 @@
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi
+from sharedfunctions import callrestapi, getapplicationproperties
 
 # get cli location from properties
 propertylist=getapplicationproperties()
