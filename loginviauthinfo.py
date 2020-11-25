@@ -47,7 +47,7 @@ import os
 import argparse
 import json
 
-from sharedfunctions import file_accessible
+from sharedfunctions import file_accessible,getapplicationproperties
 
 try:
     # Python 3
