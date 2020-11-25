@@ -47,7 +47,7 @@ from sharedfunctions import callrestapi
 
 parser = argparse.ArgumentParser(description="Update user preferences for a user or a group of users")
 parser.add_argument("-t", "--target", help="Type the target of the update: user or group", required=True, choices=['user', 'group','all'])
-parser.add_argument("-tn", "--targetname", help="ID of the user or group to which the update applies.", required=True)
+parser.add_argument("-tn", "--targetname", help="ID of the user or group to which the update applies.")
 parser.add_argument("-pi", "--preferenceid", help="ID of the preference to be updated", required=True)
 parser.add_argument("-pv", "--preferencevalue", help="Value to be set for the preference", required=True)
 
