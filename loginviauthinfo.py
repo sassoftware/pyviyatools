@@ -57,14 +57,19 @@ except ImportError:
     from urlparse import urlparse
 
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
-#clidir='c:\\admincli\\'
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
 
 debug=0
 profileexists=0
 
-# get input parameters	
+# get input parameters
 parser = argparse.ArgumentParser(description="Authinfo File")
 parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",default='.authinfo')
 args = parser.parse_args()
@@ -84,12 +89,12 @@ badprofile=0
 
 #profile does not exist
 if access_file==False:
-    badprofile=1 
+    badprofile=1
     host='default'
 
 
 #profile is empty file
-if os.stat(endpointfile).st_size==0: 
+if os.stat(endpointfile).st_size==0:
     badprofile=1
     host='default'
 
@@ -124,11 +129,11 @@ if profileexists:
           print('user: '+username)
           print('profile: '+myprofile)
           print('host: '+host)
-          
+
        #quote the password string for posix systems
-       if (os.name =='posix'): command=clidir+"sas-admin  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
-       else: command=clidir+'sas-admin --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password 
+       if (os.name =='posix'): command=clicommand+"  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
+       else: command=clicommand+' --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
        subprocess.call(command, shell=True)
-    
+
     else:
-       print('ERROR: '+fname+' does not exist') 
+       print('ERROR: '+fname+' does not exist')

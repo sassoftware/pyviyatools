@@ -173,7 +173,7 @@ if areyousure.upper() =='Y':
 					#time.sleep(1)
 					if autotranferremove:
 						print(clicommand+' transfer delete --id '+package_id+"\n")
-						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
 						remTransferObject.wait()
 
