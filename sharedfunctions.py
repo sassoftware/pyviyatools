@@ -684,8 +684,6 @@ def getapplicationproperties():
     prop_file=os.path.join(install_dir, "application.properties")
 
     myparams=dict(line.strip().split('=') for line in open(prop_file) if line[0].isalpha())
-    print(myparams)
-
     return myparams
 
 
