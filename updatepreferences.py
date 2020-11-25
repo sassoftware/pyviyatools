@@ -82,9 +82,7 @@ if target=='all' :
                result=callrestapi(reqval, reqtype,data=json,stoponerror=0)
                print("Updating Preference "+reqval+" = "+preferenceValue)
 
-
-# Function to update preference of a specific user
-if target == 'user' :
+elif target == 'user' :
 
     userID=targetName
 
