@@ -38,9 +38,14 @@
 #
 
 # Import Python modules
+import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
 from sharedfunctions import getfolderid, callrestapi, getpath
+
+def get_valid_filename(s):
+	s = str(s).strip().replace(' ', '_')
+	return re.sub(r'(?u)[^-\w.]', '', s)
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -145,11 +150,8 @@ if areyousure.upper() =='Y':
 					path_to_report=path_to_report.replace("/","_")
 
 					package_name=str(uuid.uuid1())
-					json_name=path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
 
-					json_name=json_name.replace("(","_")
-					json_name=json_name.replace(")","_")
-					json_name=json_name.replace(" ","-")
+					json_name=get_valid_filename(path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
 
 					command=clidir+'sas-admin transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 					print(command)
@@ -172,7 +174,8 @@ if areyousure.upper() =='Y':
 						remTransferObject.wait()
 
 
-					print("NOTE: "+str(reports_exported)+" Viya report(s) exported to json files in "+path)
+					print("NOTE: "+str(reports_exported)+" report(s) exported to json files in "+path)
+			print("NOTE: "+str(total_items)+" total reports found, "+str(reports_exported)+" reports exported to json files in "+path)
 
 
 else:
