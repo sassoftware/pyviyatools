@@ -33,6 +33,7 @@
 #  20dec2018 Fixed standard csv output
 #  14JAN2019 Added getpath
 #  20SEP2019 Added getidsanduris
+#  09dec2020 Added get_valid_filename function to deal with invalid characters for Linux filesystem
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
