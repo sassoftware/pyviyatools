@@ -57,6 +57,7 @@ import json
 import pprint
 import os
 import collections
+import re
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -667,3 +668,18 @@ def simplejsonresults(resultdata):
 
         del resultdata['links'] 
         print(json.dumps(resultdata,indent=2))
+
+
+#The get_valid_filename function is taken from https://github.com/django/django/blob/master/django/utils/text.py.
+#The function replaces the characters that are not valid for Linux filsystem in the input string.
+#The comment in the source says:
+#
+#    Return the given string converted to a string that can be used for a clean
+#    filename. Remove leading and trailing spaces; convert other spaces to
+#    underscores; and remove anything that is not an alphanumeric, dash,
+#    underscore, or dot.
+
+
+def get_valid_filename(s):
+	s = str(s).strip().replace(' ', '_')
+	return re.sub(r'(?u)[^-\w.]', '', s)

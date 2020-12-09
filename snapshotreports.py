@@ -41,11 +41,7 @@
 import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath
-
-def get_valid_filename(s):
-	s = str(s).strip().replace(' ', '_')
-	return re.sub(r'(?u)[^-\w.]', '', s)
+from sharedfunctions import getfolderid, callrestapi, getpath, get_valid_filename
 
 # get python version
 version=int(str(sys.version_info[0]))
