@@ -21,6 +21,7 @@
 # 16may2020 add folder path to report name
 # 16may2020 allow to subset reports exported by the path of the report folder
 # 10aug2020 add option to auto delete transport file after download completes
+# 09dec2020 add get_valid_filename function to deal with invalid characters for Linux filesystem
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
