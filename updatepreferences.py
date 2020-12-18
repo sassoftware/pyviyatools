@@ -64,7 +64,7 @@ json= {"application": "SAS Visual Analytics", "version": 1,"id": preferenceID ,"
 if target=='all' :
 
     reqtype='get'
-    reqval='/identities/users/'
+    reqval='/identities/users/?limit=10000'
     resultdata=callrestapi(reqval,reqtype)
 
     reqtype="put"
