@@ -10,6 +10,24 @@ The tools should be installed on the same machine that hosts the Viya command-li
 
 *git clone https://github.com/sassoftware/pyviyatools.git*
 
+NOTE: to use the tools with Viya 4 clone the viya4_v1 branch
+
+*git clone https://github.com/sassoftware/pyviyatools.git -b viya4_v1*
+
+**Configure** 
+
+The application properties file contains the default location of the sas-admin or viya cli. Edit this file to match the location of the cli and the cli name in your environment.
+
+The default values for Viya 3.x are:
+
+sascli.location=/opt/sas/viya/home/bin/
+sascli.executable=sas-admin
+
+The default values for Viya 4.x are:
+
+sascli.location=/opt/sas/viya/home/bin/
+sascli.executable=sas-viya
+
 **Authenticate**
 
 The pyviya tools use the sas-admin auth CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. This process is documented in the SAS Viya Administration guide here.
