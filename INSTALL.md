@@ -16,7 +16,7 @@ NOTE: to use the tools with Viya 4 clone the viya4_v1 branch
 
 **Configure** 
 
-The application properties file contains the default location of the sas-admin or viya cli. Edit this file to match the location of the cli and the cli name in your environment.
+The application.properties file contains the default location of the sas-admin or viya cli. Edit this file to match the location of the cli and the cli name in your environment.
 
 The default values for Viya 3.x are:
 
