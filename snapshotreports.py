@@ -42,13 +42,20 @@
 import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath, get_valid_filename
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename
+
 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export Viya Reports each to its own unique transfer package")
@@ -150,7 +157,7 @@ if areyousure.upper() =='Y':
 
 					json_name=get_valid_filename(path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
 
-					command=clidir+'sas-admin transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
+					command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 					print(command)
 					subprocess.call(command, shell=True)
 
@@ -160,20 +167,18 @@ if areyousure.upper() =='Y':
 					package_id=package_info['items'][0]['id']
 
 					completefile=os.path.join(path,json_name+'.json')
-					command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id
+					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 					print(command)
 					subprocess.call(command, shell=True)
 					#time.sleep(1)
 					if autotranferremove:
-						print(clidir+'sas-admin transfer delete --id '+package_id+"\n")
-						remTransferObject = subprocess.Popen(clidir+'sas-admin transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						print(clicommand+' transfer delete --id '+package_id+"\n")
+						remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
 						remTransferObject.wait()
 
 
-					print("NOTE: "+str(reports_exported)+" report(s) exported to json files in "+path)
 			print("NOTE: "+str(total_items)+" total reports found, "+str(reports_exported)+" reports exported to json files in "+path)
-
 
 else:
 	 print("NOTE: Operation cancelled")

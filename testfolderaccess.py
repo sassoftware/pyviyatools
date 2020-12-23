@@ -24,9 +24,6 @@
 #  limitations under the License.
 #
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
-debug=False
 
 # Import Python modules
 
@@ -34,8 +31,23 @@ import argparse
 import subprocess
 import json
 import sys
+import os
 
-from sharedfunctions import getfolderid,callrestapi
+from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
+
+
+# get python version
+version=int(str(sys.version_info[0]))
+
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
+debug=False
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):

@@ -7,7 +7,7 @@
 # Pass in a directory and this tool will export the complete viya folder
 # structure to a sub-directory named for the current date and time
 # There will be a json file for each viya folder at the root level.
-#   
+#
 #
 # Change History
 #
@@ -30,15 +30,20 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob
 
-from sharedfunctions import getfolderid, callrestapi
+from sharedfunctions import getfolderid, callrestapi,getapplicationproperties
 
-# get python version  
+# get python version
 version=int(str(sys.version_info[0]))
 
-# CHANGE THIS VARIABLE IF YOUR CLI IS IN A DIFFERENT LOCATION
-clidir='/opt/sas/viya/home/bin/'
+# get cli location from properties
+propertylist=getapplicationproperties()
 
-# get input parameters	
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+
+# get input parameters
 parser = argparse.ArgumentParser(description="Export the complete Viya folder tree")
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
@@ -56,11 +61,11 @@ if os.path.exists(basedir):
 		if version  > 2:
 			areyousure=input("The folder exists any existing json files in it will be deleted. Continue? (Y)")
 		else:
-			areyousure=raw_input("The folder already exists any existing json files in it will be deleted. Continue? (Y)") 
+			areyousure=raw_input("The folder already exists any existing json files in it will be deleted. Continue? (Y)")
 	else:
 		areyousure="Y"
 
-else: areyousure="Y" 
+else: areyousure="Y"
 
 # prompt is Y if user selected Y, its a new directory, or user selected quiet mode
 if areyousure.upper() =='Y':
@@ -69,7 +74,7 @@ if areyousure.upper() =='Y':
 
 	# create directory if it doesn't exist
 	if not os.path.exists(path): os.makedirs(path)
-	else: 
+	else:
 		filelist=glob.glob(path+"/*.json")
 		for file in filelist:
 			os.remove(file)
@@ -81,31 +86,31 @@ if areyousure.upper() =='Y':
 
 	# loop root folders
 	if 'items' in resultdata:
-	
+
 		total_items=resultdata['count']
-			
+
 		returned_items=len(resultdata['items'])
-			
+
 		if total_items == 0: print("Note: No items returned.")
 		else:
 			# export each folder and download the package file to the directory
-			for i in range(0,returned_items):   
-				
+			for i in range(0,returned_items):
+
 				id=resultdata['items'][i]["id"]
 				package_name=str(uuid.uuid1())
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
-							
-				command=clidir+'sas-admin transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
-				print(command)     
+
+				command=clicommand+' transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
+				print(command)
 				subprocess.call(command, shell=True)
 
-				reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'                
+				reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 				package_info=callrestapi(reqval,reqtype)
-					
+
 				package_id=package_info['items'][0]['id']
-					
+
 				completefile=os.path.join(path,json_name+'.json')
-				command=clidir+'sas-admin transfer download --file '+completefile+' --id '+package_id    
+				command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 				print(command)
 				subprocess.call(command, shell=True)
 

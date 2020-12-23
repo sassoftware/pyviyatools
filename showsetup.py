@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # showsetup.py
-# 
+#
 # output some system settings to help with debugging issues
 #
 # October 2018
@@ -30,7 +30,7 @@ import sys
 import requests
 import os
 
-from sharedfunctions import getprofileinfo
+from sharedfunctions import getprofileinfo, getapplicationproperties
 
 # software versions
 print("Python Version is: "+str(sys.version_info[0])+'.'+str(sys.version_info[1]))
@@ -40,7 +40,7 @@ print("Requests Version is: "+requests.__version__)
 
 cur_profile=os.environ.get("SAS_CLI_PROFILE","NOTSET")
 
-if cur_profile=="NOTSET": 
+if cur_profile=="NOTSET":
     print("SAS_CLI_PROFILE environment variable not set, using Default profile")
     cur_profile='Default'
 else:
@@ -49,7 +49,7 @@ else:
 
 ssl_file=os.environ.get("SSL_CERT_FILE","NOTSET")
 
-if ssl_file=="NOTSET": 
+if ssl_file=="NOTSET":
     print("SSL_CERT_FILE environment variable not set.")
 else:
     print("SSL_CERT_FILE environment variable set to profile "+ ssl_file)
@@ -57,9 +57,19 @@ else:
 
 r_ssl_file=os.environ.get("REQUESTS_CA_BUNDLE","NOTSET")
 
-if r_ssl_file=="NOTSET": 
+if r_ssl_file=="NOTSET":
     print("REQUESTS_CA_BUNDLE environment variable not set.")
 else:
     print("REQUESTS_CA_BUNDLE environment variable set to profile "+ r_ssl_file)
 
 getprofileinfo(cur_profile)
+
+
+# get cli location from properties
+propertylist=getapplicationproperties()
+
+clidir=propertylist["sascli.location"]
+cliexe=propertylist["sascli.executable"]
+
+clicommand=os.path.join(clidir,cliexe)
+print(propertylist)
