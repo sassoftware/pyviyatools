@@ -21,6 +21,7 @@
 # 16may2020 add folder path to report name
 # 16may2020 allow to subset reports exported by the path of the report folder
 # 10aug2020 add option to auto delete transport file after download completes
+# 09dec2020 add get_valid_filename function to deal with invalid characters for Linux filesystem
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -38,9 +39,11 @@
 #
 
 # Import Python modules
+import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
 from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename
+
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -151,7 +154,8 @@ if areyousure.upper() =='Y':
 					path_to_report=path_to_report.replace("/","_")
 
 					package_name=str(uuid.uuid1())
-					json_name=get_valid_filename(path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))					
+
+					json_name=get_valid_filename(path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
 
 					command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 					print(command)
@@ -174,8 +178,7 @@ if areyousure.upper() =='Y':
 						remTransferObject.wait()
 
 
-					print("NOTE: "+str(reports_exported)+" report(s) exported to json files in "+path)
-
+			print("NOTE: "+str(total_items)+" total reports found, "+str(reports_exported)+" reports exported to json files in "+path)
 
 else:
 	 print("NOTE: Operation cancelled")
