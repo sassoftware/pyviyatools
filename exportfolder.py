@@ -67,9 +67,9 @@ if os.path.exists(basedir):
         if not quietmode:
 
                 if version  > 2:
-                        areyousure=input("The folder exists any existing json files in it will be deleted. Continue? (Y)")
+                        areyousure=input("The folder exists any existing json files pf the same naew will be overwritten. Continue? (Y)")
                 else:
-                        areyousure=raw_input("The folder already exists any existing json files in it will be deleted. Continue? (Y)")
+                        areyousure=raw_input("The folder exists any existing json files pf the same naew will be overwritten. Continue? (Y)")
         else:
                 areyousure="Y"
 
@@ -82,10 +82,6 @@ if areyousure.upper() =='Y':
 
         # create directory if it doesn't exist
         if not os.path.exists(path): os.makedirs(path)
-        else:
-                filelist=glob.glob(path+"/*.json")
-                for file in filelist:
-                        os.remove(file)
 
         folderinfo=getfolderid(folderpath)
 
