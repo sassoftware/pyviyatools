@@ -1,0 +1,11 @@
+{
+  "name" : "SAS_Email_Message_with_TextParts",
+  "description" : "Email Notification Sample Text Template with textParts",
+  "locale" : "en-US",
+  "type" : "TEXT",
+  "variables": "SUBJ=;MSG=;",
+  "textParts": {
+    "Text": "$MSG$\n\nThis is a system-generated message. Do not reply to this email.",
+    "Subject": "$SUBJ$"
+  }
+}
