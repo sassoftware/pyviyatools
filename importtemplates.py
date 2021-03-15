@@ -57,6 +57,7 @@ version=int(str(sys.version_info[0]))
 
 # check that directory exists
 if os.path.isdir(basedir):
+	id=None
 
 	# loop files in the directory
 	for filename in os.listdir( basedir ):
@@ -80,12 +81,12 @@ if os.path.isdir(basedir):
 			reqaccept="application/vnd.sas.collection+json"
 			reccontent="application/json"
 			resultdata=callrestapi(reqval,reqtype,reqaccept,reccontent,data,stoponerror=0)
-			print("Template already exists - "+name)
 
 			if 'items' in resultdata:
 				returned_items=len(resultdata['items'])
 				for i in range(0,returned_items):
 					id=resultdata['items'][i]['id']
+					print("Template already exists - "+name+" ["+id+"]")
 			else:
 				id=None
 
@@ -103,18 +104,21 @@ if os.path.isdir(basedir):
 
 				if areyousure.upper() =='Y':
 					reqtype="put"
+					reqval="/templates/templates/"+id
 				else:
-	 					print("NOTE: Operation cancelled")
+					print("NOTE: Operation cancelled")
 			else:
 				reqtype="post"
-			reqval="/templates/templates/"+id
-			reqaccept="application/vnd.sas.template+json"
-			reccontent="application/json"
+				reqval="/templates/templates/"
 
-			print("Uploading template "+name)
-			resultdata=callrestapi(reqval,reqtype,reqaccept,reccontent,data,stoponerror=0)
+			if not id or areyousure.upper() =='Y':
+				reqaccept="application/vnd.sas.template+json"
+				reccontent="application/json"
 
-			print("NOTE: Viya content imported from json file "+filename)
+				print("Uploading template "+name)
+				resultdata=callrestapi(reqval,reqtype,reqaccept,reccontent,data,stoponerror=0)
+
+				print("NOTE: Viya content imported from json file "+filename)
 			print("\n")
 
 	print("NOTE: Completed Viya content import from json files in "+basedir)
