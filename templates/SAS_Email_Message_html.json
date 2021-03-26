@@ -1,0 +1,11 @@
+{
+  "name" : "SAS_Email_Message_HTML_with_TextParts",
+  "description" : "Email Notification Sample HTML Template with textParts",
+  "locale" : "en-US",
+  "type" : "HTML",
+  "variables": "SUBJ=;MSG=;",
+  "textParts": {
+    "Text": "<html><head><title></title></head>\n<style>\n</style>\n<body>\n<div class=\"title\">\n\n<p>$MSG$</p>\n\n<p class=\"footer\">This is a system-generated message. Do not reply to this email.</p>\n</body>\n</html>",
+    "Subject": "$SUBJ$"
+  }
+}
