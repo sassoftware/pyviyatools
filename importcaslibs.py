@@ -7,8 +7,20 @@
 # Pass in a directory and this tool will import all the json files in the directory. It depends on the admin CLI
 # The json files should be standard caslib definitions
 #
+# File format
+#{
+#"attributes": { "active": false, "personal": false, "subDirs": false},
+#"description": "",
+#"name": "Sales2",
+# "path": "/tmp/sales",
+# "scope": "global",
+# "server": "cas-shared-default",
+# "type": "PATH"
+#}
+#
+#
 # Change History
-
+#
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License); you may not use this file except in compliance with the License.
@@ -17,8 +29,6 @@
 #  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 #  OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
-# change log
-# renamed to importpackages.py to be more descriptive of actual usage
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
@@ -35,12 +45,10 @@ clicommand=os.path.join(clidir,cliexe)
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that define path-based CASLIBS from directory. All json files in directory will be imported.")
 parser.add_argument("-d","--directory", help="Directory that contains JSON caslib dfinition files to import",required='True')
-parser.add_argument("-s","--server", help="The CAS server name. eg. cas-shared-default",default='cas-shared-default')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
-cas_server=args.server
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -49,9 +57,9 @@ version=int(str(sys.version_info[0]))
 if not quietmode:
 
 	if version  > 2:
-		areyousure=input("WARNING: If content from the packages already exists in folders it will be replaced. Continue? (Y)")
+		areyousure=input("WARNING: Are you sure? (Y)")
 	else:
-		areyousure=raw_input("WARNING:If content from the packages already exists in folders it will be replaced. Continue? (Y)")
+		areyousure=raw_input("WARNING:   Are you sure? (Y)")
 else:
 	areyousure="Y"
 
@@ -67,7 +75,7 @@ if areyousure.upper() =='Y':
 			if filename.lower().endswith('.json'):
 
 				#create caslib
-                command=clicommand+'  cas caslibs create path --server '+cas_server+' --source-file '+os.path.join(basedir,filename)
+                                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
 				print(command)
 				subprocess.call(command, shell=True)
 
@@ -76,5 +84,10 @@ if areyousure.upper() =='Y':
 	else: print("ERROR: Directory does not exist")
 else:
 	 print("NOTE: Operation cancelled")
+
+
+
+
+
 
 
