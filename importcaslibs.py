@@ -45,7 +45,6 @@ cas_server=args.server
 # get python version
 version=int(str(sys.version_info[0]))
 
-
 # if the quiet mode flag is not passed then prompt to continue
 if not quietmode:
 
