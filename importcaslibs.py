@@ -79,7 +79,7 @@ if areyousure.upper() =='Y':
 				print(command)
 				subprocess.call(command, shell=True)
 
-				print("NOTE: Viya Caslibs imported from json files in "+basedir)
+				print("NOTE: Viya Caslib imported attempted from json file "+filename+" in  directory "+basedir )
 
 	else: print("ERROR: Directory does not exist")
 else:
