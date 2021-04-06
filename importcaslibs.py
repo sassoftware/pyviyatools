@@ -73,7 +73,7 @@ if areyousure.upper() =='Y':
 
 			# only process json files
 			if filename.lower().endswith('.json'):
-                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
+                                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
 				print(command)
 				subprocess.call(command, shell=True)
 
