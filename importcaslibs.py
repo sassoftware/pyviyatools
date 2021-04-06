@@ -75,11 +75,12 @@ if areyousure.upper() =='Y':
 			if filename.lower().endswith('.json'):
 
 				#create caslib
-                                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
+                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
 				print(command)
 				subprocess.call(command, shell=True)
 
 				print("NOTE: Viya Caslib imported attempted from json file "+filename+" in  directory "+basedir  )
+            else: print("NOTE: No JSON files in directory")
 
 	else: print("ERROR: Directory does not exist")
 else:
