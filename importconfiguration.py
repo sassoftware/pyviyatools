@@ -67,7 +67,6 @@ if areyousure.upper() =='Y':
 				subprocess.call(command, shell=True)
 
 				print("NOTE: Configuration import attempted from json file "+filename+" in  directory "+basedir  )
-                else: print("NOTE: No JSON files in directory")
 
 	else: print("ERROR: Directory does not exist")
 else:
