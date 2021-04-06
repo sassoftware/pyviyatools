@@ -34,8 +34,8 @@ clicommand=os.path.join(clidir,cliexe)
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that define path-based CASLIBS from directory. All json files in directory will be imported.")
-parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
-parser.add_argument("-s","--server", help="Directory that contains JSON files to import",default='cas-shared-default')
+parser.add_argument("-d","--directory", help="Directory that contains JSON caslib dfinition files to import",required='True')
+parser.add_argument("-s","--server", help="The CAS server name. eg. cas-shared-default",default='cas-shared-default')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 args= parser.parse_args()
 basedir=args.directory
