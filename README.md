@@ -1,12 +1,22 @@
 # Python Tools for SAS Viya
 
-The pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. The tools are designed to be used in conjunction with the sas-admin command line interfaces(CLI).
+The pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. The tools are designed to be used in conjunction with the SAS Administration command line interfaces(CLI). A subset of the tools also make calls to the cli.
 
+* [Getting Started](#getting-started)
+  * [Documentation](#documentation)
+  * [Prerequisites](#prerequisites)
+  * [Installing](#installing)
+  * [Running](#running)
+    * [Creating a Profile and Logging on](#creating-a-profile-and-logging-on)
+* [Troubelshooting](#troubelshooting)
+* [Developing with the existing functions](#developing-with-the-existing-functions)
+* [Contributing](#contributing)
+* [License](#license)
 ## Getting Started
 
 ### Documentation
 
-* SAS Open API's documented : https://developer.sas.com/apis/rest/ 
+* SAS Open API's documented : https://developer.sas.com/apis/rest/
 * Sample REST API calls : https://github.com/sassoftware/devsascom-rest-api-samples
 
 Some other useful links
@@ -34,33 +44,33 @@ The following python libraries are used:
 
 ### Installing
 
-Please use the installation intructions in the file [INSTALL.md](INSTALL.md) 
+Please use the installation intructions in the file [INSTALL.md](INSTALL.md)
 
 ### Running
 
-The pyviya tools use the sas-admin auth CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. 
+The pyviya tools use the SAS Administratin CLI to authenticate to Viya. To use the tool you must create a profile and authenticate.
 
-This process is documented in the SAS Viya Administration guide here:  
+This process is documented in the SAS Viya Administration guide here:
 
-* Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en  
+* Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 * Viya 3.4: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.4&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 * Viya 3.5: https://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.5&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 
 #### Creating a Profile and Logging on
 
 The tool will automatically use the default profile.
- 
-1. To create a profile as a SAS Administrator logon to the machine that contains the Viya CLI's 
-2. Run `/opt/sas/viya/home/bin/sas-admin profile init` and when prompted enter the base endpoint of your Viya server for example: http://myviyaserver.blah.com. You may enter your personal preference at the other prompts. 
+
+1. To create a profile as a SAS Administrator logon to the machine that contains the Viya CLI's
+2. Run `/opt/sas/viya/home/bin/sas-admin profile init` and when prompted enter the base endpoint of your Viya server for example: http://myviyaserver.blah.com. You may enter your personal preference at the other prompts.
 3. After you create the profile there are two options to authenticate
  * Run `/opt/sas/viya/home/bin/sas-admin auth login` to authenticate to Viya enter the userid and password of the SAS Administrator when prompted.
- *  Create an .authinfo file in your home directory with your userid and password and use **loginviauthinfo.py** to authenticate with the credentials in the file (you can use different authinfo files with the -f option) 
+ *  Create an .authinfo file in your home directory with your userid and password and use **loginviauthinfo.py** to authenticate with the credentials in the file (you can use different authinfo files with the -f option)
 
 The CLI allows for multiple profiles. To use a profile other than the default profile, for example newprofile
 
 1. Create a named profile *sas-admin --profile newprofile profile init*
 2. Logon with the named profile *sas-admin --profile newprofile auth login*
-3. Set the SAS_CLI_PROFILE environment variable to the name of the profile 
+3. Set the SAS_CLI_PROFILE environment variable to the name of the profile
 * LINUX: *export SAS_CLI_PROFILE=newprofile*
 * WINDOWS: *set SAS_CLI_PROFILE=newprofile*
 
@@ -71,21 +81,21 @@ The CLI allows for multiple profiles. To use a profile other than the default pr
 * WINDOWS: *set SAS_CLI_PROFILE=*
 
 
-The tools are self-documenting, for help on any tool call the tool passing -h or --help. 
+The tools are self-documenting, for help on any tool call the tool passing -h or --help.
 
 python *\<pathtotool\>\<toolname.py\>* -h
 
 
 **Available Tools**
 
-**callrestapi** 
+**callrestapi**
 
 callrestapi is a general tool, and the building block for all the other tools.
 
 callrestapi  will call the Viya REST API and return json or optionally a simplified output. It can call any viya REST method. (Like a curl command).
 
 *usage: callrestapi.py [-h] -e ENDPOINT -m {get,put,post,delete} [-i INPUTFILE]  [-a ACCEPTTYPE] [-c CONTENTTYPE] [-o {csv,json,simple}]*
-          
+
 You must pass a method and endpoint. You can optionally pass json, content type headers or the -t flag to change output from json to basic text.
 
 **List of some of the Additional Tools Available**
@@ -106,7 +116,7 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **loginviauthinfo.py** use an authinfo file to authenticate to the CLI
 * **updateprefences.py** update preferences for a user or group of users
 * **updatedomain.py** load a set of userids and passwords to a Viya domain from a csv file
-* **createfolders.py** create a set of Viya folders from a csv file 
+* **createfolders.py** create a set of Viya folders from a csv file
 * **explainaccess.py** explains access for a folder, object or service endpoint
 * **getpath.py** return path of folder, report, or other object in folder
 * **listmemberswithpath.py** lists members of a folder, recursively if desired
@@ -121,12 +131,11 @@ Additional tools provide more complex functionality by combining multiple calls 
 
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
-                   
+
 **Examples**
 
-Most of the tools have examples of usage documented in  [EXAMPLES.md](EXAMPLES.md) 
-
-**Troubleshooting**
+Most of the tools have examples of usage documented in  [EXAMPLES.md](EXAMPLES.md)
+## Troubelshooting
 
 The most common problem is an expired access token. You may see a message like:
 
