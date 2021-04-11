@@ -27,7 +27,7 @@ Some other useful links
 
 ### Prerequisites
 
-The tools require either python 2 or python 3.
+The tools will work with either python 2 or python 3.
 
 The following python libraries are used:
 
