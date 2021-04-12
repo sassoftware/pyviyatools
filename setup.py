@@ -39,7 +39,7 @@
 #
 # Import Python modules
 
-import argparse, sys, configparser, os, inspect
+import argparse, sys, os, inspect
 
 from sharedfunctions import getapplicationproperties
 from configobj import ConfigObj
