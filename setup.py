@@ -71,3 +71,10 @@ config.filename = prop_file
 
 config.write()
 
+# remove spaces
+with open(prop_file, 'r+') as f:
+    txt = f.read().replace(' ', '')
+    f.seek(0)
+    f.write(txt)
+    f.truncate()
+
