@@ -11,7 +11,7 @@
 # Format of input csv file is 6 columns
 # Column 1 is the full path to the folder
 # Column 2 is the principal type
-# Column 3 is the principal name
+# Column 3 is the principal id
 # Column 4 is the access setting (grant or prohibit)
 # Column 5 is the permissions on the folder
 # Column 6 is the conveyed permissions on the folder's contents
