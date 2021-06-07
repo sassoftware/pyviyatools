@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # getposixgroups.py
-# February 2021
+# June 2021
 #
 # Returns the posix attributes of a group or all groups
 #

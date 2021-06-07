@@ -3,7 +3,7 @@
 #
 #
 # create a viya notification
-# notification is displayed in the UI
+# notification is displayed in the UI in the notifications pane
 #
 # Change History
 #
@@ -33,7 +33,7 @@ import argparse
 
 
 from sharedfunctions import callrestapi
-    
+
 parser = argparse.ArgumentParser(description="Create a Viya Notification")
 parser.add_argument("-s","--subject", help="Enter the subject.",required=True)
 #parser.add_argument("-m","--message", help="Enter the message.",required=True)
