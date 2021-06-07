@@ -26,11 +26,11 @@ import argparse, json
 from sharedfunctions import printresult, callrestapi
 
 # setup command-line arguements
-parser = argparse.ArgumentParser(description="Display POSIX attributes for gourp")
+parser = argparse.ArgumentParser(description="Display POSIX attributes for group or all groups of no groups specified")
 
-parser.add_argument("-g","--group", help="Enter the group id",required='True',default='all')
+parser.add_argument("-g","--group", help="Enter the group id",default='all')
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='simplejson')
 
 args = parser.parse_args()
 group=args.group
@@ -43,7 +43,7 @@ if group=='all':
    # get all groups that are not custom
    reqtype='get'
    #reqval='/identities/groups'
-   reqval='/identities/groups/?filter=ne(providerId,"local")'
+   reqval='/identities/groups/?filter=ne(providerId,"local")&limit=10000'
    groupslist_result_json=callrestapi(reqval,reqtype)
 
    groups = groupslist_result_json['items']
@@ -56,8 +56,8 @@ if group=='all':
        # get gid
        group["gid"]=posixinfo_result_json["gid"]
 
-
-   printresult(groupslist_result_json,output_style)
+   cols=['id','gid','name']
+   printresult(groupslist_result_json,output_style,cols)
 
 else:
 
