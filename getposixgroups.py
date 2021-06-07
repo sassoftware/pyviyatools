@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# getposixidentity.py
+# getposixgroups.py
 # February 2021
 #
-# Returns the posix attributes of a gourp similar to the Linux "id" command
+# Returns the posix attributes of a group or all groups
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
