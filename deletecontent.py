@@ -124,6 +124,8 @@ if targets[0] is not None:
                reqval=furi+"?recursive=true"
                callrestapi(reqval,reqtype)
 
+        print("NOTE: deleted all content and sub-folders from"+ oath_to_folder)
+
         # with content gone recursively delete top folder
         if includefolder:
            reqtype='delete'
