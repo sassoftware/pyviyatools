@@ -129,7 +129,7 @@ if targets[0] is not None:
         # with content gone recursively delete top folder
         if includefolder:
 
-           print("NOTE: eleted "+ path_to_folder+" and all sub-folders and content.")
+           print("NOTE: Deleted "+ path_to_folder+" and all sub-folders and content.")
            reqtype='delete'
            reqval=uri+"?recursive=true"
            callrestapi(reqval,reqtype)
