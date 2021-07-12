@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# deletecontentfromfolder.py
+# deletecontent.py
 # july 2021
 #
 # Pass in a folder path and delete the content from the folder, leave the folder intact
@@ -29,10 +29,10 @@ import argparse, sys, json
 
 from sharedfunctions import getfolderid, callrestapi
 
-# get python version  
+# get python version
 version=int(str(sys.version_info[0]))
 
-# get input parameters	
+# get input parameters
 parser = argparse.ArgumentParser(description="Delete a folders content")
 parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder.",required='True')
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
@@ -50,50 +50,80 @@ targets=getfolderid(path_to_folder)
 
 # if the folder is found
 if targets[0] is not None:
-    
+
     uri=targets[1]
 
     # if quiet do not prompt
     if quietmode:
         areyousure="Y"
     else:
-        
+
         if version  > 2:
             areyousure=input("Are you sure you want to delete the folder and its contents? (Y)")
         else:
-            areyousure=raw_input("Are you sure you want to delete the folder and its contents? (Y)") 
-    
+            areyousure=raw_input("Are you sure you want to delete the folder and its contents? (Y)")
+
     if areyousure.upper() == 'Y':
-    
+
         #delete folder content, recursive call returns all children
-        reqval=uri+"/members?recursive=true"
+        reqval=uri+"/members?recursive=true&limit=1000000"
+
         reqtype='get'
         allchildren=callrestapi(reqval,reqtype)
-		
+
         # get all child items
         if 'items' in allchildren:
-    
+
             itemlist=allchildren['items']
-            
+
+            folderlist=[]
+            contentlist=[]
+
             #delete child items and if its a folder delete the folder and its content
             for children in itemlist:
-                
-                               
-                print("NOTE: Deleting "+children['name']+" of type "+children['contentType']+" from "+ path_to_folder) 
-		              
+
+                #print(json.dumps(children,indent=2))
+                contenttype=children['contentType']
+
                 linklist=children['links']
-                       
+
                 for linkval in linklist:
-                    
-                    #find the delete method and call it
-                    if linkval['rel']=='deleteResource':
-                        
-                        reqval=(linkval['uri'])
-                        if children['contentType']=="folder": reqval=reqval+"?recursive=true"
-                        if debug: print(reqval)
-                        reqtype=(linkval['method']).lower()		    		
-                        callrestapi(reqval,reqtype) 
-		
-        				
-    else:
-        print("Good thing I asked!")
+                    #build a list of folders
+                    if contenttype=="folder":
+
+                        if linkval['rel']=='deleteResource':
+                            deleteUri=(linkval['uri'])
+                            folderlist.append(deleteUri)
+                    else:
+                        if linkval['rel']=='deleteResource':
+                            deleteUri=(linkval['uri'])
+                            contentlist.append(deleteUri)
+
+            # do all non-folders first
+            for itemuri in contentlist:
+                reqtype='delete'
+                callrestapi(itemuri,reqtype)
+
+        #with content gone recusively delete sub-folders of the folder
+        reqtype='get'
+        reqval=uri+"/members?limit=1000000"
+        subfolders=callrestapi(reqval,reqtype)
+
+        if 'items' in subfolders:
+
+           itemlist=subfolders['items']
+           #delete child items and if its a folder delete the folder and its content
+           for children in itemlist:
+
+               furi=children['uri']
+               reqtype='delete'
+               reqval=furi+"?recursive=true"
+               callrestapi(reqval,reqtype)
+
+        # with content gone recursively delete top folders
+        #reqtype='delete'
+        #reqval=uri+"?recursive=true"
+        #print(reqval)
+        #callrestapi(reqval,reqtype)
+
+    else: print("Good thing I asked!")
