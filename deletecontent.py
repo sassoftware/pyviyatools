@@ -101,7 +101,7 @@ if targets[0] is not None:
                         if linkval['rel']=='deleteResource':
                             deleteUri=(linkval['uri'])
                             contentlist.append(deleteUri)
-                            print("NOTE: Deleting item "+children['name']+" of type "+children['contentType']
+                            print("NOTE: Deleting item "+children['name']+" of type "+children['contentType']+".")
 
             # do all non-folders first
             for itemuri in contentlist:
