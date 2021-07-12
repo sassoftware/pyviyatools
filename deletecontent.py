@@ -4,7 +4,9 @@
 # deletecontent.py
 # july 2021
 #
-# Pass in a folder path and delete the content from the folder, leave the folder intact
+# Pass in a folder path and delete the folder and content
+# use -i to also delete the folder
+# Replaces deletefolderandcontent.py
 #
 # Change History
 #
