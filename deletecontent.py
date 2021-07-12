@@ -35,7 +35,7 @@ version=int(str(sys.version_info[0]))
 # get input parameters
 parser = argparse.ArgumentParser(description="Delete a folders content")
 parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder.",required='True')
-parser.add_argument("-i","--includefolder", action='store_false', help="Include folder in delete.")
+parser.add_argument("-i","--includefolder", action='store_true', help="Include folder in delete.")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
@@ -101,7 +101,7 @@ if targets[0] is not None:
                         if linkval['rel']=='deleteResource':
                             deleteUri=(linkval['uri'])
                             contentlist.append(deleteUri)
-                            print("NOTE: Deleting item "+children['name']+" of type "+children['contentType']+".")
+                            print("NOTE: Deleting "+children['name']+" of type "+children['contentType']+".")
 
             # do all non-folders first
             for itemuri in contentlist:
@@ -124,7 +124,7 @@ if targets[0] is not None:
                reqval=furi+"?recursive=true"
                callrestapi(reqval,reqtype)
 
-        print("NOTE: deleted all content and sub-folders from"+ path_to_folder)
+        print("NOTE: deleted all content and sub-folders from "+ path_to_folder)
 
         # with content gone recursively delete top folder
         if includefolder:
