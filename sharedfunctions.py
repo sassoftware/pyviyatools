@@ -34,6 +34,7 @@
 #  14JAN2019 Added getpath
 #  20SEP2019 Added getidsanduris
 #  09dec2020 Added get_valid_filename function to deal with invalid characters for Linux filesystem
+#  16Jul2021 Edited callrestapi to be able to update the header. (Issue #83)
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -88,8 +89,9 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 # change history
 #   01dec2017 initial development
 #   28oct2018 Added stop on error to be able to override stopping processing when an error occurs
+#   16Jul2021 Added a functionality to update the header if necessary.
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},stoponerror=1):
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1):
 
 
     # get the url from the default profile
@@ -101,6 +103,9 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # build the authorization header
     head= {'Content-type':contentType,'Accept':acceptType}
     head.update({"Authorization" : oaval})
+    #Converting the header values to string to pass it into the header
+    header = {str(key):str(value) for key,value in header.items()}
+    head.update(header)
 
     # maybe this can be removed
     global result

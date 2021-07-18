@@ -19,7 +19,7 @@
 # 08OCT2018 make printed json pretty 
 # 26OCT2018 call print function 
 # 20FEB2020 support simplejson
-
+# 16Jul2021 Support for updating the header. (Issue #83)
 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -51,6 +51,7 @@ parser.add_argument("-a","--accepttype",help="Enter REST Content Type you want r
 parser.add_argument("-c","--contenttype",help="Enter REST Content Type for POST e.g application/vnd.sas.identity.basic+json",default="application/json")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("-t","--text", help="Display Simple Text Results.", action='store_true')
+parser.add_argument("-hf","--headerfile",help="Enter the full path to a header json file",default=None)
 
 args = parser.parse_args()
 
@@ -61,15 +62,23 @@ reqcontent=args.contenttype
 reqaccept=args.accepttype
 simpletext=args.text
 output_style=args.output
+headfile=args.headerfile
 
 # keep for backward compatibility
 if simpletext: output_style='simple'
 
 # use the callrestapi function to make a call to the endpoint
 # call passing json or not
-if reqfile != None:
+if reqfile != None and headfile != None:
+    inputdata=getinputjson(reqfile)
+    headerdata=getinputjson(headfile)
+    result = callrestapi(reqval, reqtype, reqaccept, reqcontent, data=inputdata,header=headerdata)
+elif reqfile != None:
     inputdata=getinputjson(reqfile)
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent,data=inputdata)
+elif headfile != None:
+    headerdata=getinputjson(headfile)
+    result=callrestapi(reqval,reqtype,reqaccept,reqcontent,header=headerdata)
 else:
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent)
   
