@@ -63,6 +63,8 @@ if not quietmode:
 else:
 	areyousure="Y"
 
+tryimport=0
+
 if areyousure.upper() =='Y':
 
 	# check that directory exists
@@ -87,9 +89,10 @@ if areyousure.upper() =='Y':
 					casserver=data['server']
 
 					command=clicommand+'  cas caslibs create path --source-file '+fullfile
+					print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
 					print(command)
 					subprocess.call(command, shell=True)
-					print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
+					tryimport=tryimport+1
 
 					# apply the authorization if authorization file exists
 					authfile=os.path.join(basedir,caslibname+'_authorization_.json')
@@ -97,14 +100,15 @@ if areyousure.upper() =='Y':
 
 					if access_file==True:
 						command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
+						print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
 						print(command)
 						subprocess.call(command, shell=True)
-						print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
-				else: print("NOTE: no caslibs files in directory")
 
-	else: print("ERROR: Directory does not exist")
+		if not tryimport: print("NOTE: no caslib files available for import.")
+
+	else: print("ERROR: Directory does not exist.")
 else:
-	 print("NOTE: Operation cancelled")
+	 print("NOTE: Operation cancelled.")
 
 
 
