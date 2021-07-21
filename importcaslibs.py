@@ -73,11 +73,29 @@ if areyousure.upper() =='Y':
 
 			# only process json files
 			if filename.lower().endswith('.json'):
-                                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
-				print(command)
-				subprocess.call(command, shell=True)
 
-				print("NOTE: Viya Caslib imported attempted from json file "+filename+" in  directory "+basedir  )
+				#create the caslib
+				if '_authorization_' not in filename:
+
+					# get some caslib attributes for the authorization import
+					with open(os.path.join(basedir,filename)) as json_file:
+						data = json.load(json_file)
+
+					caslibname=data['name']
+					casserver=data['server']
+
+					command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
+					print(command)
+					subprocess.call(command, shell=True)
+					print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
+
+				# apply the authorization
+				if '_authorization_' in filename:
+
+					command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+os.path.join(basedir,filename)
+					print(command)
+					subprocess.call(command, shell=True)
+					print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
 
 	else: print("ERROR: Directory does not exist")
 else:
