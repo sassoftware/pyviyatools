@@ -95,12 +95,12 @@ if areyousure.upper() =='Y':
 					authfile=os.path.join(basedir,caslibname+'_authorization_.json')
 					access_file=file_accessible(authfile,'r')
 
-
 					if access_file==True:
 						command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
 						print(command)
 						subprocess.call(command, shell=True)
 						print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
+				else: print("NOTE: no caslibs files in directory")
 
 	else: print("ERROR: Directory does not exist")
 else:
