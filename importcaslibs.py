@@ -32,7 +32,7 @@
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi, getapplicationproperties
+from sharedfunctions import callrestapi, getapplicationproperties, file_accessible
 
 # get cli location from properties
 propertylist=getapplicationproperties()
@@ -71,6 +71,8 @@ if areyousure.upper() =='Y':
 		# loop files in the directory
 		for filename in os.listdir( basedir ):
 
+			fullfile=os.path.join(basedir,filename)
+
 			# only process json files
 			if filename.lower().endswith('.json'):
 
@@ -78,24 +80,27 @@ if areyousure.upper() =='Y':
 				if '_authorization_' not in filename:
 
 					# get some caslib attributes for the authorization import
-					with open(os.path.join(basedir,filename)) as json_file:
+					with open(fullfile) as json_file:
 						data = json.load(json_file)
 
 					caslibname=data['name']
 					casserver=data['server']
 
-					command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
+					command=clicommand+'  cas caslibs create path --source-file '+fullfile
 					print(command)
 					subprocess.call(command, shell=True)
 					print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
 
-				# apply the authorization
-				if '_authorization_' in filename:
+					# apply the authorization if authorization file exists
+					authfile=os.path.join(basedir,caslibname+'_authorization_.json')
+					access_file=file_accessible(authfile,'r')
 
-					command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+os.path.join(basedir,filename)
-					print(command)
-					subprocess.call(command, shell=True)
-					print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
+
+					if access_file==True:
+						command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
+						print(command)
+						subprocess.call(command, shell=True)
+						print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
 
 	else: print("ERROR: Directory does not exist")
 else:
