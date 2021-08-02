@@ -24,14 +24,13 @@
 #
 
 # Delete a publishing destination, after first validating that it exists
-from __future__ import print_function
 
 debug=False
 folder_exists=False
 
 # Import Python modules
 import argparse
-import syse
+import sys
 from sharedfunctions import callrestapi
 
 
