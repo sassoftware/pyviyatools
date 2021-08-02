@@ -40,7 +40,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
     if debug:
         debug_hook(exception_type, exception, traceback)
     else:
-        print "%s: %s" % (exception_type.__name__, exception)
+        print (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
 
@@ -60,7 +60,7 @@ debug=args.debug
 
 if rowlevelsecurity:
     permissions.append("tableFilter")
-    
+
 # Print header row unless noheader argument was specified
 if not noheader:
     print('server,caslib,table,'+','.join(map(str, identity_cols))+','+','.join(map(str, permissions)))
@@ -93,7 +93,7 @@ for server in servers:
     for caslib in caslibs:
         caslibname=caslib['name']
         #print(servername+','+caslibname)
-        
+
         # Get the tables in the caslib
         endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true&limit=10000'
         method='get'
@@ -116,8 +116,8 @@ for server in servers:
                     # We have the in-memory table name, but if the user requested it, try to use the source table name instead
                     if sourcetables and 'tableReference' in table:
                         if 'sourceTableName' in table['tableReference']:
-                            tablename=table['tableReference']['sourceTableName']                        
-                    
+                            tablename=table['tableReference']['sourceTableName']
+
                     # Get effective Access Controls on this table
                     endpoint='/casAccessManagement/servers/'+servername+'/caslibs/'+caslibname+'/tableControls/'+tablename+'?accessControlType=effective'
                     method='get'

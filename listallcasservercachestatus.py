@@ -36,15 +36,6 @@ import swat                         # pip install swat
 import sys
 from sharedfunctions import callrestapi
 
-# Define exception handler so that we only output trace info from errors when in debug mode
-def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
-    if debug:
-        debug_hook(exception_type, exception, traceback)
-    else:
-        print "%s: %s" % (exception_type.__name__, exception)
-
-sys.excepthook = exception_handler
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
@@ -55,7 +46,7 @@ debug=args.debug
 # Print header row unless noheader argument was specified
 if not noheader:
     print('server,host-or-ip,port,restPort, [table]')
-    
+
 endpoint='/casManagement/servers'
 method='get'
 
@@ -77,13 +68,13 @@ for server in servers:
     print(servername+','+serverhost+','+str(serverport)+','+str(serverrest))
 
     # connect to each CAS server
-    s = swat.CAS(serverhost, serverport)                
+    s = swat.CAS(serverhost, serverport)
     # TLS relies on env var $CAS_CLIENT_SSL_CA_LIST=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/vault-ca.crt (or local location)
     # else "ERROR: SSL Error: Missing CA trust list"
 
     # get CAS_DISK_CACHE usage
-    s.accessControl.assumeRole(adminRole="superuser")   # superuser role reqd  
-    results = s.builtins.getCacheInfo                   # returns dictionary and table       
-    
+    s.accessControl.assumeRole(adminRole="superuser")   # superuser role reqd
+    results = s.builtins.getCacheInfo                   # returns dictionary and table
+
     # display table with CAS_DISK_CACHE usage stats
-    print(tabulate(results,headers='firstrow')) 
+    print(tabulate(results,headers='firstrow'))

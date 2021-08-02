@@ -31,6 +31,12 @@
 #
 
 
+# Import Python modules
+import argparse
+import sys
+import os
+from sharedfunctions import getpath, getapplicationproperties
+
 # get python version
 version=int(str(sys.version_info[0]))
 
@@ -44,18 +50,12 @@ clicommand=os.path.join(clidir,cliexe)
 
 debug=False
 
-# Import Python modules
-import argparse
-import sys
-
-from sharedfunctions import getpath
-
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
     if debug:
         debug_hook(exception_type, exception, traceback)
     else:
-        print "%s: %s" % (exception_type.__name__, exception)
+        print (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
 
@@ -69,4 +69,4 @@ debug=args.debug
 path=getpath(objecturi)
 
 if path is not None:
-    print path
+    print (path)
