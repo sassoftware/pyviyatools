@@ -23,6 +23,14 @@
 #  limitations under the License.
 #
 
+# Import Python modules
+
+from sharedfunctions import callrestapi, getapplicationproperties
+import argparse
+import json
+import sys
+import os
+
 # get python version
 version=int(str(sys.version_info[0]))
 
@@ -35,7 +43,6 @@ cliexe=propertylist["sascli.executable"]
 clicommand=os.path.join(clidir,cliexe)
 
 
-
 debug=False
 defaultBackupScheduleName="DEFAULT_BACKUP_SCHEDULE"
 newScheduleName="BINARY_BACKUP_SCHEDULE"
@@ -43,14 +50,6 @@ newScheduleDesc="JobRequest to execute a binary backup"
 jobDefinitionURIStem="/jobDefinitions/definitions/"
 newScheduleContentType="application/vnd.sas.backup.request+json" # For a single-tenant deployment
 #newScheduleContentType="application/vnd.sas.backup.deployment.request+json" # For a multi-tenant deployment
-
-# Import Python modules
-
-import argparse
-import json
-import sys
-
-from sharedfunctions import callrestapi
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
