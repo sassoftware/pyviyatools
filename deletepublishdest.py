@@ -24,23 +24,16 @@
 #
 
 # Delete a publishing destination, after first validating that it exists
+from __future__ import print_function
 
 debug=False
 folder_exists=False
 
 # Import Python modules
 import argparse
-import sys
+import syse
 from sharedfunctions import callrestapi
 
-# Define exception handler so that we only output trace info from errors when in debug mode
-def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
-    if debug:
-        debug_hook(exception_type, exception, traceback)
-    else:
-        print "%s: %s" % (exception_type.__name__, exception)
-
-sys.excepthook = exception_handler
 
 parser = argparse.ArgumentParser(description="Delete a publishing destination")
 parser.add_argument("-n","--name", help="Enter the name of the publishing destination to be deleted.",required=True)
