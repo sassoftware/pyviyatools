@@ -40,7 +40,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
     if debug:
         debug_hook(exception_type, exception, traceback)
     else:
-        print "%s: %s" % (exception_type.__name__, exception)
+        print (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
 
@@ -85,7 +85,7 @@ for server in servers:
     for caslib in caslibs:
         caslibname=caslib['name']
         #print(servername+','+caslibname)
-      
+
         # Get effective Access Controls on this caslib
         endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective&limit=10000'
         method='get'
@@ -104,5 +104,5 @@ for server in servers:
                      output=output+','+ai[col]
                 else:
                      output=output+','
-            print output
-        
+            print(output)
+

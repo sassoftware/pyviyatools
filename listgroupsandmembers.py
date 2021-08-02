@@ -43,7 +43,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
     if debug:
         debug_hook(exception_type, exception, traceback)
     else:
-        print "%s: %s" % (exception_type.__name__, exception)
+        print (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
 
@@ -82,7 +82,7 @@ for group in groups:
     groupproviderid=group['providerId']
 
     if groupid!="": # Skip groups with empty id (this has been seen at least once at a customer site), because we cannot fetch their members.
-    
+
         # List the members of this group
         endpoint='/identities/groups/'+groupid+'/members?limit=10000'
         method='get'
