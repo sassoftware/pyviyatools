@@ -32,7 +32,7 @@
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi, getapplicationproperties
+from sharedfunctions import callrestapi, getapplicationproperties, file_accessible
 
 # get cli location from properties
 propertylist=getapplicationproperties()
@@ -63,6 +63,8 @@ if not quietmode:
 else:
 	areyousure="Y"
 
+tryimport=0
+
 if areyousure.upper() =='Y':
 
 	# check that directory exists
@@ -71,17 +73,42 @@ if areyousure.upper() =='Y':
 		# loop files in the directory
 		for filename in os.listdir( basedir ):
 
+			fullfile=os.path.join(basedir,filename)
+
 			# only process json files
 			if filename.lower().endswith('.json'):
-                                command=clicommand+'  cas caslibs create path --source-file '+os.path.join(basedir,filename)
-				print(command)
-				subprocess.call(command, shell=True)
 
-				print("NOTE: Viya Caslib imported attempted from json file "+filename+" in  directory "+basedir  )
+				#create the caslib
+				if '_authorization_' not in filename:
 
-	else: print("ERROR: Directory does not exist")
+					# get some caslib attributes for the authorization import
+					with open(fullfile) as json_file:
+						data = json.load(json_file)
+
+					caslibname=data['name']
+					casserver=data['server']
+
+					command=clicommand+'  cas caslibs create path --source-file '+fullfile
+					print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
+					print(command)
+					subprocess.call(command, shell=True)
+					tryimport=tryimport+1
+
+					# apply the authorization if authorization file exists
+					authfile=os.path.join(basedir,caslibname+'_authorization_.json')
+					access_file=file_accessible(authfile,'r')
+
+					if access_file==True:
+						command=clicommand+'  cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
+						print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
+						print(command)
+						subprocess.call(command, shell=True)
+
+		if not tryimport: print("NOTE: no caslib files available for import.")
+
+	else: print("ERROR: Directory does not exist.")
 else:
-	 print("NOTE: Operation cancelled")
+	 print("NOTE: Operation cancelled.")
 
 
 
