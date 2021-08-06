@@ -130,6 +130,9 @@ if areyousure.upper() =='Y':
             if 'count' in casauth_result: casauth_result.pop('count')
             if 'start' in casauth_result: casauth_result.pop('start')
             if 'limit' in casauth_result: casauth_result.pop('limit')
+            if 'links' in casauth_result: casauth_result.pop('links')
+            if 'version' in casauth_result: casauth_result.pop('version')
+                
 
             json.dump(casauth_result, outauth)
 
