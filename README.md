@@ -128,6 +128,8 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **getauditrecords.py** lists audit records from SAS Infrastructure Data Server in CSV or JSON format using REST calls.
 * **listmodelobjects.py** lists basic information about model content (models, projects and repositories).
 * **applyfolderauthorization.py** apply authorization rules to folders in bulk from a source CSV file.
+* **submit_jd_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job definition id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
+* **submit_jr_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job request id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
 
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.

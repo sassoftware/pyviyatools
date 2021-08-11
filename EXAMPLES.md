@@ -327,3 +327,18 @@ For example:
 /gelcontent/GELCorp/Marketing/Analyses,group,Marketing,grant,"read,add,remove","read,update,delete,add,remove"
 /gelcontent/GELCorp/Marketing/Work in Progress,group,Marketing,grant,"read,update,add,remove,delete,secure","read,update,add,remove,delete,secure"
 ```
+
+**submit_jobdef.py**
+```bash
+./submit_jobdef.py -id {jobDefinitionId}
+./submit_jobdef.py -id {jobDefinitionId} -v
+./submit_jobdef.py -id {jobDefinitionId} -context "SAS Studio compute context"
+./submit_jobdef.py -id {jobDefinitionId} -context "SAS Studio compute context" -v
+
+```
+
+**submit_jobreq.py**
+```bash
+./submit_jobreq.py -id {jobRequestId}
+./submit_jobreq.py -id {jobRequestId} -v
+```
