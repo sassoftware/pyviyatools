@@ -67,9 +67,9 @@ if os.path.exists(basedir):
         if not quietmode:
 
                 if version  > 2:
-                        areyousure=input("The folder exists any existing json files pf the same naew will be overwritten. Continue? (Y)")
+                        areyousure=input("The folder exists, any existing json files of the same name will be overwritten. Continue? (Y)")
                 else:
-                        areyousure=raw_input("The folder exists any existing json files pf the same naew will be overwritten. Continue? (Y)")
+                        areyousure=raw_input("The folder exists, any existing json files of the same name will be overwritten. Continue? (Y)")
         else:
                 areyousure="Y"
 
