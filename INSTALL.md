@@ -30,10 +30,11 @@ cd $install-dir
 
 What does .setup.py do?
 
+**NOTE. You do not need to run setup.py if you are using Viya 3.x and the tools are installed in the default location.**
+
 Viya 3.5 the SAS Administration cli executable is sas-admin and the Viya 4 cli is sas-viya.
 
 The application.properties file contains the name and location of the SAS Administation cli.
-
 
 The default application properties in the repository stores the values for Viya 3.x
 

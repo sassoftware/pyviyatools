@@ -48,14 +48,15 @@ Please use the installation intructions in the file [INSTALL.md](INSTALL.md)
 
 ### Running
 
-The pyviya tools use the SAS Administratin CLI to authenticate to Viya. To use the tool you must create a profile and authenticate.
+The pyviya tools use the SAS Administration CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. The SAS Administration CLI is named sas-admin in Viya 3.x and sas-viya in Viya 4. 
 
 This process is documented in the SAS Viya Administration guide here:
 
 * Viya 3.3: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.3&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 * Viya 3.4: http://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.4&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
 * Viya 3.5: https://documentation.sas.com/?cdcId=calcdc&cdcVersion=3.5&docsetId=calcli&docsetTarget=n1e2dehluji7jon1gk69yggc6i28.htm&locale=en
-
+* Viya 4: https://documentation.sas.com/doc/en/sasadmincdc/v_017/calcli/titlepage.htm
+* 
 #### Creating a Profile and Logging on
 
 The tool will automatically use the default profile.
