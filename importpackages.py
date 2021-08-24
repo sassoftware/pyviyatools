@@ -67,7 +67,7 @@ if areyousure.upper() =='Y':
 			if filename.lower().endswith('.json'):
 
 				#upload the json package
-				command=clicommand+' transfer upload --file '+os.path.join(basedir,filename)+'> /tmp/packageid.json'
+				command=clicommand+' transfer upload --file "'+os.path.join(basedir,filename)+'" > /tmp/packageid.json'
 				print(command)
 				subprocess.call(command, shell=True)
 
