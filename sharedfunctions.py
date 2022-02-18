@@ -35,6 +35,7 @@
 #  20SEP2019 Added getidsanduris
 #  09dec2020 Added get_valid_filename function to deal with invalid characters for Linux filesystem
 #  16Jul2021 Edited callrestapi to be able to update the header. (Issue #83)
+#  20Feb2022 Support patch
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -79,7 +80,7 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
     print("Data for Request:")
     print(json_data)
 
-    if (reqtype !="get" or reqtype !="post" or reqtype!="delete" or reqtype!="put"):
+    if (reqtype !="get" or reqtype !="post" or reqtype!="delete" or reqtype!="put" or reqtype!="patch"  ):
         print("NOTE: Invalid method")
 
     return;
@@ -123,6 +124,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
         ret = requests.delete(baseurl+reqval,headers=head,data=json_data)
     elif reqtype=="put":
         ret = requests.put(baseurl+reqval,headers=head,data=json_data)
+    elif reqtype=="patch":
+        ret = requests.patch(baseurl+reqval,headers=head,data=json_data)
     else:
         result=None
         print("NOTE: Invalid method")

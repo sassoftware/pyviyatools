@@ -10,16 +10,17 @@
 #
 # 27JAN2017 Comments added
 # 29JAN2017 Added choices to validate method input
-# 31JAN2017 Added contenttype parameters                        
+# 31JAN2017 Added contenttype parameters
 # 02FEB2018 Added  simple text print flag
 # 01JUN2018 Renamed from call_rest_api.py to callrestapi.py
-# 08JUN2018 Print json instead of pprint of easier result parsing    
-# 01JUN2018 Renamed from call_rest_api.py to callrestapi.py   
 # 08JUN2018 Print json instead of pprint of easier result parsing
-# 08OCT2018 make printed json pretty 
-# 26OCT2018 call print function 
+# 01JUN2018 Renamed from call_rest_api.py to callrestapi.py
+# 08JUN2018 Print json instead of pprint of easier result parsing
+# 08OCT2018 make printed json pretty
+# 26OCT2018 call print function
 # 20FEB2020 support simplejson
 # 16Jul2021 Support for updating the header. (Issue #83)
+# 20Feb2022 Support patch
 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -42,10 +43,10 @@ import argparse
 from sharedfunctions import callrestapi,getinputjson,printresult
 
 # get command line parameters
-   
+
 parser = argparse.ArgumentParser(description="Call the Viya REST API")
 parser.add_argument("-e","--endpoint", help="Enter the REST endpoint e.g. /folders/folders ",required='True')
-parser.add_argument("-m","--method", help="Enter the REST method.",default="get",required='True',choices=['get','put','post','delete'])
+parser.add_argument("-m","--method", help="Enter the REST method.",default="get",required='True',choices=['get','put','post','delete','patch'])
 parser.add_argument("-i","--inputfile",help="Enter the full path to an input json file",default=None)
 parser.add_argument("-a","--accepttype",help="Enter REST Content Type you want returned e.g application/vnd.sas.identity.basic+json",default="application/json")
 parser.add_argument("-c","--contenttype",help="Enter REST Content Type for POST e.g application/vnd.sas.identity.basic+json",default="application/json")
@@ -55,8 +56,8 @@ parser.add_argument("-hf","--headerfile",help="Enter the full path to a header j
 
 args = parser.parse_args()
 
-reqval=args.endpoint   
-reqtype=args.method 
+reqval=args.endpoint
+reqtype=args.method
 reqfile=args.inputfile
 reqcontent=args.contenttype
 reqaccept=args.accepttype
@@ -81,6 +82,6 @@ elif headfile != None:
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent,header=headerdata)
 else:
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent)
-  
+
 #print the result
 printresult(result,output_style)
