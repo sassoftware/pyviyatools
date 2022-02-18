@@ -4,7 +4,7 @@
 # exportfolder.py
 # Feb 2021
 #
-# Pass in a folder and this tool will  export the folder to a apcakge
+# Pass in a folder and this tool will  export the folder to a package
 #
 #
 # Change History
