@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# listcaslibs.py
+# exportcaslibs.py
 # January 2019
 #
 # Usage:
-# listcaslibs.py [--noheader] [-d]
+# exportcaslibs.py -s -i -d -nc -dc -q
 #
 # Examples:
 #
-# 1. Return list of all CAS libraries on all servers
-#        ./listcaslibs.py
+# 1. Export all caslibs and auth
+#        ./exportcaslibs.py -s cas-shared-default -i -d /tmp/mycaslbs -q
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -132,7 +132,7 @@ if areyousure.upper() =='Y':
             if 'limit' in casauth_result: casauth_result.pop('limit')
             if 'links' in casauth_result: casauth_result.pop('links')
             if 'version' in casauth_result: casauth_result.pop('version')
-                
+
 
             json.dump(casauth_result, outauth)
 
