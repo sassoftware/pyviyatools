@@ -120,6 +120,8 @@ if id!=None:
         # print(resultdata['attributes'])
         # print(type(resultdata['attributes']))
 
+        boolRemoveAfterIterating=False
+
         for attributeKey, attributeValue in resultdata['attributes'].items():
             #print("Attribute: "+attributeKey+" : "+attributeValue)
 
@@ -142,14 +144,9 @@ if id!=None:
                     # We found the value to remove
                     boolFoundAttribute=True
                     print("Attribute: "+attributeKey+" : "+attributeValue+" to be removed")
-                    if len(resultdata['attributes'].items())==1:
-                        # We are about to remove the only attribute
-                        # Remove the whole attributes dictionary
-                        resultdata.pop("attributes",None)
-                    else:
-                        # We are about to remove an attribute, but it is not the last one
-                        # Remove this specific attribute from the 'attributes' dictionary
-                        resultdata['attributes'].pop(attrToRemove,None)
+                    # However, don't remove it yet, as we are still iterating over the attributes
+                    # and Python 3 doesn't like you deleting an element of the dict you are iterating over.
+                    boolRemoveAfterIterating=True
                     boolUpdateRequired=True
         if not boolFoundAttribute:
             if attrToAdd != "None":
@@ -160,6 +157,19 @@ if id!=None:
             if attrToRemove != "None":
                 # We are being asked to remove an attribute, but we did not find it among the compute context's existing attributes
                 print("Attribute: "+attrToRemove+" was not found and cannot be removed")
+
+        if boolRemoveAfterIterating:
+            # Now we are no longer iterating over the attributes list, so it's okay to delete either
+            # an element from the list, or the entire list
+            if len(resultdata['attributes'].items())==1:
+                # We are about to remove the only attribute
+                # Remove the whole attributes dictionary
+                resultdata.pop("attributes",None)
+            else:
+                # We are about to remove an attribute, but it is not the last one
+                # Remove this specific attribute from the 'attributes' dictionary
+                resultdata['attributes'].pop(attrToRemove,None)
+
     else:
         # No attributes section in results data at all
         if attrToAdd != "None":
