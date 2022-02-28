@@ -76,10 +76,10 @@ if id!=None:
     resultdata,etag=callrestapi(reqval,reqtype,returnEtag=True)
     #print("etag: "+etag)
     # Get rid of parts of the context we don't need
-    # resultdata.pop("links",None)
-    # resultdata.pop("creationTimeStamp",None)
-    # resultdata.pop("modifiedTimeStamp",None)
-    # resultdata.pop("version",None)
+    resultdata.pop("links",None)
+    resultdata.pop("creationTimeStamp",None)
+    resultdata.pop("modifiedTimeStamp",None)
+    resultdata.pop("version",None)
     #json_formatted_str = json.dumps(resultdata, indent=2)
     #print(json_formatted_str)
 
