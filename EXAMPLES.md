@@ -342,3 +342,16 @@ For example:
 ./submit_jobreq.py -id {jobRequestId}
 ./submit_jobreq.py -id {jobRequestId} -v
 ```
+
+**getcomputecontextattributes.py**
+
+```bash
+./getcomputecontextattributes.py -n "Data Mining compute context"
+```
+
+**setcomputecontextattributes.py**
+
+```bash
+./setcomputecontextattributes.py -n "Data Mining compute context" -a runAsUser -v sastest1
+./setcomputecontextattributes.py -n "Data Mining compute context" -r runAsUser
+```
