@@ -36,6 +36,7 @@
 #  09dec2020 Added get_valid_filename function to deal with invalid characters for Linux filesystem
 #  16Jul2021 Edited callrestapi to be able to update the header. (Issue #83)
 #  20Feb2022 Support patch
+#  28Feb2022 Added functionality to callrestapi optionally pass in etags, and to request they be returned, for API endpoints that use them
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -91,8 +92,10 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   01dec2017 initial development
 #   28oct2018 Added stop on error to be able to override stopping processing when an error occurs
 #   16Jul2021 Added a functionality to update the header if necessary.
+#   20Feb2022 Support patch
+#   28Feb2022 Added functionality to optionally pass in etags, and to request they be returned, for API endpoints that use them
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1):
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn=''):
 
 
     # get the url from the default profile
@@ -107,11 +110,14 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     #Converting the header values to string to pass it into the header
     header = {str(key):str(value) for key,value in header.items()}
     head.update(header)
+    # If an etag was passed in, add an If-Match header with that etag as the value
+    if etagIn!='':
+         head.update({"If-Match" : etagIn})
 
     # maybe this can be removed
     global result
 
-    # sereliaze the data string for the request to json format
+    # serialize the data string for the request to json format
     json_data=json.dumps(data, ensure_ascii=False)
 
     # call the rest api using the parameters passed in and the requests python library
@@ -152,9 +158,19 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
                 result=None
                 print("NOTE: No result to print")
 
+    # Capture the value of any etag returned in the headers
+    etagOut=None
+    if 'etag' in ret.headers:
+        etagOut=ret.headers['etag']
 
-
-    return result;
+    # ONLY if the caller specifically asked for an etag to be returned, return one
+    if returnEtag:
+        return result,etagOut;
+    else:
+        # Otherwise, return only the result as normal.
+        # This avoids breaking anything that does not expect an etag to be returned
+        # in addition to the normal results.
+        return result;
 
 # getfolderid
 # when a Viya content path is passed in return the id, path and uri
