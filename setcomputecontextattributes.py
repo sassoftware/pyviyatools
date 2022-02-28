@@ -19,7 +19,7 @@
 #
 #
 # Import Python modules
-import argparse, sys, os, json
+import argparse, sys, json
 from sharedfunctions import callrestapi
 
 debug=False
@@ -37,7 +37,7 @@ sys.excepthook = exception_handler
 parser = argparse.ArgumentParser(description="Add attributes to an existing compute context.")
 parser.add_argument("-n","--name", help="Compute context name",required='True')
 parser.add_argument("-a","--add", help="Single attribute to add or update.", nargs="?",const="")
-parser.add_argument("-v","--value", help="Value to set attribute to. Only has any effect if you also specify an attribute to add.", nargs="?",const="")
+parser.add_argument("-v","--value", help="Value to set attribute to. Only has any effect if the arguments also specify an attribute to add or update with -a.", nargs="?",const="")
 parser.add_argument("-r","--remove", help="Single attribute to remove. If the compute context does not have this attribute, nothing happens.", nargs="?",const="")
 args= parser.parse_args()
 contextname=args.name
@@ -47,16 +47,16 @@ attrToRemove=str(args.remove)
 
 if attrToAdd != "None":
     if attrValue == "None":
-        raise Exception('If you specify an attribute to add or update, you must also specify a value using -v or --value.')
+        raise Exception('If the arguments specify an attribute to add or update, they must also specify a value using -v or --value.')
     if attrToRemove != "None":
-        raise Exception('If you specify an attribute to add or update, do not also specify an attribute to remove in the same command. Add and remove attributes with separate calls to this utility.')
+        raise Exception('If the arguments specify an attribute to add or update, they should not also specify an attribute to remove in the same command. Add and remove attributes with separate calls to this utility.')
 else:
     if attrToRemove == "None":
-        raise Exception('You must specify either:\n    - an attribute to add or update with -a and a value to set it to with -v, or\n    - an attribute to remove with -r.')
+        raise Exception('The arguments specify either:\n    - an attribute to add or update with -a and a value to set it to with -v, or\n    - an attribute to remove with -r.')
 
 if attrToRemove != "None":
     if attrValue != "None":
-        print('Note: You specified an attribute to remove, but also specified a value. The value will be ignored; the specified attribute will be removed whatever value it has.')
+        print('Note: Arguments specify an attribute to remove, and also specified a value. The value will be ignored; the specified attribute will be removed whatever value it has.')
 
 # get python version
 #version=int(str(sys.version_info[0]))
@@ -98,11 +98,13 @@ if id!=None:
     # reccontent="application/vnd.sas.collection+json"
     resultdata,etag=callrestapi(reqval,reqtype,returnEtag=True)
     #print("etag: "+etag)
-    # Get rid of parts of the context we don't need
-    # resultdata.pop("links",None)
-    # resultdata.pop("creationTimeStamp",None)
-    # resultdata.pop("modifiedTimeStamp",None)
-    # resultdata.pop("version",None)
+
+    # Get rid of parts of the context structure that are not required for updating the context
+    resultdata.pop("links",None)
+    resultdata.pop("creationTimeStamp",None)
+    resultdata.pop("modifiedTimeStamp",None)
+    resultdata.pop("version",None)
+
     #json_formatted_str = json.dumps(resultdata, indent=2)
     #print(json_formatted_str)
 
@@ -187,7 +189,6 @@ if id!=None:
     #print(json_formatted_str)
 
     if boolUpdateRequired:
-        #print("Update required")
         # Update compute contexts
         # See http://swagger.na.sas.com/swagger-ui/?url=/apis/compute/v10/openapi-all.json#/Contexts/updateContext
         ##########################################################################
@@ -202,12 +203,12 @@ if id!=None:
         # response header of any endpoint that produces
         # application/vnd.sas.compute.context.
         ##########################################################################
+        #print("Update required")
         reqtype="put"
         reqval="/compute/contexts/"+id
         reqaccept="application/vnd.sas.compute.context+json"
-        #reccontent="application/vnd.sas.collection+json"
         reccontent="application/vnd.sas.compute.context+json"
-        resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=resultdata,etagIn=etag)
+        resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=resultdata,stoponerror=False,etagIn=etag)
         #json_formatted_str = json.dumps(resultdata_after_update, indent=2)
         #print(json_formatted_str)
     #else:

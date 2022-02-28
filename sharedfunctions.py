@@ -141,7 +141,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # response error if status code between these numbers
     if (400 <= ret.status_code <=599):
 
-       print(ret.text)
+       print("http response code: "+ str(ret.status_code))
+       print("ret.text: "+ret.text)
        result=None
        if stoponerror: sys.exit()
 
