@@ -20,10 +20,9 @@
 #
 # Import Python modules
 import argparse, sys, os, json
-from sharedfunctions import callrestapi #, getbaseurl, getauthtoken
-#import requests
+from sharedfunctions import callrestapi
 
-debug=True
+debug=False
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
@@ -33,80 +32,6 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
         print "%s: %s" % (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
-
-
-
-# ###########################################################
-# def callrestapiwithetag(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},stoponerror=1,returnEtag=False,etagIn=''):
-
-#     # get the url from the default profile
-#     baseurl=getbaseurl()
-
-#     # get the auth token
-#     oaval=getauthtoken(baseurl)
-
-#     # build the authorization header
-#     head= {'Content-type':contentType,'Accept':acceptType}
-#     head.update({"Authorization" : oaval})
-#     # If an etag was passed in, add an If-Match header with that etag as the value
-#     if etagIn!='':
-#          head.update({"If-Match" : etagIn})
-
-#     # maybe this can be removed
-#     global result
-
-#     # sereliaze the data string for the request to json format
-#     json_data=json.dumps(data, ensure_ascii=False)
-
-#     # call the rest api using the parameters passed in and the requests python library
-
-#     if reqtype=="get":
-#         ret = requests.get(baseurl+reqval,headers=head,data=json_data)
-#     elif reqtype=="post":
-#         ret = requests.post(baseurl+reqval,headers=head,data=json_data)
-#     elif reqtype=="delete":
-#         ret = requests.delete(baseurl+reqval,headers=head,data=json_data)
-#     elif reqtype=="put":
-#         ret = requests.put(baseurl+reqval,headers=head,data=json_data)
-#     else:
-#         result=None
-#         print("NOTE: Invalid method")
-#         sys.exit()
-
-
-#     # response error if status code between these numbers
-#     if (400 <= ret.status_code <=599):
-
-#        print(ret.text)
-#        result=None
-#        if stoponerror: sys.exit()
-
-#     # return the result
-#     else:
-#          # is it json
-#          try:
-#              result=ret.json()
-#          except:
-#             # is it text
-#             try:
-#                 result=ret.text
-#             except:
-#                 result=None
-#                 print("NOTE: No result to print")
-
-#     # Capture the value of any etag returned in the headers
-#     etagOut=None
-#     if 'etag' in ret.headers:
-#         etagOut=ret.headers['etag']
-
-#     # ONLY if the user specifically asked for an etag to be returned, return one
-#     if returnEtag:
-#         return result,etagOut;
-#     else:
-#         # Otherwise, return only the result as normal
-#         return result;
-
-# ###########################################################
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Add attributes to an existing compute context.")
@@ -172,14 +97,14 @@ if id!=None:
     # reqaccept="application/vnd.sas.compute.context.summary+json"
     # reccontent="application/vnd.sas.collection+json"
     resultdata,etag=callrestapi(reqval,reqtype,returnEtag=True)
-    print("etag: "+etag)
+    #print("etag: "+etag)
     # Get rid of parts of the context we don't need
     # resultdata.pop("links",None)
     # resultdata.pop("creationTimeStamp",None)
     # resultdata.pop("modifiedTimeStamp",None)
     # resultdata.pop("version",None)
-    json_formatted_str = json.dumps(resultdata, indent=2)
-    print(json_formatted_str)
+    #json_formatted_str = json.dumps(resultdata, indent=2)
+    #print(json_formatted_str)
 
     # The following set of logic expects and assumes that EITHER:
     #   attrToAdd has a value, indicating that we are adding/updating a value, and attrToRemove has a value of None, or
@@ -196,7 +121,7 @@ if id!=None:
         # print(type(resultdata['attributes']))
 
         for attributeKey, attributeValue in resultdata['attributes'].items():
-            print("Attribute: "+attributeKey+" : "+attributeValue)
+            #print("Attribute: "+attributeKey+" : "+attributeValue)
 
             if attrToAdd != "None":
                 # We are adding or updating a value
@@ -273,7 +198,7 @@ if id!=None:
         #reccontent="application/vnd.sas.collection+json"
         reccontent="application/vnd.sas.compute.context+json"
         resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=resultdata,etagIn=etag)
-        json_formatted_str = json.dumps(resultdata_after_update, indent=2)
+        #json_formatted_str = json.dumps(resultdata_after_update, indent=2)
         #print(json_formatted_str)
     #else:
         #print("Update not required")
