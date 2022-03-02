@@ -19,9 +19,8 @@
 #
 #
 # Import Python modules
-import argparse, sys, os, json
-from sharedfunctions import callrestapi, getbaseurl, getauthtoken
-import requests
+import argparse, sys, json
+from sharedfunctions import callrestapi
 
 debug=False
 
@@ -30,82 +29,15 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
     if debug:
         debug_hook(exception_type, exception, traceback)
     else:
-        print "%s: %s" % (exception_type.__name__, exception)
+        print (exception_type.__name__, exception)
 
 sys.excepthook = exception_handler
-
-
-
-###########################################################
-def callrestapiwithetag(reqval, reqtype, acceptType='application/json', contentType='application/json',etagIn='',data={},stoponerror=1):
-
-    # get the url from the default profile
-    baseurl=getbaseurl()
-
-    # get the auth token
-    oaval=getauthtoken(baseurl)
-
-    # build the authorization header
-    head= {'Content-type':contentType,'Accept':acceptType}
-    head.update({"Authorization" : oaval})
-    if etagIn!='':
-        head.update({"If-Match" : etagIn})
-
-    # maybe this can be removed
-    global result
-
-    # sereliaze the data string for the request to json format
-    json_data=json.dumps(data, ensure_ascii=False)
-
-    # call the rest api using the parameters passed in and the requests python library
-
-    if reqtype=="get":
-        ret = requests.get(baseurl+reqval,headers=head,data=json_data)
-    elif reqtype=="post":
-        ret = requests.post(baseurl+reqval,headers=head,data=json_data)
-    elif reqtype=="delete":
-        ret = requests.delete(baseurl+reqval,headers=head,data=json_data)
-    elif reqtype=="put":
-        ret = requests.put(baseurl+reqval,headers=head,data=json_data)
-    else:
-        result=None
-        print("NOTE: Invalid method")
-        sys.exit()
-
-
-    # response error if status code between these numbers
-    if (400 <= ret.status_code <=599):
-
-       print(ret.text)
-       result=None
-       if stoponerror: sys.exit()
-
-    # return the result
-    else:
-         # is it json
-         try:
-             result=ret.json()
-         except:
-            # is it text
-            try:
-                result=ret.text
-            except:
-                result=None
-                print("NOTE: No result to print")
-
-    etagOut=None
-    if 'etag' in ret.headers:
-        etagOut=ret.headers['etag']
-
-    return result,etagOut;
-
-###########################################################
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Add attributes to an existing compute context.")
 parser.add_argument("-n","--name", help="Compute context name",required='True')
 parser.add_argument("-a","--add", help="Single attribute to add or update.", nargs="?",const="")
-parser.add_argument("-v","--value", help="Value to set attribute to. Only has any effect if you also specify an attribute to add.", nargs="?",const="")
+parser.add_argument("-v","--value", help="Value to set attribute to. Only has any effect if the arguments also specify an attribute to add or update with -a.", nargs="?",const="")
 parser.add_argument("-r","--remove", help="Single attribute to remove. If the compute context does not have this attribute, nothing happens.", nargs="?",const="")
 args= parser.parse_args()
 contextname=args.name
@@ -115,16 +47,16 @@ attrToRemove=str(args.remove)
 
 if attrToAdd != "None":
     if attrValue == "None":
-        raise Exception('If you specify an attribute to add or update, you must also specify a value using -v or --value.')
+        raise Exception('If the arguments specify an attribute to add or update, they must also specify a value using -v or --value.')
     if attrToRemove != "None":
-        raise Exception('If you specify an attribute to add or update, do not also specify an attribute to remove in the same command. Add and remove attributes with separate calls to this utility.')
+        raise Exception('If the arguments specify an attribute to add or update, they should not also specify an attribute to remove in the same command. Add and remove attributes with separate calls to this utility.')
 else:
     if attrToRemove == "None":
-        raise Exception('You must specify either:\n    - an attribute to add or update with -a and a value to set it to with -v, or\n    - an attribute to remove with -r.')
+        raise Exception('The arguments specify either:\n    - an attribute to add or update with -a and a value to set it to with -v, or\n    - an attribute to remove with -r.')
 
 if attrToRemove != "None":
     if attrValue != "None":
-        print('Note: You specified an attribute to remove, but also specified a value. The value will be ignored; the specified attribute will be removed whatever value it has.')
+        print('Note: Arguments specify an attribute to remove, and also specified a value. The value will be ignored; the specified attribute will be removed whatever value it has.')
 
 # get python version
 #version=int(str(sys.version_info[0]))
@@ -164,14 +96,16 @@ if id!=None:
     reqval="/compute/contexts/"+id
     # reqaccept="application/vnd.sas.compute.context.summary+json"
     # reccontent="application/vnd.sas.collection+json"
-    resultdata,etag=callrestapiwithetag(reqval,reqtype)
-    #print(etag)
-    # Get rid of parts of the context we don't need
+    resultdata,etag=callrestapi(reqval,reqtype,returnEtag=True)
+    #print("etag: "+etag)
+
+    # Get rid of parts of the context structure that are not required for updating the context
     resultdata.pop("links",None)
     resultdata.pop("creationTimeStamp",None)
     resultdata.pop("modifiedTimeStamp",None)
     resultdata.pop("version",None)
-    json_formatted_str = json.dumps(resultdata, indent=2)
+
+    #json_formatted_str = json.dumps(resultdata, indent=2)
     #print(json_formatted_str)
 
     # The following set of logic expects and assumes that EITHER:
@@ -188,8 +122,10 @@ if id!=None:
         # print(resultdata['attributes'])
         # print(type(resultdata['attributes']))
 
+        boolRemoveAfterIterating=False
+
         for attributeKey, attributeValue in resultdata['attributes'].items():
-            print("Attribute: "+attributeKey+" : "+attributeValue)
+            #print("Attribute: "+attributeKey+" : "+attributeValue)
 
             if attrToAdd != "None":
                 # We are adding or updating a value
@@ -210,14 +146,9 @@ if id!=None:
                     # We found the value to remove
                     boolFoundAttribute=True
                     print("Attribute: "+attributeKey+" : "+attributeValue+" to be removed")
-                    if len(resultdata['attributes'].items())==1:
-                        # We are about to remove the only attribute
-                        # Remove the whole attributes dictionary
-                        resultdata.pop("attributes",None)
-                    else:
-                        # We are about to remove an attribute, but it is not the last one
-                        # Remove this specific attribute from the 'attributes' dictionary
-                        resultdata['attributes'].pop(attrToRemove,None)
+                    # However, don't remove it yet, as we are still iterating over the attributes
+                    # and Python 3 doesn't like you deleting an element of the dict you are iterating over.
+                    boolRemoveAfterIterating=True
                     boolUpdateRequired=True
         if not boolFoundAttribute:
             if attrToAdd != "None":
@@ -228,6 +159,19 @@ if id!=None:
             if attrToRemove != "None":
                 # We are being asked to remove an attribute, but we did not find it among the compute context's existing attributes
                 print("Attribute: "+attrToRemove+" was not found and cannot be removed")
+
+        if boolRemoveAfterIterating:
+            # Now we are no longer iterating over the attributes list, so it's okay to delete either
+            # an element from the list, or the entire list
+            if len(resultdata['attributes'].items())==1:
+                # We are about to remove the only attribute
+                # Remove the whole attributes dictionary
+                resultdata.pop("attributes",None)
+            else:
+                # We are about to remove an attribute, but it is not the last one
+                # Remove this specific attribute from the 'attributes' dictionary
+                resultdata['attributes'].pop(attrToRemove,None)
+
     else:
         # No attributes section in results data at all
         if attrToAdd != "None":
@@ -245,7 +189,6 @@ if id!=None:
     #print(json_formatted_str)
 
     if boolUpdateRequired:
-        print("Update required")
         # Update compute contexts
         # See http://swagger.na.sas.com/swagger-ui/?url=/apis/compute/v10/openapi-all.json#/Contexts/updateContext
         ##########################################################################
@@ -260,16 +203,16 @@ if id!=None:
         # response header of any endpoint that produces
         # application/vnd.sas.compute.context.
         ##########################################################################
+        #print("Update required")
         reqtype="put"
         reqval="/compute/contexts/"+id
         reqaccept="application/vnd.sas.compute.context+json"
-        #reccontent="application/vnd.sas.collection+json"
         reccontent="application/vnd.sas.compute.context+json"
-        resultdata_after_update,etagAfter=callrestapiwithetag(reqval,reqtype,reqaccept,reccontent,etag,data=resultdata)
-        json_formatted_str = json.dumps(resultdata_after_update, indent=2)
+        resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=resultdata,stoponerror=False,etagIn=etag)
+        #json_formatted_str = json.dumps(resultdata_after_update, indent=2)
         #print(json_formatted_str)
-    else:
-        print("Update not required")
+    #else:
+        #print("Update not required")
 
 
 sys.exit()
