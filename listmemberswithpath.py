@@ -15,6 +15,11 @@
 # 2. Return list of all members of a folder identified by objectURI, recursively searching subfolders
 #        ./listmemberswithpath.py -u /folders/folders/060c0ea4-07ee-43ea-aa79-a1696b7f8f52 -r
 #
+# Change History
+#
+# 09MAR2022 Python3 compatibility fix
+#
+#
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the License);
@@ -90,4 +95,4 @@ for member in members:
     else:
         outstr=outstr+','
     outstr=outstr+','+member['uri']
-    print outstr
+    print(outstr)
