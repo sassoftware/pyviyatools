@@ -17,7 +17,7 @@
 #
 # Change History
 #
-# 09MAR2022 Python3 compatibility fix
+# 09MAR2022 Python3 compatibility fix, and better support output redirect to file in python2 with non-ASCII characters
 #
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -95,4 +95,7 @@ for member in members:
     else:
         outstr=outstr+','
     outstr=outstr+','+member['uri']
-    print(outstr)
+    try:
+        print(outstr)
+    except UnicodeEncodeError:
+        print(outstr.encode('ascii','replace'))
