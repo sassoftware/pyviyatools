@@ -87,6 +87,8 @@ if check:
 
             #make the rest call using the callrestapi function. You can have one or many calls
             user_info_result_json=callrestapi(reqval,reqtype,data=data)
+
+            if debug: print(user_info_result_json)
           
             print("NOTE: Finished Processing "+file)
 else:
