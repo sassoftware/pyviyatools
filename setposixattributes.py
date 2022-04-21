@@ -89,6 +89,6 @@ if check:
 
             if debug: print(user_info_result_json)
           
-            print("NOTE: Finished Processing "+file)
+        print("NOTE: Finished Processing "+file)
 else:
     print("ERROR: "+file+" not available.")
