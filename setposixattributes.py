@@ -9,13 +9,12 @@
 # Format of csv file is three columns no header
 # Column 1 userid
 # Column 2 numeric override uid
-# Column 3 numeric override primary git
-# Column 4 | delimited list of secondary gids
+# Column 3 numeric override primary gid
 #
 # For example:
-#Santiago,9000,9001,9991|9992|9993
-#Hugh,8000,8001,8991|8992
-#Fay,7000,9001,
+#Santiago,9000,9001
+#Hugh,8000,8001
+#Fay,7000,9001
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -53,7 +52,6 @@ output_style=args.output
 reqtype="put"
 # set the endpoint to call
 
-
 check=file_accessible(file,'r')
 
 # file can be read
@@ -70,9 +68,6 @@ if check:
             gid=row[2]
             secgids=row[3]
 
-            secondaryGids_list=secgids.split("|")
-
-            #sec gids are | delimited seperate them out
             reqval='/identities/users/'+user+"/identifier"
             
             # build the json
@@ -81,13 +76,12 @@ if check:
             data['gid'] = gid
             data['uid'] = uid
 
-            if len(secondaryGids_list): data['secondaryGids'] = secondaryGids_list
-            
             if debug: 
                 
                 print(reqval)
                 print(row)
                 print(data)
+
             reqaccept='application/vnd.sas.identity.identifier+json'
 
             #make the rest call using the callrestapi function. You can have one or many calls
