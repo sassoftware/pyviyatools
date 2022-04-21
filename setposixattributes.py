@@ -75,17 +75,18 @@ if check:
             data['username'] = user
             data['gid'] = gid
             data['uid'] = uid
-
+            
+            # print debug info
             if debug: 
                 
                 print(reqval)
                 print(row)
                 print(data)
-
+                
             reqaccept='application/vnd.sas.identity.identifier+json'
 
             #make the rest call using the callrestapi function. You can have one or many calls
             user_info_result_json=callrestapi(reqval,reqtype,data=data)
         
-        
+    
 print("NOTE: Finished Processing "+file)
