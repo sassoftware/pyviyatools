@@ -66,8 +66,7 @@ if check:
             user=row[0]
             uid=row[1]
             gid=row[2]
-            secgids=row[3]
-
+            
             reqval='/identities/users/'+user+"/identifier"
             
             # build the json
