@@ -7,14 +7,16 @@
 # sets the posix attributes of a user 
 #
 # Format of csv file is three columns no header
-# Column 1 userid
-# Column 2 numeric override uid
-# Column 3 numeric override primary gid
+# Column 1 Principal Type (User or Group)
+# Column 2 userid or group
+# Column 3 numeric override user or group
+# Column 4 numeric override primary uid or gid
 #
 # For example:
-#Santiago,9000,9001
-#Hugh,8000,8001
-#Fay,7000,9001
+#GROUP,HR,99999
+#USER,Santiago,9000,9001
+#USER,Hugh,8000,8001
+#USER,Fay,7000,9001
 #
 # Copyright © 2022, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -38,7 +40,7 @@ import os
 from sharedfunctions import printresult, callrestapi, file_accessible
 
 # setup command-line arguements
-parser = argparse.ArgumentParser(description="Set POSIX attributes for User (uid and gid) file format: user,uid,gid")
+parser = argparse.ArgumentParser(description="Set POSIX attributes for User and Group (uid and gid) file format: principal type,principal,id of user or group, primary gid for users")
 
 parser.add_argument("-f","--file", help="Full path to csv containing posix attributes.",required='True')
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
@@ -62,29 +64,34 @@ if check:
         filecontents = csv.reader(f)
         for row in filecontents:
         
-            # column1 is user, column2 is uid column3 is gid
-            user=row[0]
-            uid=row[1]
-            gid=row[2]
+            # column1 is principal type, column 2 is principal, column3 is id column3 is gid for user
             
-            #request
-            reqval='/identities/users/'+user+"/identifier"
-            
-            # build the json
-            data = {}
-            data['username'] = user
-            data['gid'] = gid
-            data['uid'] = uid
-            
-            # print debug info
-            if debug: 
+            principal_type=row[0]
+            principal=row[1]
+            id=row[2]
+
+            if principal_type.upper()=="USER":
+
+                gid=row[3]
                 
-                print(reqval)
-                print(row)
-                print(data)
-            
-            print("NOTE: Upating Posix Attributes for "+user+": uid= "+uid+", gid= "+gid)
+                #request
+                reqval='/identities/users/'+principal+"/identifier"
+                # build the json
+                data = {}
+                data['gid'] = gid
+                data['uid'] = id
+                print("NOTE: Upating Posix Attributes for "+principal_type+" "+principal+": uid= "+id+", gid= "+gid)
                 
+            elif principal_type.upper()=="GROUP":     
+                #request
+                reqval='/identities/groups/'+principal+"/identifier"
+                data = {}
+                data['gid'] = id
+                print("NOTE: Upating Posix Attributes for "+principal_type+" "+principal+": gid= "+id)
+
+            else:
+                print("ERROR: principal type is "+principal_type+" for principal "+principal+". P rincipal type (column1 in csv) must be USER or GROUP.")
+
             reqaccept='application/vnd.sas.identity.identifier+json'
 
             #make the rest call using the callrestapi function. 
