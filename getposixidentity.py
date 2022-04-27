@@ -28,7 +28,7 @@ from sharedfunctions import printresult, callrestapi
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Display POSIX attributes for User or ALL users(default)")
 
-parser.add_argument("-u","--user", help="Enter the user id or leave blan for all users.",default='all')
+parser.add_argument("-u","--user", help="Enter the user id or leave blank for all users.",default='all')
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
@@ -56,8 +56,9 @@ if user=='all':
 
          if posixinfo_result_json.has_key("secondaryGids"):
             user["secgid"]=posixinfo_result_json["secondaryGids"]
-
-     cols=['id','uid','gid','secgid','name']
+            cols=['id','uid','gid','secgid','name']
+         else:
+            cols=['id','uid','gid','name']
      printresult(userslist_result_json,output_style,cols)
 
 else:
