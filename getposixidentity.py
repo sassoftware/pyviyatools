@@ -26,9 +26,9 @@ import argparse
 from sharedfunctions import printresult, callrestapi
 
 # setup command-line arguements
-parser = argparse.ArgumentParser(description="Display POSIX attributes for User")
+parser = argparse.ArgumentParser(description="Display POSIX attributes for User or ALL users(default)")
 
-parser.add_argument("-u","--user", help="Enter the user id",required='True')
+parser.add_argument("-u","--user", help="Enter the user id or leave blank for all users.",default='all')
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
@@ -37,20 +37,46 @@ user=args.user
 debug=args.debug
 output_style=args.output
 
-# set the request type
-reqtype='get'
-# set the endpoint to call
-reqval='/identities/users/'+user+"/identifier"
+if user=='all':
 
-if debug: print(reqval)
+     reqtype='get'
+     #reqval='/identities/users'
+     reqval='/identities/users/?filter=ne(providerId,"local")&limit=10000'
+     userslist_result_json=callrestapi(reqval,reqtype)
 
-#make the rest call using the callrestapi function. You can have one or many calls
-user_info_result_json=callrestapi(reqval,reqtype)
+     users = userslist_result_json['items']
 
-# seems to be returning non standard results add id to make it standard
-# print result expects there to an id so use uid
+     for user in users:
+         userid=user['id']
+         reqval='/identities/users/'+userid+'/identifier'
+         posixinfo_result_json=callrestapi(reqval,reqtype)
+         user["uid"]=posixinfo_result_json["uid"]
+         # get gid
+         user["gid"]=posixinfo_result_json["gid"]
 
-user_info_result_json['id']=user_info_result_json["uid"]
-user_info_result_json['username']=user
+         if posixinfo_result_json.has_key("secondaryGids"):
+            user["secgid"]=posixinfo_result_json["secondaryGids"]
+            cols=['id','uid','gid','secgid','name']
+         else:
+            cols=['id','uid','gid','name']
+     printresult(userslist_result_json,output_style,cols)
 
-printresult(user_info_result_json,output_style)
+else:
+
+    # set the request type
+    reqtype='get'
+    # set the endpoint to call
+    reqval='/identities/users/'+user+"/identifier"
+
+    if debug: print(reqval)
+
+    #make the rest call using the callrestapi function. You can have one or many calls
+    user_info_result_json=callrestapi(reqval,reqtype)
+
+    # seems to be returning non standard results add id to make it standard
+    # print result expects there to an id so use uid
+
+    user_info_result_json['id']=user_info_result_json["uid"]
+    user_info_result_json['username']=user
+
+    printresult(user_info_result_json,output_style)
