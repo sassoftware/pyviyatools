@@ -54,11 +54,14 @@ if user=='all':
          # get gid
          user["gid"]=posixinfo_result_json["gid"]
 
+         if debug: print(posixinfo_result_json)
+
          if posixinfo_result_json.has_key("secondaryGids"):
             user["secgid"]=posixinfo_result_json["secondaryGids"]
-            cols=['id','uid','gid','secgid','name']
          else:
-            cols=['id','uid','gid','name']
+            user["secgid"]=[""]
+
+     cols=['id','uid','gid','secgid','name']
      printresult(userslist_result_json,output_style,cols)
 
 else:
