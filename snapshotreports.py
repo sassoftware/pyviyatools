@@ -22,6 +22,7 @@
 # 16may2020 allow to subset reports exported by the path of the report folder
 # 10aug2020 add option to auto delete transport file after download completes
 # 09dec2020 add get_valid_filename function to deal with invalid characters for Linux filesystem
+# 20jul2022 add option to include dependencies for reports
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -66,11 +67,13 @@ parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
 parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-i","--includeDependencies", help="Specifies if dependencies want to be included for each of the reports being exported.", action='store_true')
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 autotranferremove=args.tranferremove
+autoIncludeDep=args.includeDependencies
 
 changeddays=args.changeddays
 modby=args.modifiedby
@@ -156,8 +159,12 @@ if areyousure.upper() =='Y':
 					package_name=str(uuid.uuid1())
 
 					json_name=get_valid_filename(path_to_report+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
+					
+					if autoIncludeDep:
+						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'" -d'
+					else:
+						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 
-					command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 					print(command)
 					subprocess.call(command, shell=True)
 
