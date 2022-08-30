@@ -8,7 +8,7 @@
 #
 #
 # Change History
-#
+# 22aug2022 add option to auto delete transport file after download completes
 #
 # Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -47,6 +47,7 @@ parser = argparse.ArgumentParser(description="Export a Viya Folder and its sub-f
 parser.add_argument("-f","--folderpath", help="Folder path to export",required='True')
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 parser.add_argument("--filename", help="File name without extension. Optional, default name is the folder path.",default="XNOFILENAMEX")
+parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 
 
 
@@ -56,6 +57,7 @@ args= parser.parse_args()
 folderpath=args.folderpath
 basedir=args.directory
 filename=args.filename
+autotranferremove=args.tranferremove
 
 quietmode=args.quiet
 
@@ -104,10 +106,16 @@ if areyousure.upper() =='Y':
         reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
         package_info=callrestapi(reqval,reqtype)
         package_id=package_info['items'][0]['id']
+        
         completefile=os.path.join(path,json_name+'.json')
         command=clicommand+' transfer download --file '+completefile+' --id '+package_id
         print(command)
         subprocess.call(command, shell=True)
+        if autotranferremove:
+                print(clicommand+' transfer delete --id '+package_id+"\n")
+                remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+                remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+                remTransferObject.wait()
 
 
         print("NOTE: Viya folder "+folderpath+ "  exported to json file "+completefile)
