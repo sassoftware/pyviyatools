@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser(description="Export a Viya Folder and its sub-f
 parser.add_argument("-f","--folderpath", help="Folder path to export",required='True')
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 parser.add_argument("--filename", help="File name without extension. Optional, default name is the folder path.",default="XNOFILENAMEX")
-parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 
 
 
