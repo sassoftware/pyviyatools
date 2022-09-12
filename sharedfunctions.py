@@ -712,7 +712,7 @@ def simplejsonresults(resultdata):
 def get_valid_filename(s):
 	
 
-    #try original method, if it fales with encoding error remove string function
+    #try original method, if it fails with encoding error remove string function
     try:
         s = str(s).strip().replace(' ', '_')
     
