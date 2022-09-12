@@ -37,6 +37,7 @@
 #  16Jul2021 Edited callrestapi to be able to update the header. (Issue #83)
 #  20Feb2022 Support patch
 #  28Feb2022 Added functionality to callrestapi optionally pass in etags, and to request they be returned, for API endpoints that use them
+#  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -709,8 +710,16 @@ def simplejsonresults(resultdata):
 
 
 def get_valid_filename(s):
-	s = str(s).strip().replace(' ', '_')
-	return re.sub(r'(?u)[^-\w.]', '', s)
+	
+
+    #try original method, if it fails with encoding error remove string function
+    try:
+        s = str(s).strip().replace(' ', '_')
+    
+    except UnicodeEncodeError:
+        s = s.strip().replace(' ', '_')
+    
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 # getapplicationproperties
 #   20nov2020 initial development
