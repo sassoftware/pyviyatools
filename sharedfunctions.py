@@ -718,7 +718,8 @@ def get_valid_filename(s):
     
     except UnicodeEncodeError:
         s = s.strip().replace(' ', '_')
-	return re.sub(r'(?u)[^-\w.]', '', s)
+    
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 # getapplicationproperties
 #   20nov2020 initial development
