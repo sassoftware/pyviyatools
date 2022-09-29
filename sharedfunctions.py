@@ -56,6 +56,7 @@
 
 # Import Python modules
 from __future__ import print_function
+from __future__ import unicode_literals
 import requests
 import sys
 import json
@@ -446,12 +447,13 @@ def csvresults(resultdata,columns=[]):
 
                 if key !=  'links' and key in columns: 
 
-                    try:
+                    print('"'+str(val)+'"'+sep, end="")
+                    """ try:
                         print('"'+str(val)+'"'+sep, end="")
                     except UnicodeEncodeError:
                         newval=val.encode('ascii','replace')
                         print('"'+str(newval)+'"'+sep, end="")
-
+ """
         print("\n",end="")
 
 
