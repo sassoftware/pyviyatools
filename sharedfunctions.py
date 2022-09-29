@@ -444,8 +444,13 @@ def csvresults(resultdata,columns=[]):
                 if z==numvals: sep=''
                 else: sep=','
 
-                if key !=  'links' and key in columns: print('"'+str(val)+'"'+sep, end="")
+                if key !=  'links' and key in columns: 
 
+                    try:
+                        print('"'+str(val)+'"'+sep, end="")
+                    except UnicodeEncodeError:
+                        newval=val.encode('ascii','replace'))
+                        print('"'+str(newval)+'"'+sep, end="")
 
         print("\n",end="")
 
