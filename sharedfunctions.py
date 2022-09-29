@@ -442,11 +442,15 @@ def csvresults(resultdata,columns=[]):
                 # seperate with comma except last item
                 z=z+1
                 if z==numvals: sep=''
-                else: sep=u','
+                else: sep=','
 
                 if key !=  'links' and key in columns: 
-                                        
-                    print('"'+val'"'+sep,end="")
+                                                           
+                    try:
+                        print('"'+str(val)+'"'+sep, end="")
+                    except UnicodeEncodeError:
+                        newval=val.encode('ascii','replace')
+                        print('"'+str(newval)+'"'+sep, end="")
                     
  
         print("\n",end="")
@@ -478,7 +482,13 @@ def csvresults(resultdata,columns=[]):
             if z==numvals: sep=''
             else: sep=','
 
-            if key != 'links': print('"'+str(val)+'"'+sep,end="")
+            if key != 'links': 
+                
+                try:
+                    print('"'+str(val)+'"'+sep, end="")
+                except UnicodeEncodeError:
+                    newval=val.encode('ascii','replace')
+                    print('"'+str(newval)+'"'+sep, end="")
 
         print("\n",end="")
 
