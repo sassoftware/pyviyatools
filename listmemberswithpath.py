@@ -95,4 +95,7 @@ for member in members:
     else:
         outstr=outstr+','
     outstr=outstr+','+member['uri']
-    print(outstr)
+    try:
+        print(outstr)
+    except UnicodeEncodeError:
+        print(outstr.encode('ascii','replace'))

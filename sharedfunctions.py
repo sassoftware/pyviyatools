@@ -449,7 +449,7 @@ def csvresults(resultdata,columns=[]):
                     try:
                         print('"'+str(val)+'"'+sep, end="")
                     except UnicodeEncodeError:
-                        newval=val.encode('ascii','replace'))
+                        newval=val.encode('ascii','replace')
                         print('"'+str(newval)+'"'+sep, end="")
 
         print("\n",end="")
