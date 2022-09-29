@@ -66,7 +66,6 @@ import collections
 import inspect
 import re
 
-
 pp = pprint.PrettyPrinter(indent=4)
 
 # validate rest api is not used at this time
@@ -443,17 +442,13 @@ def csvresults(resultdata,columns=[]):
                 # seperate with comma except last item
                 z=z+1
                 if z==numvals: sep=''
-                else: sep=','
+                else: sep=u','
 
                 if key !=  'links' and key in columns: 
-
-                    print('"'+str(val)+'"'+sep, end="")
-                    """ try:
-                        print('"'+str(val)+'"'+sep, end="")
-                    except UnicodeEncodeError:
-                        newval=val.encode('ascii','replace')
-                        print('"'+str(newval)+'"'+sep, end="")
- """
+                                        
+                    print('"'+val'"'+sep,end="")
+                    
+ 
         print("\n",end="")
 
 
