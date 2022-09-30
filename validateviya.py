@@ -23,6 +23,7 @@
 import argparse
 from sharedfunctions import callrestapi,printresult
 import json
+import os
 
 from jobmodule import jobmodule
 
@@ -63,9 +64,72 @@ def verbosePrint(text, verbose):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson', 'passfail'],default='csv')
+#By including the flag -g, the test file will be created in the current directory, but if -g is not used, the test will not be generated at all
+#It is also possible to use -g filename.json to give your test a custom name
+parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", type=argparse.FileType('w'), const=(os.getcwd() + "/testPreferences.json"), metavar="filename")
+#There is no default file name to be read for -c, it must be entered manually
+parser.add_argument("-c","--custom-tests", dest="customTests", help="Use a Custom Test Preferences File", nargs="?", type=argparse.FileType('r'), metavar="filename")
+
 args = parser.parse_args()
 output_style=args.output
 
+testPreferences = None
+numTests = 8
+
+if(args.customTests is not None):
+    try:
+        #Read JSON file as a JSON object
+        customPreferences = json.load(args.customTests)
+    except:
+        print("Custom Test Preferences File could not be read")
+        quit()
+
+    #Verify preferences to be of correct form
+    assert(int(customPreferences['count']) == numTests)
+    #Convert count to int
+    customPreferences['count'] = int(customPreferences['count'])
+
+    for i in range(0, numTests):
+        #Assure each test has an id, counting up from 1 to numTests
+        assert(int(customPreferences['tests'][i]['id']) == i)
+        #Convert ids to int
+        customPreferences['tests'][i]['id'] = int(customPreferences['tests'][i]['id'])
+        #Assure each test contains the key
+        assert(customPreferences['tests'][i]['active'] is not None)
+
+    #Set the test preferences to those specificied in the file
+    testPreferences = customPreferences
+else:
+    #Create JSON object with default preferences
+    defaultPreferences = {
+        "tests":[
+            {"id":"0", "name":"Logged in User", "active":"True"},
+            {"id":"1", "name":"List Users", "active":"True"},
+            {"id":"2", "name":"List Base Folders", "active":"True"},
+            {"id":"3", "name":"List CAS Servers", "active":"True"},
+            {"id":"4", "name":"List CAS Server Metrics", "servers":["cas-shared-default"], "active":"True"},
+            {"id":"5", "name":"List CAS Server Caslibs", "servers":["cas-shared-default"], "active":"True"},
+            {"id":"6", "name":"List CASLib Tables", "caslibs":[("cas-shared-default", "systemData")], "active":"True"},
+            {"id":"7", "name":"Run Test SAS Code", "active":"True"}
+        ],
+        "count":numTests
+    }
+    #Set the test preferences to the default values
+    testPreferences = defaultPreferences
+
+if(args.generateTestJson is not None):
+    #Write tests preferences JSON to file (default OR those specified via -c)
+    try:
+        args.generateTestJson.write(json.dumps(testPreferences, indent=2))
+    except:
+        print("JSON Test Preferences File cannot be written")
+    finally:
+        args.generateTestJson.close()
+
+    #We only want to generate the test file, not run tests
+    quit()
+
+#Run tests:
 #Important values:
 defaultCAS = "cas-shared-default"
 caslibs = ["systemData"]
@@ -75,26 +139,25 @@ loggedInUserReq = '/identities/users/@currentUser'
 listUsersReq = '/identities/users?limit=10000'
 baseFoldersReq = '/folders/rootFolders?limit=10000'
 listServersReq = '/casManagement/servers?limit=10000'
-defaultServerMetricsReq = '/casManagement/servers/' + defaultCAS + '/metrics'
-defaultServerCaslibsReq = '/casManagement/servers/' + defaultCAS + '/caslibs?limit=10000'
+serverMetricsReq = '/casManagement/servers/' + defaultCAS + '/metrics'
+serverCaslibsReq = '/casManagement/servers/' + defaultCAS + '/caslibs?limit=10000'
 caslibTableReq = '/casManagement/servers/' + defaultCAS + '/caslibs/' + "systemData" + '/tables?limit=10000'
 
-#Data collection calls:
 loggedInUser_result_json = callrestapi(loggedInUserReq, "get")
 listUsers_result_json = callrestapi(listUsersReq, "get")
 baseFolders_result_json = callrestapi(baseFoldersReq, "get")
 listServers_result_json = callrestapi(listServersReq, "get")
-defaultServerMetrics_result_json = callrestapi(defaultServerMetricsReq, "get")
-defaultServerCaslibs_result_json = callrestapi(defaultServerCaslibsReq, "get")
-systemData_result_json = callrestapi(caslibTableReq, "get")
+serverMetrics_result_json = callrestapi(serverMetricsReq, "get")
+serverCaslibs_result_json = callrestapi(serverCaslibsReq, "get")
+caslibTable_result_json = callrestapi(caslibTableReq, "get")
 
 #Columns printed for simple, simplejson, and csv output_style
 loggedInUser_cols=['name', 'id']
 listUsers_cols=['name', 'id']
 baseFolders_cols=['name','description']
 listServers_cols=['name','host','port','description']
-defaultServerMetrics_cols = ['serverName','systemNodes','systemCores','cpuSystemTime','memory']
-defaultServerCaslibs_cols = ['name','scope','description']
+serverMetrics_cols = ['serverName','systemNodes','systemCores','cpuSystemTime','memory']
+serverCaslibs_cols = ['name','scope','description']
 systemData_cols = ['name','rowCount']
 executeData_cols=['runSuccessful',"jobState"]
 
@@ -161,10 +224,10 @@ printresult(baseFolders_result_json,output_style,baseFolders_cols)
 print("\nCAS Servers:")
 printresult(listServers_result_json,output_style,listServers_cols)
 print("\nDefault Server Metrics:")
-specializedPrint(defaultServerMetrics_result_json, defaultServerMetrics_cols, output_style)
+specializedPrint(serverMetrics_result_json, serverMetrics_cols, output_style)
 print("\nDefault Server Caslibs:")
-printresult(defaultServerCaslibs_result_json,output_style,defaultServerCaslibs_cols)
-print("\nSystemData Caslib Tables:")
-printresult(systemData_result_json,output_style,systemData_cols)
+printresult(serverCaslibs_result_json,output_style,serverCaslibs_cols)
+print("\Caslib Tables:")
+printresult(caslibTable_result_json,output_style,systemData_cols)
 print("\nRun a Test Program:")
 specializedPrint(executeData_result_json, executeData_cols, output_style)
