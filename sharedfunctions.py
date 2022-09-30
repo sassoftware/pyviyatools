@@ -56,6 +56,7 @@
 
 # Import Python modules
 from __future__ import print_function
+from __future__ import unicode_literals
 import requests
 import sys
 import json
@@ -64,7 +65,6 @@ import os
 import collections
 import inspect
 import re
-
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -444,9 +444,15 @@ def csvresults(resultdata,columns=[]):
                 if z==numvals: sep=''
                 else: sep=','
 
-                if key !=  'links' and key in columns: print('"'+str(val)+'"'+sep, end="")
-
-
+                if key !=  'links' and key in columns: 
+                                                           
+                    try:
+                        print('"'+str(val)+'"'+sep, end="")
+                    except UnicodeEncodeError:
+                        newval=val.encode('ascii','replace')
+                        print('"'+str(newval)+'"'+sep, end="")
+                    
+ 
         print("\n",end="")
 
 
@@ -476,7 +482,13 @@ def csvresults(resultdata,columns=[]):
             if z==numvals: sep=''
             else: sep=','
 
-            if key != 'links': print('"'+str(val)+'"'+sep,end="")
+            if key != 'links': 
+                
+                try:
+                    print('"'+str(val)+'"'+sep, end="")
+                except UnicodeEncodeError:
+                    newval=val.encode('ascii','replace')
+                    print('"'+str(newval)+'"'+sep, end="")
 
         print("\n",end="")
 

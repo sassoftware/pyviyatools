@@ -11,6 +11,7 @@
 #
 # Change History
 #
+# SEP2022 Added option to specify the root folder to start at
 #
 # Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -28,7 +29,7 @@
 #
 
 # Import Python modules
-import argparse, sys, subprocess, uuid, time, os, glob
+import argparse, sys, subprocess, uuid, time, os, glob, json
 
 from sharedfunctions import getfolderid, callrestapi,getapplicationproperties
 
@@ -44,11 +45,14 @@ cliexe=propertylist["sascli.executable"]
 clicommand=os.path.join(clidir,cliexe)
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Export the complete Viya folder tree")
-parser.add_argument("-d","--directory", help="Directory for Export",required='True')
+parser = argparse.ArgumentParser(description="Export the complete Viya folder tree or the members of a folder to a set of Viya Packages.")
+parser.add_argument("-d","--directory", help="Directory to store Export Packages",required='True')
+parser.add_argument("-f","--folder", help="Folder to start export at (root is default)",default="NONE")
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 args= parser.parse_args()
+
 basedir=args.directory
+folder=args.folder
 quietmode=args.quiet
 
 
@@ -78,11 +82,22 @@ if areyousure.upper() =='Y':
 		filelist=glob.glob(path+"/*.json")
 		for file in filelist:
 			os.remove(file)
-
-	# retrieve root folders
+	
 	reqtype='get'
-	reqval='/folders/rootFolders'
+
+	if folder !='NONE':
+		
+ 	   folderinfo=getfolderid(folder)
+           results=(folderinfo[3])
+           folderid=results["id"]
+           reqval='/folders/folders/'+folderid+'/members'
+        else:
+	   # retrieve root folders
+	   reqval='/folders/rootFolders'
+	
 	resultdata=callrestapi(reqval,reqtype)
+
+	print(json.dumps(resultdata,indent=2))
 
 	# loop root folders
 	if 'items' in resultdata:
@@ -96,11 +111,16 @@ if areyousure.upper() =='Y':
 			# export each folder and download the package file to the directory
 			for i in range(0,returned_items):
 
-				id=resultdata['items'][i]["id"]
+				if folder=='NONE':	
+				   id=resultdata['items'][i]["id"]
+				   folderuri='/folders/folders/'+id
+				else:
+				   folderuri=resultdata['items'][i]["uri"]
+
 				package_name=str(uuid.uuid1())
 				json_name=resultdata['items'][i]["name"].replace(" ","")+'_'+str(i)
 
-				command=clicommand+' transfer export -u /folders/folders/'+id+' --name "'+package_name+'"'
+				command=clicommand+' transfer export -u '+folderuri+' --name "'+package_name+'"'
 				print(command)
 				subprocess.call(command, shell=True)
 
@@ -114,7 +134,7 @@ if areyousure.upper() =='Y':
 				print(command)
 				subprocess.call(command, shell=True)
 
-	print("NOTE: Viya root folders exported to json files in "+path)
+	print("NOTE: Viya folders exported to json files in "+path)
 
 else:
 	 print("NOTE: Operation cancelled")
