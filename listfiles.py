@@ -47,7 +47,8 @@ parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
 parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=None)
-parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
+parser.add_argument("-d","--days", help="List files older or younger than this number of days",default='-1')
+parser.add_argument("-do","--olderoryounger", help="For the date subsetting specify older or younger",choices=['older','younger'],default='older')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output by this field",default='modifiedTimeStamp')
 parser.add_argument("-so","--sortorder", help="Sort order",choices=['ascending','descending'],default='descending')
@@ -57,7 +58,7 @@ parser.add_argument("--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
 output_style=args.output
-daysolder=args.days
+days=args.days
 modby=args.modifiedby
 sortby=args.sortby
 nameval=args.name
@@ -66,6 +67,7 @@ pfolder=args.parentfolder
 debug=args.debug
 verbosecsv=args.verbosecsv
 sortorder=args.sortorder
+olderoryounger=args.olderoryounger
 
 files_result_json=None
 
@@ -76,9 +78,12 @@ if puri !=None and pfolder !=None:
    sys.exit()
 
 # calculate time period for files
-now=dt.today()-td(days=int(daysolder))
+now=dt.today()-td(days=int(days))
 subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-datefilter="le(creationTimeStamp,"+subset_date+")"
+
+if olderoryounger=='older':
+  datefilter="le(creationTimeStamp,"+subset_date+")"
+else: datefilter="ge(creationTimeStamp,"+subset_date+")"
 
 # create a list for filter conditions
 filtercond=[]
@@ -97,7 +102,7 @@ delimiter = ','
 if puri!=None: 
    filtercond.append("contains(parentUri,'"+puri+"')")
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
        
 # process items in folders
 elif pfolder!=None:
@@ -105,7 +110,7 @@ elif pfolder!=None:
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
    
    files_in_folder=callrestapi(reqval,reqtype)
       
