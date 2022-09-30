@@ -34,7 +34,7 @@ version=int(str(sys.version_info[0]))
 
 # get input parameters	
 parser = argparse.ArgumentParser(description="List folder and its sub-folders and contents")
-parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder.",required='True')
+parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder to start the listing.",required='True')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -50,7 +50,7 @@ targets=getfolderid(path_to_folder)
 
 if debug: print(targets)
 
-cols=["id","name","contentType","createdBy"]
+cols=["id","name","contentType","createdBy","parentFolderUri"]
 
 # if the folder is found
 if targets[0] is not None:
