@@ -86,7 +86,7 @@ baseFolders_result_json = callrestapi(baseFoldersReq, "get")
 listServers_result_json = callrestapi(listServersReq, "get")
 defaultServerMetrics_result_json = callrestapi(defaultServerMetricsReq, "get")
 defaultServerCaslibs_result_json = callrestapi(defaultServerCaslibsReq, "get")
-systemData_result_json = callrestapi(systemDataReq, "get")
+systemData_result_json = callrestapi(caslibTableReq, "get")
 
 #Columns printed for simple, simplejson, and csv output_style
 loggedInUser_cols=['name', 'id']
