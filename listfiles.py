@@ -42,7 +42,7 @@ from datetime import datetime as dt, timedelta as td
 
 parser = argparse.ArgumentParser()
 
-parser = argparse.ArgumentParser(description="Query and list files stored in the infrastructure data server.")
+parser = argparse.ArgumentParser(description="Query and list files stored in the Viya Infrastructure Data sSrver.")
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
@@ -50,6 +50,7 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
+parser.add_argument("-v","--verbosecsv", help="Verbose CSV(only used with -o=csv) ", action='store_true' )
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -62,7 +63,7 @@ nameval=args.name
 puri=args.parent
 pfolder=args.parentfolder
 debug=args.debug
-
+verbosecsv=args.verbosecsv
 
 files_result_json=None
 
@@ -136,8 +137,10 @@ else:
 if debug: print(reqval)   
 
 files_result_json=callrestapi(reqval,reqtype)
-
-cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
+if verbosecsv:
+   cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
+else:
+   cols=['id,'name','contentType','description','typeDefName','documentType','contentDisposition','fileStatus','searchable','size','creationTimeStamp','createdBy','modifiedBy','modifiedTimeStamp','expirationTimeStamp','encoding','parentUri']
 # print result
 
 if files_result_json == None:
