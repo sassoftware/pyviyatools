@@ -27,7 +27,7 @@
 
 import argparse, sys
 
-from sharedfunctions import getfolderid, callrestapi, printresult, getfolderid, getidsanduris
+from sharedfunctions import getfolderid, callrestapi, printresult, getfolderid, getidsanduris, getpath
 
 # get python version  
 version=int(str(sys.version_info[0]))
@@ -50,7 +50,7 @@ targets=getfolderid(path_to_folder)
 
 if debug: print(targets)
 
-cols=["id","name","contentType","createdBy","parentFolderUri"]
+cols=["pathtoitem","name","contentType","createdBy","creationTimeStamp","uri"]
 
 # if the folder is found
 if targets[0] is not None:
@@ -63,6 +63,27 @@ if targets[0] is not None:
 
     if debug: print(reqval)
     folders_result_json=callrestapi(reqval,reqtype)
+    
+    # add a loop of folder result that adds the parent folder path
+    # add the path back into the json for printing
+    total_items=folders_result_json['count']
+    itemlist=folders_result_json['items']
+    returned_items=len(itemlist)
+    
+    for i in range(0,returned_items):
+
+        itemuri=itemlist[i]["uri"]
+        name=itemlist[i]["name"]
+        contenttype=itemlist[i]["contentType"]
+                
+        parentFolderUri=itemlist[i]["parentFolderUri"]   
+        
+        if contenttype=='folder': path_to_item=getpath(itemuri)
+        else: path_to_item=getpath(parentFolderUri)
+
+        itemlist[i]["pathtoitem"]=path_to_item
+        itemlist[i]["pathanditemname"]=path_to_item+name
+        #print(path_to_item,name,contenttype)  
 
     printresult(folders_result_json,output_style,cols)
 		
