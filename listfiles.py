@@ -49,8 +49,9 @@ parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
 parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
-parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
-parser.add_argument("-v","--verbosecsv", help="Verbose CSV(only used with -o=csv) ", action='store_true' )
+parser.add_argument("-s","--sortby", help="Sort the output by this field",default='modifiedTimeStamp')
+parser.add_argument("-so","--sortorder", help="Sort order",choices=['ascending','descending'],default='descending')
+parser.add_argument("-v","--verbosecsv", help="Verbose CSV(only used with -o=csv) ", action='store_false' )
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -64,6 +65,7 @@ puri=args.parent
 pfolder=args.parentfolder
 debug=args.debug
 verbosecsv=args.verbosecsv
+sortorder=args.sortorder
 
 files_result_json=None
 
@@ -127,12 +129,12 @@ elif pfolder!=None:
    
    filtercond.append("in(id,"+inclause+")")
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"g&limit=10000"
    
    
 else:
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
 
 if debug: print(reqval)   
 
@@ -140,7 +142,7 @@ files_result_json=callrestapi(reqval,reqtype)
 if verbosecsv:
    cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
 else:
-   cols=['id,'name','contentType','description','typeDefName','documentType','contentDisposition','fileStatus','searchable','size','creationTimeStamp','createdBy','modifiedBy','modifiedTimeStamp','expirationTimeStamp','encoding','parentUri']
+   cols=['id','name','contentType','description','typeDefName','documentType','contentDisposition','fileStatus','searchable','size','creationTimeStamp','createdBy','modifiedBy','modifiedTimeStamp','expirationTimeStamp','encoding','parentUri']
 # print result
 
 if files_result_json == None:
