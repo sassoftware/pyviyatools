@@ -387,7 +387,7 @@ def simpleresults(resultdata):
 #   01aug2018  initial development
 #   19dece2018 print  csv in column orderwith only common columns
 
-def csvresults(resultdata,columns=[]):
+def csvresults(resultdata,columns=[],header=1):
 
 
     if 'items' in resultdata:
@@ -421,16 +421,17 @@ def csvresults(resultdata,columns=[]):
             numvals=len(columns)
             z=0
 
-            # print header row of column names
-            for key,val in pairs.items():
+            if header:
+                # print header row of column names
+                for key,val in pairs.items():
 
-                z=z+1
+                    z=z+1
 
-                # seperate with comma except last item
-                if z==numvals: sep=''
-                else: sep=','
+                    # seperate with comma except last item
+                    if z==numvals: sep=''
+                    else: sep=','
 
-                if i==0 and key in columns: print(key,sep,end="")
+                    if i==0 and key in columns: print(key,sep,end="")
 
             print("\n",end="")
 
@@ -519,7 +520,7 @@ def file_accessible(filepath, mode):
 #   22dec2018 add csv columns only relevent for csv output, defaults provided but can be overriden when called
 #   20feb2020 add simplejson output style
 
-def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"]):
+def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"],header=1):
 
 
     # print rest call results
@@ -530,7 +531,7 @@ def printresult(result,output_style,colsforcsv=["id","name","type","description"
         elif output_style=='simplejson':
             simplejsonresults(result)
         elif output_style=='csv':
-            csvresults(result,columns=colsforcsv)
+            csvresults(result,columns=colsforcsv,header=header)
         else:
             print(json.dumps(result,indent=2))
     else: print(result)
