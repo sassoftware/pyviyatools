@@ -28,28 +28,35 @@
 import argparse, sys
 
 from sharedfunctions import getfolderid, callrestapi, printresult, getfolderid, getidsanduris, getpath, json
+from datetime import datetime as dt, timedelta as td
 
 # get python version  
 version=int(str(sys.version_info[0]))
 
 # get input parameters	
-parser = argparse.ArgumentParser(description="List folder and its sub-folders and contents")
+parser = argparse.ArgumentParser(description="List folder and its sub-folders and content.")
 parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder to start the listing.",required='True')
+parser.add_argument("-v","--verbosecsv", help="Verbose CSV(only used with -o=csv) ", action='store_true' )
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
-
 debug=args.debug
 path_to_folder=args.folderpath
+verbosecsv=args.verbosecsv
 output_style=args.output
+
+delimiter = ','
+
+if verbosecsv: cols=cols=["id","name","type","contentType","description","typeDefName","documentType","contentDisposition","fileStatus","searchable","size","createdBy","creationTimeStamp","modifiedBy","modifiedTimeStamp","expirationTimeStamp","encoding","parentUri"]
+else: cols=["id","pathtoitem","name","contentType","createdBy","creationTimeStamp","modifiedBy","modifiedTimeStamp","uri"]
 
 def getfoldercontent(path_to_folder):
 
     # call getfolderid to get the folder id
     targets=getfolderid(path_to_folder)
 
-    if debug: print(targets)
+    #if debug: print(targets)
 
     # if the folder is found
     if targets[0] is not None:
@@ -71,24 +78,29 @@ def getfoldercontent(path_to_folder):
         
         for i in range(0,returned_items):
 
+            contenttype=itemlist[i]["contentType"]
             itemuri=itemlist[i]["uri"]
             name=itemlist[i]["name"]
-            contenttype=itemlist[i]["contentType"]
-                    
+                              
             parentFolderUri=itemlist[i]["parentFolderUri"]   
-            
-            #if contenttype=='folder': path_to_item=getpath(itemuri)
-            #else: path_to_item=getpath(parentFolderUri)
             path_to_item=getpath(itemuri)
 
             itemlist[i]["pathtoitem"]=path_to_item
             itemlist[i]["pathanditemname"]=path_to_item+name
-            #print(path_to_item,name,contenttype)  
- 
-    return folders_result_json
+            #print(path_to_item,name,contenttype) 
 
-   
-cols=["pathtoitem","name","contentType","createdBy","creationTimeStamp","uri"]
+        newitems = [ ]
+
+        # remove folders
+        for i in range(0,returned_items):
+
+            if folders_result_json['items'][i]["contentType"]!="folder":
+                newitems.append(folders_result_json['items'][i])
+            
+        folders_result_json["count"]=len(newitems)
+        folders_result_json["items"]=newitems
+     
+    return folders_result_json
 
 # root folder, loop sub-folders and print
 if path_to_folder=="/":
