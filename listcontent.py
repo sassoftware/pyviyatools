@@ -48,7 +48,7 @@ output_style=args.output
 
 delimiter = ','
 
-if verbosecsv: cols=cols=["id","name","type","contentType","description","typeDefName","documentType","contentDisposition","fileStatus","searchable","size","createdBy","creationTimeStamp","modifiedBy","modifiedTimeStamp","expirationTimeStamp","encoding","parentUri"]
+if verbosecsv: cols=cols=["id","pathtoitem","name","type","contentType","description","typeDefName","documentType","contentDisposition","fileStatus","searchable","size","createdBy","creationTimeStamp","modifiedBy","modifiedTimeStamp","expirationTimeStamp","encoding","parentUri"]
 else: cols=["id","pathtoitem","name","contentType","createdBy","creationTimeStamp","modifiedBy","modifiedTimeStamp","uri"]
 
 def getfoldercontent(path_to_folder):
