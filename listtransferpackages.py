@@ -1,22 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# lisfiles.py January 2018
+# listtransferpackages.py October 2022
 #
-# provides an easy interface to query what files are currently stored in the infrastructure data server.
-# You can list all files sorted by modified date or size of file, and query based on date modified,
-# user who last modified the file,  parentUri or filename. The output provides the size of each file, 
-# so that you can check the space being used to store files. 
-# Use this tool to view files managed by the files service and stored in the infrastructure data server.
 #
-# For example, if I want to see all potential log files, 
-# created by the /jobexecution service that are older than 6 days old.
+# For example, list all packages with hr in the name created by sasadm
 #
-# ./listfiles.py -n log -p /jobExecution -d 6 -o csv
+# ./listtransferpackages.py -n "hr" -c sasadm -o csv
 #
-# 27JAN2019 Comments added
-# 12SEP2019 Added the ability to specifiy a folder as an alternative to a URI
-#
+# 12OCT2022 Initial Creation
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -32,17 +24,14 @@ import argparse , datetime, sys
 from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
 from datetime import datetime as dt, timedelta as td
 
-# setup command-line arguements. In this block which is common to all the tools you setup what parameters
-# are passed to the tool
-# the --output parameter is a common one which supports the three styles of output json, simple or csv
-
 parser = argparse.ArgumentParser()
 
-parser = argparse.ArgumentParser(description="Query and list files stored in the infrastructure data server.")
+parser = argparse.ArgumentParser(description="Query and list transfer packages stored in the infrastructure data server.")
 parser.add_argument("-n","--name", help="Name contains",default=None)
+parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
+parser.add_argument("-c","--createdby", help="Created id equals",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-do","--olderoryounger", help="For the date subsetting specify older or younger",choices=['older','younger'],default='older')
-parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
 parser.add_argument("-so","--sortorder", help="Sort order",choices=['ascending','descending'],default='descending')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
@@ -52,13 +41,14 @@ args = parser.parse_args()
 output_style=args.output
 days=args.days
 modby=args.modifiedby
+createby=args.createdby
 sortby=args.sortby
 nameval=args.name
 debug=args.debug
 sortorder=args.sortorder
 olderoryounger=args.olderoryounger
 
-packagefile_result_json=None
+packagefile_resultn=None
 
 # calculate time period for files
 # calculate time period for files
@@ -77,6 +67,7 @@ filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
 if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if createby!=None: filtercond.append("eq(createdBy,"+createby+")")
 
 # set the request type
 reqtype='get'
@@ -87,15 +78,14 @@ reqval="/transfer/packages?filter="+completefilter+"&sortBy="+sortby+":"+sortord
 
 if debug: print(reqval)   
 
-packagefile_result_json=callrestapi(reqval,reqtype)
+packagefile_result=callrestapi(reqval,reqtype)
 
 cols=['id','name','transferObjectCount','createdBy','creationTimeStamp','modifiedBy','modifiedTimeStamp']
-# print result
 
-if packagefile_result_json == None:
-   print("No files returned by query.")
+if packagefile_result["count"] ==0 :
+   print("No packages returned by query.")
 else:
-   printresult(packagefile_result_json,output_style,cols)
+   printresult(packagefile_result,output_style,cols)
  
    
  

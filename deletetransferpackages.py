@@ -1,9 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# 27JAN2019 Comments added
-# 12SEP2019 Added the ability to specifiy a folder as an alternative to a URI
+# deletetransferpackages.py October 2022
 #
+#
+# For example, delete all packages with hr in the name created by sasadm
+#
+# ./deletetransferpackages.py -n "hr" -c sasadm -o csv
+#
+# 12OCT2022 Initial Creation
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -29,9 +34,10 @@ parser = argparse.ArgumentParser()
 
 parser = argparse.ArgumentParser(description="Query and list files stored in the infrastructure data server.")
 parser.add_argument("-n","--name", help="Name contains",default=None)
+parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
+parser.add_argument("-c","--createdby", help="Created id equals",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-do","--olderoryounger", help="For the date subsetting specify older or younger",choices=['older','younger'],default='older')
-parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -41,6 +47,7 @@ args = parser.parse_args()
 output_style='csv'
 days=args.days
 modby=args.modifiedby
+createby=args.createdby
 sortby='modifiedTimeStamp'
 nameval=args.name
 debug=args.debug
@@ -50,7 +57,6 @@ quietmode=args.quiet
 
 packagefile_result=None
 
-# calculate time period for files
 # calculate time period for files
 now=dt.today()-td(days=int(days))
 subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
@@ -66,6 +72,7 @@ filtercond=[]
 filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
+if createby!=None: filtercond.append("eq(createdBy,"+createby+")")
 if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
 
 # set the request type
@@ -76,16 +83,13 @@ completefilter = 'and('+delimiter.join(filtercond)+')'
 reqval="/transfer/packages?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
 
 if debug: print(reqval)   
-
 packagefile_result=callrestapi(reqval,reqtype)
 
-cols=['id','name','transferObjectCount','createdBy','creationTimeStamp','modifiedBy','modifiedTimeStamp']
-
-if packagefile_result == None:
-   print("No package files returned by query.")
+if packagefile_result["count"] ==0 :
+   print("No package returned by query.")
 else:
 
-   cols=['id','name','transferObjectCount']
+   cols=['id','name','transferObjectCount','createdBy','creationTimeStamp','modifiedBy','modifiedTimeStamp']
    
    # if quiet do not prompt
    if quietmode:
@@ -100,7 +104,8 @@ else:
           areyousure=raw_input("Are you sure you want to delete the transfer packages listed above? (Y)") 
     
    if areyousure.upper() == 'Y':
-      
+
+      #loop through items returned and delete packages      
       allitems=packagefile_result["items"]
 
       for item in allitems:
