@@ -28,7 +28,7 @@ import os
 from jobmodule import jobmodule
 
 #Used in place of printresults in scenarios where results are not itemized, making printresults unusuable
-def specializedPrint(jsonData, cols, outputStyle):
+def specializedPrint(jsonData, outputStyle, cols):
     if(outputStyle == "json"):
         print(json.dumps(jsonData,indent=2))
     else:
@@ -58,24 +58,26 @@ def verbosePrint(text, verbose):
     if(verbose):
         print(text)
 
-# setup command-line arguements. In this block which is common to all the tools you setup what parameters
-# are passed to the tool
-# the --output parameter is a common one which supports the three styles of output json, simple or csv
-
+#Allows command-line arguments
 parser = argparse.ArgumentParser()
+#Controls output type for data output
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson', 'passfail'],default='csv')
 #By including the flag -g, the test file will be created in the current directory, but if -g is not used, the test will not be generated at all
 #It is also possible to use -g filename.json to give your test a custom name
 parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", type=argparse.FileType('w'), const=(os.getcwd() + "/testPreferences.json"), metavar="filename")
 #There is no default file name to be read for -c, it must be entered manually
 parser.add_argument("-c","--custom-tests", dest="customTests", help="Use a Custom Test Preferences File", nargs="?", type=argparse.FileType('r'), metavar="filename")
+#Verbose parameter determines whether or not validateviya talks while running
+parser.add_argument("-v", "--verbose", help="Add Output Verbosity", action="store_true")
 
 args = parser.parse_args()
 output_style=args.output
+verbose = args.verbose
 
 testPreferences = None
-numTests = 8
+defaultNumTests = 8
 
+# Create testPreferences json object from either custom or default tests
 if(args.customTests is not None):
     try:
         #Read JSON file as a JSON object
@@ -84,39 +86,43 @@ if(args.customTests is not None):
         print("Custom Test Preferences File could not be read")
         quit()
 
-    #Verify preferences to be of correct form
-    assert(int(customPreferences['count']) == numTests)
     #Convert count to int
-    customPreferences['count'] = int(customPreferences['count'])
+    numTests = int(customPreferences['count'])
+    #Assure that the number of tests is equal to the actual number of tests
+    assert(numTests == len(list(customPreferences['tests'])))
 
+    #Assure the number of tests is default amount
     for i in range(0, numTests):
-        #Assure each test has an id, counting up from 1 to numTests
+        #Assure each test has an id, counting up from 0 to numTests-1
         assert(int(customPreferences['tests'][i]['id']) == i)
         #Convert ids to int
         customPreferences['tests'][i]['id'] = int(customPreferences['tests'][i]['id'])
-        #Assure each test contains the key
-        assert(customPreferences['tests'][i]['active'] is not None)
+        #Assure each test contains the active parameter, either True or False
+        assert(customPreferences['tests'][i].get('active') is not None)
 
     #Set the test preferences to those specificied in the file
     testPreferences = customPreferences
 else:
+    numTests = defaultNumTests
     #Create JSON object with default preferences
     defaultPreferences = {
         "tests":[
-            {"id":"0", "name":"Logged in User", "active":"True"},
-            {"id":"1", "name":"List Users", "active":"True"},
-            {"id":"2", "name":"List Base Folders", "active":"True"},
-            {"id":"3", "name":"List CAS Servers", "active":"True"},
-            {"id":"4", "name":"List CAS Server Metrics", "servers":["cas-shared-default"], "active":"True"},
-            {"id":"5", "name":"List CAS Server Caslibs", "servers":["cas-shared-default"], "active":"True"},
-            {"id":"6", "name":"List CASLib Tables", "caslibs":[("cas-shared-default", "systemData")], "active":"True"},
-            {"id":"7", "name":"Run Test SAS Code", "active":"True"}
+            {"id":"0", "name":"Logged in User", "req":['/identities/users/@currentUser'], "active":"True", "cols":['name', 'id'], 'type':'Data Collection'},
+            {"id":"1", "name":"List Users", "req":["/identities/users?limit=10000"], "active":"True", "cols":['name', 'id'], 'type':'Data Collection'},
+            {"id":"2", "name":"List Base Folders", "req":['/folders/rootFolders?limit=10000'], "active":"True", "cols":['name','description'],'type':'Data Collection'},
+            {"id":"3", "name":"List CAS Servers", "req":['/casManagement/servers?limit=10000'], "active":"True", "cols":['name','host','port','description'], 'type':'Data Collection'},
+            {"id":"4", "name":"List CAS Server Metrics", "req":['/casManagement/servers/', '/metrics'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "active":"True", "cols":['serverName','systemNodes','systemCores','cpuSystemTime','memory'], 'type':'Data Collection'},
+            {"id":"5", "name":"List CAS Server Caslibs", "req":['/casManagement/servers/', '/caslibs?limit=10000'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "active":"True", "cols":['name','scope','description'], 'type':'Data Collection'},
+            {"id":"6", "name":"List CASLib Tables", "req":['/casManagement/servers/', '/caslibs/', '/tables?limit=10000'], "reqVariable":"caslibs", "caslibs":[["cas-shared-default", "systemData"]], "active":"True", "cols":['name','rowCount'], 'type':'Data Collection'},
+            {"id":"7", "name":"Run Test SAS Code", "active":"True", "cols":['runSuccessful',"jobState"], "type":"Computation"}
         ],
         "count":numTests
     }
     #Set the test preferences to the default values
     testPreferences = defaultPreferences
 
+# If -g flag is on, generate the test json and write to file
+# If -g and -c are used, the generated test json will be a copy of the one loaded in
 if(args.generateTestJson is not None):
     #Write tests preferences JSON to file (default OR those specified via -c)
     try:
@@ -129,105 +135,164 @@ if(args.generateTestJson is not None):
     #We only want to generate the test file, not run tests
     quit()
 
-#Run tests:
-#Important values:
-defaultCAS = "cas-shared-default"
-caslibs = ["systemData"]
+#Get active tests from library and split into data collection and computation tests
+activeTests = [test for test in testPreferences['tests'] if test['active'] == "True"]
+dataCollectionTests = [test for test in activeTests if test['type'] == "Data Collection"]
+computationTests = [test for test in activeTests if test['type'] == "Computation"]
 
-#Requests used:
-loggedInUserReq = '/identities/users/@currentUser'
-listUsersReq = '/identities/users?limit=10000'
-baseFoldersReq = '/folders/rootFolders?limit=10000'
-listServersReq = '/casManagement/servers?limit=10000'
-serverMetricsReq = '/casManagement/servers/' + defaultCAS + '/metrics'
-serverCaslibsReq = '/casManagement/servers/' + defaultCAS + '/caslibs?limit=10000'
-caslibTableReq = '/casManagement/servers/' + defaultCAS + '/caslibs/' + "systemData" + '/tables?limit=10000'
+#Special case: by setting the output type to "passfail", the tests are limited to just
+#computation tests, as these will be a simple way to validate viya.
+if(output_style == "passfail"):
+    activeTests = computationTests
+    dataCollectionTests = []
 
-loggedInUser_result_json = callrestapi(loggedInUserReq, "get")
-listUsers_result_json = callrestapi(listUsersReq, "get")
-baseFolders_result_json = callrestapi(baseFoldersReq, "get")
-listServers_result_json = callrestapi(listServersReq, "get")
-serverMetrics_result_json = callrestapi(serverMetricsReq, "get")
-serverCaslibs_result_json = callrestapi(serverCaslibsReq, "get")
-caslibTable_result_json = callrestapi(caslibTableReq, "get")
+#Run Data Collection Tests
+for test in dataCollectionTests:
+    verbosePrint("Data Collection Test Started: " + test['name'], verbose)
+    test['results'] = []
+    #If there is a request variable, that means there could be more than one request for
+    #the given test, resulting in the need for a for loop
+    if(test.get('reqVariable') is not None):
+        #the key "reqVariable" points to the key inside test that contains the variable used
+        #in the api request
+        reqVariables = test[test['reqVariable']]
+        for variables in reqVariables:
+            request = ""
+            for i in range(len(test['req'])):
+                request += test['req'][i]
+                #Being that the varaibles list should have len = len(test['req']) - 1,
+                #this ensures that there is no attempt to access an out-of-bounds index
+                if(i < len(variables)):
+                    request += variables[i]
 
-#Columns printed for simple, simplejson, and csv output_style
-loggedInUser_cols=['name', 'id']
-listUsers_cols=['name', 'id']
-baseFolders_cols=['name','description']
-listServers_cols=['name','host','port','description']
-serverMetrics_cols = ['serverName','systemNodes','systemCores','cpuSystemTime','memory']
-serverCaslibs_cols = ['name','scope','description']
-systemData_cols = ['name','rowCount']
-executeData_cols=['runSuccessful',"jobState"]
+            #Error checking: if our request fails, we remove the test from activeTests (so it
+            #is not printed with sucessful results) and move onto the next test
+            result = callrestapi(request, "get", stoponerror=False)
+            if(result is None):
+                verbosePrint("An error occurred running test " + str(test['id']), verbose)
+                activeTests.remove(test)
+                #break out of the for loop, pushing us to the next test
+                break
+            else:
+                #If things went well:
+                test['results'].append(result)
+    #In this case, there is only one request and, therefore, only one result
+    else:
+        request = test['req'][0]
+        result = callrestapi(request, "get", stoponerror=False)
+        if(result is None):
+            verbosePrint("An error occurred running test " + str(test['id']) + ": " + test['name'], verbose)
+            activeTests.remove(test)
+        else:
+            #If things went well:
+            test['results'].append(result)
 
-#Run test code:
-#Get the job execution compute context:
-getComputeContextReq="/compute/contexts?filter=contains(name, 'Job Execution')"
-computeContext_result_json = callrestapi(getComputeContextReq, "get")
-contextId = computeContext_result_json['items'][0]['id']
-#Create a compute session for the test code:
-createSessionReq="/compute/contexts/" + contextId + "/sessions"
-newSession = callrestapi(createSessionReq, "post")
-sessionId = newSession['id']
+#Run computation tests:
+#Currently designed only for "Run Test SAS Code"
+if(len(computationTests) == 1):
+    #In the event of transformation into for loop, replace code below with for test in ...
+    test = computationTests[0]
+    test['results'] = []
 
-#Keep it in a try loop to ensure we will always end our compute session
-try:
-    #Homemade json object for storing test code data:
-    executeData_result_json = {"runSuccessful": False, "log": []}
+    verbosePrint("Computation Test Started: " + test['name'], verbose)
+    #Get the job execution compute context:
+    getComputeContextReq="/compute/contexts?filter=contains(name, 'Job Execution')"
+    computeContext_result_json = callrestapi(getComputeContextReq, "get")
+    contextId = computeContext_result_json['items'][0]['id']
 
-    #Execute SAS code using our compute session:
-    executeCodeReq="/compute/sessions/" + sessionId + "/jobs"
-    #Our code uses proc print and proc cas:
-    run_code_json = {
-        "name":"Test SAS Code Request",
-        "code":'proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
-    }
-    executeCode = callrestapi(executeCodeReq, "post", data=run_code_json)
-    #Get our job id from our job request:
-    jobId = executeCode['id']
+    verbosePrint("Compute Context Found with id: " + contextId, verbose)
+    #Create a compute session for the test code:
+    createSessionReq="/compute/contexts/" + contextId + "/sessions"
+    newSession = callrestapi(createSessionReq, "post")
+    sessionId = newSession['id']
 
-    #Get job state - we want to see if it ran successfully
-    getJobStateReq="/compute/sessions/" + sessionId + "/jobs/" + jobId + "/state?wait=10"
-    jobState = callrestapi(getJobStateReq, "get")
-    #Continually check the job state until it is no longer running:
-    while(jobState == "running"):
+    verbosePrint("Compute Session Created with id: " + sessionId, verbose)
+
+    #Keep it in a try loop to ensure we will always end our compute session
+    try:
+        #Homemade json object for storing test code data:
+        executeData_result_json = {"runSuccessful": False, "log": []}
+
+        #Execute SAS code using our compute session:
+        executeCodeReq="/compute/sessions/" + sessionId + "/jobs"
+        #Our code uses proc print and proc cas:
+        run_code_json = {
+            "name":"Test SAS Code Request",
+            "code":'proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
+        }
+        executeCode = callrestapi(executeCodeReq, "post", data=run_code_json)
+
+        verbosePrint("Code Executed", verbose)
+        #Get our job id from our job request:
+        jobId = executeCode['id']
+
+        #Get job state - we want to see if it ran successfully
+        getJobStateReq="/compute/sessions/" + sessionId + "/jobs/" + jobId + "/state?wait=10"
         jobState = callrestapi(getJobStateReq, "get")
+        #Continually check the job state until it is no longer running:
+        while(jobState == "running"):
+            jobState = callrestapi(getJobStateReq, "get")
 
-    #Record our final job state:
-    executeData_result_json['jobState'] = jobState
+        #Record our final job state:
+        executeData_result_json['jobState'] = jobState
+        verbosePrint("Code Has Completed Execution with State: " + jobState, verbose)
+        #Get job log - can be used for debugging
+        getJobLogReq="/compute/sessions/" + sessionId + '/jobs/' + jobId + "/log"
+        getJobLog = callrestapi(getJobLogReq, "get")
+        executeData_result_json['log'] = getJobLog['items']
 
-    #Get job log - can be used for debugging
-    getJobLogReq="/compute/sessions/" + sessionId + '/jobs/' + jobId + "/log"
-    getJobLog = callrestapi(getJobLogReq, "get")
-    executeData_result_json['log'] = getJobLog['items']
+        #If our code ran succesfully, we want to take note of that
+        if(jobState == "completed"):
+            executeData_result_json['runSuccessful'] = True
+    finally:
+        #We include this in a finally block just in case our session exists and
+        #the test code fails - we want to close the session no matter what
+        if(sessionId):
+            #Close session: delete /sessions/SESSIONID
+            closeSessionReq = "/compute/sessions/" + sessionId
+            closeSession = callrestapi(closeSessionReq, "delete")
+            verbosePrint("Compute session with session id " + sessionId + " closed successfully", verbose)
 
-    #If our code ran succesfully, we want to take note of that
-    if(jobState == "completed"):
-        executeData_result_json['runSuccessful'] = True
-finally:
-    #We include this in a finally block just in case our session exists and
-    #the test code fails - we want to close the session no matter what
-    if(sessionId):
-        #Close session: delete /sessions/SESSIONID
-        closeSessionReq = "/compute/sessions/" + sessionId
-        closeSession = callrestapi(closeSessionReq, "delete")
-        print("Compute session with session id " + sessionId + " closed successfully")
+        test['results'].append(executeData_result_json)
 
-#Print our results:
-print("Current user:")
-specializedPrint(loggedInUser_result_json, loggedInUser_cols, output_style)
-print("\nUsers:")
-printresult(listUsers_result_json,output_style,listUsers_cols)
-print("\nBase Folders:")
-printresult(baseFolders_result_json,output_style,baseFolders_cols)
-print("\nCAS Servers:")
-printresult(listServers_result_json,output_style,listServers_cols)
-print("\nDefault Server Metrics:")
-specializedPrint(serverMetrics_result_json, serverMetrics_cols, output_style)
-print("\nDefault Server Caslibs:")
-printresult(serverCaslibs_result_json,output_style,serverCaslibs_cols)
-print("\Caslib Tables:")
-printresult(caslibTable_result_json,output_style,systemData_cols)
-print("\nRun a Test Program:")
-specializedPrint(executeData_result_json, executeData_cols, output_style)
+#Print Results:
+
+#In the case of passfail output, we simply check to see if all of our tests
+#ran successfully, if so, we return PASS, else FAIL
+if(output_style == "passfail"):
+    runSuccessful = True
+    for test in activeTests:
+        for result in test['results']:
+            if(result['runSuccessful'] == False):
+                runSuccessful = False
+                break
+        #If we break in the inner for loop, we want to break the outer, as well
+        else:
+            continue
+        break
+
+    if(runSuccessful):
+        print("PASS")
+    else:
+        print("FAIL")
+
+    #To avoid unneeded indendation on the main print block, we just quit here
+    quit()
+
+#For standard output types:
+for test in activeTests:
+    #Verbose print the name, id of our test:
+    testName = test['name']
+    verbosePrint("\nTest " + str(test['id']) + ": " + testName, verbose)
+    #For each test that we ran, go through the results
+    for i in range(len(test['results'])):
+        #If there is a request variable, verbose print it
+        if('reqVariable' in test):
+            reqVar = test['reqVariable']
+            verbosePrint((reqVar + ":" + str(test[reqVar][i])), verbose)
+        #If there is not an items key inside the results, we have to use specializedPrint
+        #if there is we can just use printresult
+        if not "items" in test['results'][0]:
+            specializedPrint(test['results'][i], output_style, test['cols'])
+        else:
+            printresult(test["results"][i], output_style, test['cols'])
