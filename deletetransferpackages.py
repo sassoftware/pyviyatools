@@ -1,19 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# lisfiles.py January 2018
-#
-# provides an easy interface to query what files are currently stored in the infrastructure data server.
-# You can list all files sorted by modified date or size of file, and query based on date modified,
-# user who last modified the file,  parentUri or filename. The output provides the size of each file, 
-# so that you can check the space being used to store files. 
-# Use this tool to view files managed by the files service and stored in the infrastructure data server.
-#
-# For example, if I want to see all potential log files, 
-# created by the /jobexecution service that are older than 6 days old.
-#
-# ./listfiles.py -n log -p /jobExecution -d 6 -o csv
-#
 # 27JAN2019 Comments added
 # 12SEP2019 Added the ability to specifiy a folder as an alternative to a URI
 #
@@ -28,7 +15,9 @@
 #  express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
 
-import argparse , datetime, sys
+import argparse , datetime, sys, json
+
+from requests import delete
 from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
 from datetime import datetime as dt, timedelta as td
 
@@ -43,22 +32,23 @@ parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-do","--olderoryounger", help="For the date subsetting specify older or younger",choices=['older','younger'],default='older')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
-parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
-parser.add_argument("-so","--sortorder", help="Sort order",choices=['ascending','descending'],default='descending')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
+parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
+version=int(str(sys.version_info[0]))
+
 args = parser.parse_args()
-output_style=args.output
+output_style='csv'
 days=args.days
 modby=args.modifiedby
-sortby=args.sortby
+sortby='modifiedTimeStamp'
 nameval=args.name
 debug=args.debug
-sortorder=args.sortorder
+sortorder='descending'
 olderoryounger=args.olderoryounger
+quietmode=args.quiet
 
-packagefile_result_json=None
+packagefile_result=None
 
 # calculate time period for files
 # calculate time period for files
@@ -87,16 +77,47 @@ reqval="/transfer/packages?filter="+completefilter+"&sortBy="+sortby+":"+sortord
 
 if debug: print(reqval)   
 
-packagefile_result_json=callrestapi(reqval,reqtype)
+packagefile_result=callrestapi(reqval,reqtype)
 
 cols=['id','name','transferObjectCount','createdBy','creationTimeStamp','modifiedBy','modifiedTimeStamp']
-# print result
 
-if packagefile_result_json == None:
-   print("No files returned by query.")
+if packagefile_result == None:
+   print("No package files returned by query.")
 else:
-   printresult(packagefile_result_json,output_style,cols)
- 
+
+   cols=['id','name','transferObjectCount']
+   
+   # if quiet do not prompt
+   if quietmode:
+      areyousure="Y"
+   else:
+
+       printresult(packagefile_result,output_style,cols)
+
+       if version  > 2:
+          areyousure=input("Are you sure you want to delete the transfer packages listed above? (Y)")
+       else:
+          areyousure=raw_input("Are you sure you want to delete the transfer packages listed above? (Y)") 
+    
+   if areyousure.upper() == 'Y':
+      
+      allitems=packagefile_result["items"]
+
+      for item in allitems:
+
+         id=item["id"]
+         name=item["name"]
+
+         if debug: print("Deleting package with id "+id+" and name "+name)
+         reqtype='delete'
+         reqval='/transfer/packages/'+id+'#withParts?deletejobs=true'
+         if debug: print(reqval)
+         rc=callrestapi(reqval,reqtype)
+         if debug: print(rc)
+
+      print("NOTE: packages matching criteria have been deleted.")
+         
+
    
  
     
