@@ -113,7 +113,7 @@ else:
          id=item["id"]
          name=item["name"]
 
-         if debug: print("Deleting package with id "+id+" and name "+name)
+         print("Deleting package with id "+id+" and name "+name)
          reqtype='delete'
          reqval='/transfer/packages/'+id+'#withParts?deletejobs=true'
          if debug: print(reqval)
