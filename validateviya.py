@@ -66,7 +66,7 @@ parser.add_argument("-o","--output", help="Output Style", choices=['csv','json',
 #It is also possible to use -g filename.json to give your test a custom name
 parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", type=argparse.FileType('w'), const=(os.getcwd() + "/testPreferences.json"), metavar="filename")
 #There is no default file name to be read for -c, it must be entered manually
-parser.add_argument("-c","--custom-tests", dest="customTests", help="Use a Custom Test Preferences File", nargs="?", type=argparse.FileType('r'), metavar="filename")
+parser.add_argument("-c","--custom-tests", dest="customTests", help="Use a Custom Test Preferences File", nargs=1, type=argparse.FileType('r'), metavar="filename")
 #Verbose parameter determines whether or not validateviya talks while running
 parser.add_argument("-v", "--verbose", help="Add Output Verbosity", action="store_true")
 
@@ -81,7 +81,7 @@ defaultNumTests = 8
 if(args.customTests is not None):
     try:
         #Read JSON file as a JSON object
-        customPreferences = json.load(args.customTests)
+        customPreferences = json.load(args.customTests[0])
     except:
         print("Custom Test Preferences File could not be read")
         quit()
@@ -107,14 +107,14 @@ else:
     #Create JSON object with default preferences
     defaultPreferences = {
         "tests":[
-            {"id":"0", "name":"Logged in User", "req":['/identities/users/@currentUser'], "active":"True", "cols":['name', 'id'], 'type':'Data Collection'},
-            {"id":"1", "name":"List Users", "req":["/identities/users?limit=10000"], "active":"True", "cols":['name', 'id'], 'type':'Data Collection'},
-            {"id":"2", "name":"List Base Folders", "req":['/folders/rootFolders?limit=10000'], "active":"True", "cols":['name','description'],'type':'Data Collection'},
-            {"id":"3", "name":"List CAS Servers", "req":['/casManagement/servers?limit=10000'], "active":"True", "cols":['name','host','port','description'], 'type':'Data Collection'},
-            {"id":"4", "name":"List CAS Server Metrics", "req":['/casManagement/servers/', '/metrics'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "active":"True", "cols":['serverName','systemNodes','systemCores','cpuSystemTime','memory'], 'type':'Data Collection'},
-            {"id":"5", "name":"List CAS Server Caslibs", "req":['/casManagement/servers/', '/caslibs?limit=10000'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "active":"True", "cols":['name','scope','description'], 'type':'Data Collection'},
-            {"id":"6", "name":"List CASLib Tables", "req":['/casManagement/servers/', '/caslibs/', '/tables?limit=10000'], "reqVariable":"caslibs", "caslibs":[["cas-shared-default", "systemData"]], "active":"True", "cols":['name','rowCount'], 'type':'Data Collection'},
-            {"id":"7", "name":"Run Test SAS Code", "active":"True", "cols":['runSuccessful',"jobState"], "type":"Computation"}
+            {"id":"0", "name":"Logged in User", "active":"True", "req":['/identities/users/@currentUser'], "cols":['name', 'id'], 'type':'Data Collection'},
+            {"id":"1", "name":"List Users", "active":"True", "req":["/identities/users?limit=10000"], "cols":['name', 'id'], 'type':'Data Collection'},
+            {"id":"2", "name":"List Base Folders", "active":"True", "req":['/folders/rootFolders?limit=10000'], "cols":['name','description'],'type':'Data Collection'},
+            {"id":"3", "name":"List CAS Servers", "active":"True", "req":['/casManagement/servers?limit=10000'], "cols":['name','host','port','description'], 'type':'Data Collection'},
+            {"id":"4", "name":"List CAS Server Metrics", "active":"True", "req":['/casManagement/servers/', '/metrics'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "cols":['serverName','systemNodes','systemCores','cpuSystemTime','memory'], 'type':'Data Collection'},
+            {"id":"5", "name":"List CAS Server Caslibs", "active":"True", "req":['/casManagement/servers/', '/caslibs?limit=10000'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "cols":['name','scope','description'], 'type':'Data Collection'},
+            {"id":"6", "name":"List CASLib Tables", "active":"True", "req":['/casManagement/servers/', '/caslibs/', '/tables?limit=10000'], "reqVariable":"caslibs", "caslibs":[["cas-shared-default", "systemData"]], "cols":['name','rowCount'], 'type':'Data Collection'},
+            {"id":"7", "name":"Run Test SAS Code", "active":"True", "active":"True", "cols":['runSuccessful',"jobState"], "type":"Computation"}
         ],
         "count":numTests
     }
