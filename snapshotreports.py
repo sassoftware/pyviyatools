@@ -87,8 +87,6 @@ folderpath=args.folderpath
 
 datefilter=createdatefilter(olderoryounger='younger',datevar='modifiedTimeStamp',days=changeddays)
 
-print(datefilter)
-
 # create a list for filter conditions
 filtercond=[]
 
