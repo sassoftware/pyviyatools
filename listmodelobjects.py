@@ -14,7 +14,7 @@
 #
 
 import argparse , datetime, sys
-from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris,createdatefilter
 from datetime import datetime as dt, timedelta as td
 
 # setup command-line arguments. In this block, which is common to all the tools, you setup what parameters
@@ -29,6 +29,8 @@ parser.add_argument("-d","--days", help="List files older than this number of da
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='name')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='csv')
+parser.add_argument("--debug", action='store_true', help="Debug")
+
 
 args = parser.parse_args()
 output_style=args.output
@@ -37,11 +39,14 @@ modby=args.modifiedby
 sortby=args.sortby
 nameval=args.name
 typeval=args.type
+debug=args.debug
 
 # calculate time period for models
-now=dt.today()-td(days=int(daysolder))
-subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-datefilter="le(creationTimeStamp,"+subset_date+")"
+# now=dt.today()-td(days=int(daysolder))
+# subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
+# datefilter="le(creationTimeStamp,"+subset_date+")"
+
+datefilter=createdatefilter(olderoryounger='older',datevar='creationTimeStamp',days=daysolder)
 
 # create a list for filter conditions
 filtercond=[]
@@ -57,15 +62,21 @@ completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # prepare the request according to content type
 reqtype='get'
-if typeval=='model': reqval="/modelRepository/models?"+completefilter+"&sortBy="+sortby
-if typeval=='project': reqval="/modelRepository/projects?"+completefilter+"&sortBy="+sortby
-if typeval=='repository': reqval="/modelRepository/repositories?"+completefilter+"&sortBy="+sortby
+
+if typeval=='model': reqval="/modelRepository/models?filter="+completefilter+"&sortBy="+sortby
+if typeval=='project': reqval="/modelRepository/projects?filter="+completefilter+"&sortBy="+sortby
+if typeval=='repository': reqval="/modelRepository/repositories?filter="+completefilter+"&sortBy="+sortby
+
+if debug: print(reqval)
 
 # Make call, and process & print results
 files_result_json=callrestapi(reqval,reqtype)
-print("-------------------------------------")
-print("Listing "+typeval+" objects")
-print("-------------------------------------")
+
+# remove not consistent with other tools
+# print("-------------------------------------")
+# print("Listing "+typeval+" objects")
+# print("-------------------------------------")
+
 printresult(files_result_json,output_style)
 
 

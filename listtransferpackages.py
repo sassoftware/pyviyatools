@@ -21,7 +21,7 @@
 #
 
 import argparse , datetime, sys
-from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris,createdatefilter
 from datetime import datetime as dt, timedelta as td
 
 parser = argparse.ArgumentParser()
@@ -50,14 +50,8 @@ olderoryounger=args.olderoryounger
 
 packagefile_resultn=None
 
-# calculate time period for files
-# calculate time period for files
-now=dt.today()-td(days=int(days))
-subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-
-if olderoryounger=='older':
-  datefilter="le(creationTimeStamp,"+subset_date+")"
-else: datefilter="ge(creationTimeStamp,"+subset_date+")"
+# build the date filter
+datefilter=createdatefilter(olderoryounger=olderoryounger,datevar='creationTimeStamp',days=days)
 
 # create a list for filter conditions
 filtercond=[]
