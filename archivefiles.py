@@ -31,7 +31,7 @@
 #
 
 import argparse , datetime, os, time, json, sys
-from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris,createdatefilter
 from datetime import datetime as dt, timedelta as td
 
 # get python version
@@ -83,11 +83,8 @@ if dodelete:
 
    if areyousure !='Y': dodelete=False
 
-
 # calculate time period for files
-now=dt.today()-td(days=int(daysolder))
-subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-datefilter="le(creationTimeStamp,"+subset_date+")"
+datefilter=createdatefilter(olderoryounger='older',datevar='creationTimeStamp',days=daysolder)
 
 # create a list for filter conditions
 filtercond=[]

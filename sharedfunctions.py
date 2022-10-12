@@ -38,6 +38,7 @@
 #  20Feb2022 Support patch
 #  28Feb2022 Added functionality to callrestapi optionally pass in etags, and to request they be returned, for API endpoints that use them
 #  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
+#  12OCT2022 Build date filter function
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -65,6 +66,7 @@ import os
 import collections
 import inspect
 import re
+from datetime import datetime as dt, timedelta as td
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -747,4 +749,19 @@ def getapplicationproperties():
     myparams=dict(line.strip().split('=') for line in open(prop_file) if line[0].isalpha())
     return myparams
 
+# build a date filter for the REST filter
 
+def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
+    
+    # what date is the filter based on
+    thedate=dt.today()-td(days=int(days))
+
+    # set the timestamp to be at the end of the day for younger and the begining for older
+    if olderoryounger=='older':
+       subset_date=thedate.replace(hour=23, minute=59, second=59, microsecond=999999).strftime("%Y-%m-%dT%H:%M:%S")
+       datefilter="le("+datevar+","+subset_date+")"
+    else:
+       subset_date=thedate.replace(hour=00, minute=00, second=00, microsecond=999999).strftime("%Y-%m-%dT%H:%M:%S")
+       datefilter="ge("+datevar+","+subset_date+")"
+   
+    return datefilter
