@@ -39,6 +39,7 @@
 #  28Feb2022 Added functionality to callrestapi optionally pass in etags, and to request they be returned, for API endpoints that use them
 #  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
 #  12OCT2022 Build date filter function
+#  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -181,6 +182,7 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 # change history
 #   01dec2017 initial development
 #   08Feb2020 return full json as 4 item in list that is returned
+#   14OCT2022 added 'createdBy' to return array
 
 def getfolderid(path):
 
@@ -189,19 +191,22 @@ def getfolderid(path):
     reqtype='get'
 
     callrestapi(reqval,reqtype)
-
+    
     if result==None:
         print("NOTE: Folder'"+path+"' not found.")
         targetid=None
         targetname=None
         targeturi=None
+        targetcreatedBy=None
     else:
         targetid=result['id']
         targetname=result['name']
         targeturi="/folders/folders/"+targetid
+        targetcreatedBy=result['createdBy']
 
-    return [targetid,targeturi,targetname,result]
-
+    return [targetid,targeturi,targetname,targetcreatedBy,result]
+    
+    
 
 # getbaseurl
 # from the default profile return the baseurl of the Viya server
@@ -654,6 +659,34 @@ def getpath(objecturi):
         path='/'+path
 
     return path
+
+
+
+# getobjectdetails
+# Viya objectURI is input, assorted fields are returned
+# change history
+#   14OCT2022 initial development
+
+def getobjectdetails(objecturi):
+
+    # build the request parameters
+    reqval=objecturi
+    reqtype='get'
+
+    callrestapi(reqval,reqtype)
+   
+    # verfiyc objectURI input found and return attributes
+    if result==None:
+        print("NOTE: Object with ObjectURI:'"+objecturi+"' not found.")
+    else:
+	targetname=result['name']
+	targetcreator=result['createdBy']
+        targetid=result['id']
+        targeturi=objecturi
+
+    return [targetname,targetcreator,targetid,targeturi,result]
+    
+    
 
 # getidsanduris
 # given a result json structure, return a dictionary with a list of id's and uri's
