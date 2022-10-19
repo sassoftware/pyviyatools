@@ -679,8 +679,8 @@ def getobjectdetails(objecturi):
     if result==None:
         print("NOTE: Object with ObjectURI:'"+objecturi+"' not found.")
     else:
-	targetname=result['name']
-	targetcreator=result['createdBy']
+        targetname=result['name']
+        targetcreator=result['createdBy']
         targetid=result['id']
         targeturi=objecturi
 
