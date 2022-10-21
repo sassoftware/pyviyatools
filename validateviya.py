@@ -24,6 +24,7 @@ import argparse
 from sharedfunctions import callrestapi,printresult
 import json
 import os
+import datetime
 
 from jobmodule import jobmodule
 
@@ -41,17 +42,21 @@ def specializedPrint(jsonData, outputStyle, cols):
         elif(outputStyle=='simplejson'):
             print(json.dumps(jsonData,indent=2))
         else:
-            for i in range(len(list(jsonData))):
-                if(i != len(list(jsonData))-1):
-                    print(list(jsonData)[i],",",end="")
+            #CSV output
+            #Create our column row using cols list, to ensure ordering
+            for index in range(len(cols)):
+                if(index != len(cols) - 1):
+                    print(cols[index],",",end="")
                 else:
-                    print(list(jsonData)[i])
+                    print(cols[index])
 
-            for i in range(len(list(jsonData.keys()))):
-                if(i != len(list(jsonData))-1):
-                    print('"'+str(list(jsonData.items())[i][1])+'",',end="")
+            #Create a row containing the corresponding result for each column
+            for index in range(len(cols)):
+                if(index != len(cols) - 1):
+                    #Using .get(cols[index]) to ensure order matches the column row above
+                    print('"'+str(jsonData.get(cols[index]))+'",',end="")
                 else:
-                    print('"'+str(list(jsonData.items())[i][1])+'"')
+                    print('"'+str(jsonData.get(cols[index]))+'"')
 
 #Simple helper method to print only if our user wants verbose printing
 def verbosePrint(text, verbose):
@@ -61,7 +66,7 @@ def verbosePrint(text, verbose):
 #Allows command-line arguments
 parser = argparse.ArgumentParser()
 #Controls output type for data output
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson', 'passfail'],default='csv')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson', 'passfail', 'report', 'report-full'],default='csv')
 #By including the flag -g, the test file will be created in the current directory, but if -g is not used, the test will not be generated at all
 #It is also possible to use -g filename.json to give your test a custom name
 parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", type=argparse.FileType('w'), const=(os.getcwd() + "/testPreferences.json"), metavar="filename")
@@ -79,6 +84,9 @@ defaultNumTests = 8
 
 # Create testPreferences json object from either custom or default tests
 if(args.customTests is not None):
+    if(args.generateTestJson is not None):
+        print("You cannot generate and load custom tests at the same time")
+        quit()
     try:
         #Read JSON file as a JSON object
         customPreferences = json.load(args.customTests[0])
@@ -113,7 +121,7 @@ else:
             {"id":"3", "name":"List CAS Servers", "active":"True", "req":['/casManagement/servers?limit=10000'], "cols":['name','host','port','description'], 'type':'Data Collection'},
             {"id":"4", "name":"List CAS Server Metrics", "active":"True", "req":['/casManagement/servers/', '/metrics'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "cols":['serverName','systemNodes','systemCores','cpuSystemTime','memory'], 'type':'Data Collection'},
             {"id":"5", "name":"List CAS Server Caslibs", "active":"True", "req":['/casManagement/servers/', '/caslibs?limit=10000'], "reqVariable":"servers", "servers":[["cas-shared-default"]], "cols":['name','scope','description'], 'type':'Data Collection'},
-            {"id":"6", "name":"List CASLib Tables", "active":"True", "req":['/casManagement/servers/', '/caslibs/', '/tables?limit=10000'], "reqVariable":"caslibs", "caslibs":[["cas-shared-default", "systemData"]], "cols":['name','rowCount'], 'type':'Data Collection'},
+            {"id":"6", "name":"List CASLib Tables", "active":"True", "req":['/casManagement/servers/', '/caslibs/', '/tables?limit=10000'], "reqVariable":"caslibs", "caslibs":[["cas-shared-default", "systemData"]], "cols":['serverName','caslibName','name'], 'type':'Data Collection'},
             {"id":"7", "name":"Run Test SAS Code", "active":"True", "active":"True", "cols":['runSuccessful',"jobState"], "type":"Computation"}
         ],
         "count":numTests
@@ -139,12 +147,16 @@ if(args.generateTestJson is not None):
 activeTests = [test for test in testPreferences['tests'] if test['active'] == "True"]
 dataCollectionTests = [test for test in activeTests if test['type'] == "Data Collection"]
 computationTests = [test for test in activeTests if test['type'] == "Computation"]
+passingTests = []
+failingTests = []
 
 #Special case: by setting the output type to "passfail", the tests are limited to just
 #computation tests, as these will be a simple way to validate viya.
 if(output_style == "passfail"):
     activeTests = computationTests
     dataCollectionTests = []
+
+testStartTime = datetime.datetime.now()
 
 #Run Data Collection Tests
 for test in dataCollectionTests:
@@ -170,22 +182,26 @@ for test in dataCollectionTests:
             result = callrestapi(request, "get", stoponerror=False)
             if(result is None):
                 verbosePrint("An error occurred running test " + str(test['id']), verbose)
-                activeTests.remove(test)
+                failingTests.append(test)
+                passingTests.remove(test)
                 #break out of the for loop, pushing us to the next test
                 break
             else:
                 #If things went well:
                 test['results'].append(result)
+                if(test not in passingTests):
+                    passingTests.append(test)
     #In this case, there is only one request and, therefore, only one result
     else:
         request = test['req'][0]
         result = callrestapi(request, "get", stoponerror=False)
         if(result is None):
             verbosePrint("An error occurred running test " + str(test['id']) + ": " + test['name'], verbose)
-            activeTests.remove(test)
+            failingTests.append(test)
         else:
             #If things went well:
             test['results'].append(result)
+            passingTests.append(test)
 
 #Run computation tests:
 #Currently designed only for "Run Test SAS Code"
@@ -244,6 +260,9 @@ if(len(computationTests) == 1):
         #If our code ran succesfully, we want to take note of that
         if(jobState == "completed"):
             executeData_result_json['runSuccessful'] = True
+            passingTests.append(test)
+        else:
+            failingTests.append(test)
     finally:
         #We include this in a finally block just in case our session exists and
         #the test code fails - we want to close the session no matter what
@@ -254,6 +273,11 @@ if(len(computationTests) == 1):
             verbosePrint("Compute session with session id " + sessionId + " closed successfully", verbose)
 
         test['results'].append(executeData_result_json)
+
+testEndTime = datetime.datetime.now()
+timeElapsed = testEndTime - testStartTime
+verbosePrint('Tests Completed at ' + testEndTime.strftime("%H:%M:%S on %m/%d/%Y"), verbose)
+verbosePrint("Time Elapsed: " + str(timeElapsed.seconds) + " seconds", verbose)
 
 #Print Results:
 
@@ -279,8 +303,120 @@ if(output_style == "passfail"):
     #To avoid unneeded indendation on the main print block, we just quit here
     quit()
 
+if(output_style == "report" or output_style == "report-full"):
+    #Create the string containing our html code - start with head
+    htmlStr = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>ValidateViya Test Report</title>\n</head>\n'
+    #Style
+    htmlStr += '<style>\nbody {font-family:"Open Sans", "Helvetica Neue", sans-serif;}\ntable {border-collapse: collapse;width: 70%;}\ntd, th {border: 1px solid #dddddd;text-align: left;padding: 8px;}</style>\n'
+    #Title, summary start
+    htmlStr += '<body>\n<main>\n<h1>ValidateViya Test Report</h1>\n<h2>Summary:</h2>\n'
+    #All tests passing/some tests failing
+    htmlStr += '<div style="font-size: large;">\n'
+    if(len(failingTests) == 0):
+        htmlStr += '<div style="color: green; font-weight: bold;">ALL TESTS PASSING</div>\n'
+    else:
+        htmlStr += '<div style="color: red; font-weight: bold;">SOME TESTS FAILING</div>\n'
+    htmlStr += 'Tests Completed at ' + testEndTime.strftime("%H:%M:%S on %m/%d/%Y") + '<br>\n'
+    htmlStr += str(len(passingTests)) + '/' + str(len(activeTests)) + ' Tests Ran Successfully<br>\n'
+    htmlStr += "Testing Took " + str(timeElapsed.seconds) + " Seconds To Complete\n</div>"
+
+    for test in dataCollectionTests:
+        #Label our test, state whether it has passed or not
+        htmlStr += "<hr>\n<h3>Test " + str(test['id']) + ": " + test['name'] + "</h3>\n"
+        if(test in passingTests):
+            htmlStr += '<div style="color: green; font-weight: bold;">Test Ran Successfully</div>\n'
+        else:
+            htmlStr += '<div style="color: red; font-weight: bold;">Test Failed</div>\n'
+
+        #List items returned
+        itemsReturned = 0
+        for result in test['results']:
+            #If there's an "items" parameter, we add the number of items to itemsReturned
+            if('items' in result):
+                itemsReturned += len(result['items'])
+            else:
+                #If not, we just increment by 1
+                itemsReturned += 1
+
+        htmlStr += str(itemsReturned) + ' item(s) returned</div>\n'
+
+        #Create the table with the results only if the output style is report-full
+        if(output_style == "report-full"):
+            htmlStr += "<table>\n<thead>\n<tr>"
+            for col in test.get('cols'):
+                htmlStr += "<th>" + col + "</th>"
+            htmlStr += "</tr>\n</thead>\n"
+            for result in test['results']:
+                #Create tbody
+                htmlStr += '<tbody>\n<tr>\n'
+                #Logic is similar to that of printresult/specialized print
+                #If the 'items' key exists, we collect 1 or more rows of data from there
+                #if it does not, we collect 1 row from result
+                if('items' in result):
+                    #Remove all columns except those specified
+                    for item in result['items']:
+                        for key in list(item):
+                            if key not in test['cols']: del item[key]
+                    # #Create column row with labels
+                    # for col in test['cols']:
+                    #     htmlStr += "<th>" + col + "</th>\n"
+                    # htmlStr += '</tr>\n'
+                    # #Create a row for each result
+                    for item in result['items']:
+                        htmlStr += "<tr>\n"
+                        for col in test['cols']:
+                            htmlStr += "<td>" + str(item.get(col)) + "</td>\n"
+                        htmlStr += "</tr>\n"
+                else:
+                    #Remove all columns except those specified
+                    for key in list(result):
+                        if key not in test['cols']: del result[key]
+                    # #Create column row with labels
+                    # for key in list(result.keys()):
+                    #     htmlStr += '<th>' + key + '</th>\n'
+                    # htmlStr += '</tr>\n'
+                    #Create a row for each result
+                    htmlStr += "<tr>\n"
+                    for value in list(result.values()):
+                        htmlStr += '<td>' + str(value) + '</td>\n'
+                    htmlStr += '</tr>\n'
+
+                htmlStr += '</tbody>\n'
+            htmlStr += "</table>"
+
+    #Create table for computation tests:
+    for test in computationTests:
+        htmlStr += "<hr>\n<h3>Test " + str(test['id']) + ": " + test['name'] + "</h3>\n"
+        if(test in passingTests):
+            htmlStr += '<div style="color: green; font-weight: bold;">Test Ran Successfully</div>\n'
+        else:
+            htmlStr += '<div style="color: red; font-weight: bold;">Test Failed</div>\n'
+
+        if(output_style == "report-full"):
+            htmlStr += "<div style='margin: 0 auto;'><h4>Log:</h4>\n<div style='margin-left: 50px'>"
+            for line in test['results'][0]['log']:
+                htmlStr += line['line'] + '<br>\n'
+            htmlStr += "</div></div>"
+
+
+    #Create the html file to write
+    try:
+        #Create file name using test end time
+        htmlFileName = os.getcwd() + "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
+        htmlFile = open(htmlFileName, "w")
+        #Write to html file
+        htmlFile.write(htmlStr)
+        verbosePrint("Report created at " + htmlFileName, verbose)
+    except:
+        print("Problem creating report")
+    finally:
+        #Save html file
+        htmlFile.close()
+
+        quit()
+
 #For standard output types:
-for test in activeTests:
+for test in passingTests:
     #Verbose print the name, id of our test:
     testName = test['name']
     verbosePrint("\nTest " + str(test['id']) + ": " + testName, verbose)
