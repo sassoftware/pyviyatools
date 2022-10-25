@@ -33,15 +33,24 @@ def specializedPrint(jsonData, outputStyle, cols):
     if(outputStyle == "json"):
         print(json.dumps(jsonData,indent=2))
     else:
-        for key in list(jsonData):
-            if key not in cols: del jsonData[key]
+        #Simple and simplejson -> remove "links" key from json
+        if(jsonData.get("links") != None):
+            jsonData.pop("links")
+        #Simple output
         if(outputStyle=='simple'):
+            #To mimic the existing structure:
+            print("===== Item 0 =======")
             for key in list(jsonData):
-                print ("====="+key+"=======")
-                print (jsonData[key])
+                print(f"{key} = {jsonData[key]}")
+            #Again, mimicing existing structure
+            print("Result Summary: Total items available: 1 Total items returned: 1")
+        #Simplejson output
         elif(outputStyle=='simplejson'):
             print(json.dumps(jsonData,indent=2))
         else:
+            #CSV -> remove all keys not found in cols param
+            for key in list(jsonData):
+                if key not in cols: del jsonData[key]
             #CSV output
             #Create our column row using cols list, to ensure ordering
             for index in range(len(cols)):
@@ -62,7 +71,6 @@ def specializedPrint(jsonData, outputStyle, cols):
 def verbosePrint(text, verbose):
     if(verbose):
         print(text)
-
 #Allows command-line arguments
 parser = argparse.ArgumentParser()
 #Controls output type for data output
