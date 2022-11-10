@@ -281,8 +281,7 @@ def getauthtoken(baseurl):
 
     with open(credential_file) as json_file:
         data = json.load(json_file)
-    type(data)
-
+    
     # the sas-admin profile init creates an empty credential file
     # check that credential is in file, if it is add it to the header, if not exit
 
@@ -296,6 +295,7 @@ def getauthtoken(baseurl):
     if cur_profile in data:
 
         oauthToken=data[cur_profile]['access-token']
+        refreshToken=data[cur_profile]['refresh-token']
 
         oauthTokenType="bearer"
 
@@ -304,21 +304,71 @@ def getauthtoken(baseurl):
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
 
-        # test a connection to rest api if it fails exit
+        # test a connection to rest api if it fails try using the refresh token to re-authenticate
         r = requests.get(baseurl,headers=head)
 
+        if (400 <= r.status_code <=599):
+
+            #do refresh token request
+            #curl -k "${INGRESS_URL}/SASLogon/oauth/token" -H "Accept: application/json" -H "Content-Type: application/x-www-form-urlencoded" -u "sas.cli:" \-d "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}" 
+
+            #did it work
+             
+            # set oauthToken again from the output of the request
+
+            # update oauthToken in credentials file from the output of the request
+
+             refresh_headers = {"Accept": "application/json","Content-Type": "application/x-www-form-urlencoded",}
+    
+             client_id="sas.cli"
+             client_secret=""
+
+             refresh_data = {}
+             refresh_data["grant_type"] =  "refresh_token"
+             refresh_data["refresh_token"] = refreshToken
+
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret))
+             
+             if (400 <= response.status_code <=599):
+                
+                oaval=None
+                print(r.text)
+                print("ERROR: cannot connect to "+baseurl+" with refresh token is your token expired?")
+                print("ERROR: Try refreshing your token with the CLI auth login")
+                sys.exit()
+                
+             else:
+                
+                # set new token and update credentials.json
+                result=response.json()
+                newtoken=result["access_token"]
+                oaval=oauthTokenType + ' ' + newtoken
+
+                # write the new token to the credentials file
+                data[cur_profile]['access-token']=newtoken
+                
+                with open(credential_file, "w") as outfile:
+                    outfile.write(data)
+
+        head= {'Content-type':'application/json','Accept':'application/json' }
+        head.update({"Authorization" : oaval})
+
+        # test a connection to rest api again if it fails exit
+        # tell user to re-authenticate with the sas-viya CLI
+
+        r = requests.get(baseurl,headers=head)
         if (400 <= r.status_code <=599):
 
             oaval=None
             print(r.text)
             print("ERROR: cannot connect to "+baseurl+" is your token expired?")
-            print("ERROR: Try refreshing your token with sas-admin auth login")
+            print("ERROR: Try refreshing your token with the Viya CLI auth login")
             sys.exit()
     else:
 
         oaval=None
         print("ERROR: access token not in file: ", credential_file)
-        print("ERROR: Try refreshing your token with sas-admin auth login")
+        print("ERROR: Try refreshing your token with Viya CLI auth login")
         sys.exit()
 
     return oaval
