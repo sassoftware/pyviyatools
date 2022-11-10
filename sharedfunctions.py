@@ -347,8 +347,9 @@ def getauthtoken(baseurl):
                 # write the new token to the credentials file
                 data[cur_profile]['access-token']=newtoken
                 
+                filecontent=json.dumps(data,indent=2)
                 with open(credential_file, "w") as outfile:
-                    outfile.write(data)
+                    outfile.write(filecontent)
 
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
