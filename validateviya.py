@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # validateviya.py September 2022
@@ -20,10 +20,13 @@
 #  express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
 
+from __future__ import print_function
+
 import argparse
 from sharedfunctions import callrestapi,printresult
 import json
 import os
+import sys
 import datetime
 
 from jobmodule import jobmodule
@@ -41,7 +44,7 @@ def specializedPrint(jsonData, outputStyle, cols):
             #To mimic the existing structure:
             print("===== Item 0 =======")
             for key in list(jsonData):
-                print(f"{key} = {jsonData[key]}")
+                print(str(key) + " = " + str(jsonData[key]))
             #Again, mimicing existing structure
             print("Result Summary: Total items available: 1 Total items returned: 1")
         #Simplejson output
@@ -71,21 +74,28 @@ def specializedPrint(jsonData, outputStyle, cols):
 def verbosePrint(text, verbose):
     if(verbose):
         print(text)
+
 #Allows command-line arguments
 parser = argparse.ArgumentParser()
 #Controls output type for data output
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson', 'passfail', 'report', 'report-full'],default='csv')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv', 'json', 'simple', 'simplejson', 'passfail', 'passfail-full', 'report', 'report-full'],default='csv')
 #By including the flag -g, the test file will be created in the current directory, but if -g is not used, the test will not be generated at all
 #It is also possible to use -g filename.json to give your test a custom name
-parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", type=argparse.FileType('w'), const=(os.getcwd() + "/testPreferences.json"), metavar="filename")
+parser.add_argument("-g","--generate-tests", dest="generateTestJson", help="Generate JSON Test Preferences File", nargs="?", const="/testPreferences.json", metavar="filename")
 #There is no default file name to be read for -c, it must be entered manually
 parser.add_argument("-c","--custom-tests", dest="customTests", help="Use a Custom Test Preferences File", nargs=1, type=argparse.FileType('r'), metavar="filename")
 #Verbose parameter determines whether or not validateviya talks while running
 parser.add_argument("-v", "--verbose", help="Add Output Verbosity", action="store_true")
+#Silent parameter ensures that no text is printed besides results
+parser.add_argument("-s", "--silent", help="Limit Output to Results Only", action="store_true")
+#Output directory for instances where a file is outputted
+parser.add_argument('-d',"--output-directory", dest="directory", help="Output Directory for Generated Files", metavar="directory")
 
 args = parser.parse_args()
 output_style=args.output
+generateFile=args.generateTestJson
 verbose = args.verbose
+outputDirectory = args.directory
 
 testPreferences = None
 defaultNumTests = 8
@@ -142,14 +152,28 @@ else:
 if(args.generateTestJson is not None):
     #Write tests preferences JSON to file (default OR those specified via -c)
     try:
-        args.generateTestJson.write(json.dumps(testPreferences, indent=2))
+        outputFile = os.getcwd()
+        if(outputDirectory is not None):
+            outputFile = outputDirectory
+        outputFile += generateFile
+        f = open(outputFile, 'w')
+        f.write(json.dumps(testPreferences, indent=2))
     except:
         print("JSON Test Preferences File cannot be written")
     finally:
-        args.generateTestJson.close()
+        f.close()
 
     #We only want to generate the test file, not run tests
     quit()
+
+if(args.silent):
+    if(verbose):
+        #Python doesn't know sign language yet
+        print("You cannot be silent and verbose at the same time.")
+        quit()
+
+    #Sets standard output to a null file -> no output, effectively
+    sys.stdout = open(os.devnull, 'w')
 
 #Get active tests from library and split into data collection and computation tests
 activeTests = [test for test in testPreferences['tests'] if test['active'] == "True"]
@@ -158,17 +182,11 @@ computationTests = [test for test in activeTests if test['type'] == "Computation
 passingTests = []
 failingTests = []
 
-#Special case: by setting the output type to "passfail", the tests are limited to just
-#computation tests, as these will be a simple way to validate viya.
-if(output_style == "passfail"):
-    activeTests = computationTests
-    dataCollectionTests = []
-
 testStartTime = datetime.datetime.now()
 
 #Run Data Collection Tests
 for test in dataCollectionTests:
-    verbosePrint("Data Collection Test Started: " + test['name'], verbose)
+    print("Data Collection Test Started: " + test['name'])
     test['results'] = []
     #If there is a request variable, that means there could be more than one request for
     #the given test, resulting in the need for a for loop
@@ -189,9 +207,8 @@ for test in dataCollectionTests:
             #is not printed with sucessful results) and move onto the next test
             result = callrestapi(request, "get", stoponerror=False)
             if(result is None):
-                verbosePrint("An error occurred running test " + str(test['id']), verbose)
+                print("An error occurred running test " + str(test['id']))
                 failingTests.append(test)
-                passingTests.remove(test)
                 #break out of the for loop, pushing us to the next test
                 break
             else:
@@ -204,7 +221,7 @@ for test in dataCollectionTests:
         request = test['req'][0]
         result = callrestapi(request, "get", stoponerror=False)
         if(result is None):
-            verbosePrint("An error occurred running test " + str(test['id']) + ": " + test['name'], verbose)
+            print("An error occurred running test " + str(test['id']) + ": " + test['name'])
             failingTests.append(test)
         else:
             #If things went well:
@@ -218,7 +235,7 @@ if(len(computationTests) == 1):
     test = computationTests[0]
     test['results'] = []
 
-    verbosePrint("Computation Test Started: " + test['name'], verbose)
+    print("Computation Test Started: " + test['name'])
     #Get the job execution compute context:
     getComputeContextReq="/compute/contexts?filter=contains(name, 'Job Execution')"
     computeContext_result_json = callrestapi(getComputeContextReq, "get")
@@ -270,6 +287,7 @@ if(len(computationTests) == 1):
             executeData_result_json['runSuccessful'] = True
             passingTests.append(test)
         else:
+            print("An error occurred running test " + str(test['id']) + ": " + test['name'])
             failingTests.append(test)
     finally:
         #We include this in a finally block just in case our session exists and
@@ -288,25 +306,32 @@ verbosePrint('Tests Completed at ' + testEndTime.strftime("%H:%M:%S on %m/%d/%Y"
 verbosePrint("Time Elapsed: " + str(timeElapsed.seconds) + " seconds", verbose)
 
 #Print Results:
+#Turn back out stdout if silent
+if(args.silent):
+    sys.stdout = sys.__stdout__
 
 #In the case of passfail output, we simply check to see if all of our tests
 #ran successfully, if so, we return PASS, else FAIL
 if(output_style == "passfail"):
-    runSuccessful = True
-    for test in activeTests:
-        for result in test['results']:
-            if(result['runSuccessful'] == False):
-                runSuccessful = False
-                break
-        #If we break in the inner for loop, we want to break the outer, as well
-        else:
-            continue
-        break
-
-    if(runSuccessful):
-        print("PASS")
-    else:
+    if(len(failingTests) != 0):
         print("FAIL")
+    else:
+        print("PASS")
+
+    #To avoid unneeded indendation on the main print block, we just quit here
+    quit()
+
+if(output_style == "passfail-full"):
+    passfail = {
+        "count":len(activeTests),
+        "tests":[]
+    }
+    for test in failingTests:
+        passfail["tests"].append({"id":test.get("id"), "name":test.get("name"), "result":"FAIL"})
+    for test in passingTests:
+        passfail["tests"].append({"id":test.get("id"), "name":test.get("name"), "result":"PASS"})
+
+    print(json.dumps(passfail,indent=2))
 
     #To avoid unneeded indendation on the main print block, we just quit here
     quit()
@@ -410,7 +435,10 @@ if(output_style == "report" or output_style == "report-full"):
     #Create the html file to write
     try:
         #Create file name using test end time
-        htmlFileName = os.getcwd() + "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
+        htmlFileName = os.getcwd()
+        if(outputDirectory is not None):
+            htmlFileName = outputDirectory
+        htmlFileName += "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
         htmlFile = open(htmlFileName, "w")
         #Write to html file
         htmlFile.write(htmlStr)
