@@ -346,6 +346,8 @@ def getauthtoken(baseurl):
 
                 # write the new token to the credentials file
                 data[cur_profile]['access-token']=newtoken
+
+                print(data)
                 
                 filecontent=json.dumps(data,indent=2)
                 with open(credential_file, "w") as outfile:
