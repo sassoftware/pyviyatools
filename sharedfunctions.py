@@ -108,6 +108,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # get the auth token
     oaval=getauthtoken(baseurl)
 
+    #print(oaval)
+
     # build the authorization header
     head= {'Content-type':contentType,'Accept':acceptType}
     head.update({"Authorization" : oaval})
@@ -296,7 +298,7 @@ def getauthtoken(baseurl):
 
         oauthToken=data[cur_profile]['access-token']
         refreshToken=data[cur_profile]['refresh-token']
-
+        
         oauthTokenType="bearer"
 
         oaval=oauthTokenType + ' ' + oauthToken
@@ -309,6 +311,7 @@ def getauthtoken(baseurl):
 
         if (400 <= r.status_code <=599):
 
+           
             #do refresh token request
             #curl -k "${INGRESS_URL}/SASLogon/oauth/token" -H "Accept: application/json" -H "Content-Type: application/x-www-form-urlencoded" -u "sas.cli:" \-d "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}" 
 
@@ -333,7 +336,7 @@ def getauthtoken(baseurl):
                 
                 oaval=None
                 print(r.text)
-                print("ERROR: cannot connect to "+baseurl+" with refresh token is your token expired?")
+                print("ERROR: cannot connect to "+baseurl+" with refresh token is your refresh token expired?")
                 print("ERROR: Try refreshing your token with the CLI auth login")
                 sys.exit()
                 
@@ -342,16 +345,21 @@ def getauthtoken(baseurl):
                 # set new token and update credentials.json
                 result=response.json()
                 newtoken=result["access_token"]
+                expires_in=result["expires_in"]
+                
+                # calculate new expiration
+                newexpiry=(dt.utcnow()+td(seconds=expires_in)).strftime('%Y-%m-%dT%H:%M:%SZ')
                 oaval=oauthTokenType + ' ' + newtoken
 
                 # write the new token to the credentials file
                 data[cur_profile]['access-token']=newtoken
-
-                print(data)
-                
+                data[cur_profile]['expiry']=newexpiry
+                                
                 filecontent=json.dumps(data,indent=2)
                 with open(credential_file, "w") as outfile:
                     outfile.write(filecontent)
+
+                
 
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
