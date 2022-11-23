@@ -206,7 +206,7 @@ def getfolderid(path):
         targeturi="/folders/folders/"+targetid
         targetcreatedBy=result['createdBy']
 
-    return [targetid,targeturi,targetname,targetcreatedBy,result]
+    return [targetid,targeturi,targetname,result,targetcreatedBy]
     
     
 
