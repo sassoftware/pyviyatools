@@ -59,4 +59,4 @@ if output_style=='simple':
         print("URI = "+targets[1])
         print("Path = "+targets[2])
         print("CreatedBy = "+targets[4])
-else: printresult(targets[4],output_style)
+else: printresult(targets[3],output_style)
