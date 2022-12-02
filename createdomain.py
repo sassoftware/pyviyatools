@@ -12,7 +12,7 @@
 #  27JAN2017 Added the ability to create connection domains
 #  29JAN2017 Added choices to validate type of domain  
 #  29SEP2018 make group list comma seperated 
-#
+#  01DEC2022 add token domain
 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -43,8 +43,7 @@ parser.add_argument("-u","--user", help="User ID for the domain.",required=True)
 parser.add_argument("-p","--password", help="Password for the userid.",required=False)
 parser.add_argument("-g","--groups", help="A list of groups to add to the domain. Groupid comma seperated",required=True)
 parser.add_argument("-c","--desc", help="Description of the domain.",required=False)
-parser.add_argument("-t","--type", help="Type of the domain: password or connection (passwordless).",required=True, choices=['password','connection'])
-
+parser.add_argument("-t","--type", help="Type of the domain: password, oauth2.0 (token) or connection (passwordless).",required=True, choices=['password','connection','oauth2.0'])
 args = parser.parse_args()
 
 domain_name=args.domain
