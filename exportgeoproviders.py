@@ -99,7 +99,6 @@ if areyousure.upper() =='Y':
 
 		total_items=resultdata['count']
 
-
 		returned_items=len(resultdata['items'])
 
 		if total_items == 0: print("Note: No items returned.")
@@ -118,7 +117,7 @@ if areyousure.upper() =='Y':
 				print(command)
 
 				subprocess.call(command, shell=True)
-				
+
 				providers_exported=providers_exported+1
 				print( )
 				print( )
