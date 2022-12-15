@@ -29,19 +29,21 @@ from sharedfunctions import printresult, callrestapi
 parser = argparse.ArgumentParser(description="Display POSIX attributes for User or ALL users(default)")
 
 parser.add_argument("-u","--user", help="Enter the user id or leave blank for all users.",default='all')
+parser.add_argument("-q","--query", help="Enter a valid rest query of usernames.",default="not(blank(id))")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 user=args.user
 debug=args.debug
+query=args.query
 output_style=args.output
 
 if user=='all':
 
      reqtype='get'
      #reqval='/identities/users'
-     reqval='/identities/users/?filter=ne(providerId,"local")&limit=10000'
+     reqval='/identities/users/?filter=and(ne(providerId,"local"),'+query+')&limit=10000'
      userslist_result_json=callrestapi(reqval,reqtype)
 
      users = userslist_result_json['items']
@@ -49,17 +51,25 @@ if user=='all':
      for user in users:
          userid=user['id']
          reqval='/identities/users/'+userid+'/identifier'
-         posixinfo_result_json=callrestapi(reqval,reqtype)
-         user["uid"]=posixinfo_result_json["uid"]
-         # get gid
-         user["gid"]=posixinfo_result_json["gid"]
+          posixinfo_result_json=callrestapi(reqval,reqtype,stoponerror=0,noprint=1)
+     
+         # if a dictionary is returned posix attributes are available
+         if isinstance(posixinfo_result_json,dict):
 
-         if debug: print(posixinfo_result_json)
+            # get uid
+            user["uid"]=posixinfo_result_json["uid"]
+            # get gid
+            user["gid"]=posixinfo_result_json["gid"]
 
-         if posixinfo_result_json.has_key("secondaryGids"):
-            user["secgid"]=posixinfo_result_json["secondaryGids"]
+            if posixinfo_result_json.has_key("secondaryGids"):
+               user["secgid"]=posixinfo_result_json["secondaryGids"]
+            else:
+               user["secgid"]=[""]
          else:
+            user["uid"]=""
+            user["gid"]=""
             user["secgid"]=[""]
+
 
      cols=['id','uid','gid','secgid','name']
      printresult(userslist_result_json,output_style,cols)
