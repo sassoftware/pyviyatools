@@ -98,8 +98,9 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   16Jul2021 Added a functionality to update the header if necessary.
 #   20Feb2022 Support patch
 #   28Feb2022 Added functionality to optionally pass in etags, and to request they be returned, for API endpoints that use them
+#   15DEC2022 Added noprint, can be used to suppress the printing of the error messages when stoponerror is disabled, defaults to print for compatibility
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn=''):
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
 
 
     # get the url from the default profile
@@ -147,8 +148,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # response error if status code between these numbers
     if (400 <= ret.status_code <=599):
 
-       print("http response code: "+ str(ret.status_code))
-       print("ret.text: "+ret.text)
+       if not noprint: print("http response code: "+ str(ret.status_code))
+       if not noprint: print("ret.text: "+ret.text)
        result=None
        if stoponerror: sys.exit()
 
