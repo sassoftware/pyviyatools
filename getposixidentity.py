@@ -51,7 +51,7 @@ if user=='all':
      for user in users:
          userid=user['id']
          reqval='/identities/users/'+userid+'/identifier'
-          posixinfo_result_json=callrestapi(reqval,reqtype,stoponerror=0,noprint=1)
+         posixinfo_result_json=callrestapi(reqval,reqtype,stoponerror=0,noprint=1)
      
          # if a dictionary is returned posix attributes are available
          if isinstance(posixinfo_result_json,dict):
