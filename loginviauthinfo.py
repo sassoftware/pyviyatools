@@ -125,7 +125,7 @@ if profileexists:
        secrets = netrc.netrc(fname)
        username, account, password = secrets.authenticators( host )
        
-       print('Loggin in as user: '+username)
+       print('Logging in as user: '+username)
        if debug:
           print('user: '+username)
           print('profile: '+myprofile)
