@@ -181,7 +181,12 @@ if areyousure.upper() =='Y':
 
 					completefile=os.path.join(path,json_name+'.json')
 					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
-					print(command.encode('ascii', 'ignore'))
+					
+					try:
+						print(command)
+					except UnicodeEncodeError:
+						print(command.encode('ascii','replace'))
+										
 					subprocess.call(command, shell=True)
 					#time.sleep(1)
 					if autotranferremove:
