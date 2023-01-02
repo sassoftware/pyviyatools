@@ -168,9 +168,9 @@ if areyousure.upper() =='Y':
 						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 
 					try:
-        				print(command)
+						print(command)
     				except UnicodeEncodeError:
-        				print(command.encode('ascii','replace'))
+						print(command.encode('ascii','replace'))
 					
 					subprocess.call(command, shell=True)
 
