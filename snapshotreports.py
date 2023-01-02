@@ -169,7 +169,7 @@ if areyousure.upper() =='Y':
 
 					try:
 						print(command)
-    				except UnicodeEncodeError:
+					except UnicodeEncodeError:
 						print(command.encode('ascii','replace'))
 					
 					subprocess.call(command, shell=True)
