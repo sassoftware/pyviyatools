@@ -1,14 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# validateviya.py September 2022
+# validateviya.py
+# September 2022
 #
-# Validateviya an example of how easy it is to build a new tool. This tool is not really needed as you can do this easily with the CLI
-# it is here for demo purposes. It lists the caslibs and their details accepting the cas server as a parameter
-#
-#
-# Change History
-#
+# ValidateViya runs a swath of tests on a Viya environment, validating that it is running as expected.
+# ValidateViya is designed to be heavily modular, allowing for the creation of custom tests, the alteration
+# of existing tests, and the removal of unneeded tests.
 #
 # Copyright © 2022, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -154,6 +152,9 @@ if(args.generateTestJson is not None):
     try:
         outputFile = os.getcwd()
         if(outputDirectory is not None):
+            #create directory if it doesn't exist
+            if not os.path.exists(outputDirectory):
+                os.makedirs(outputDirectory)
             outputFile = outputDirectory
         outputFile += generateFile
         f = open(outputFile, 'w')
@@ -161,8 +162,8 @@ if(args.generateTestJson is not None):
     except:
         print("JSON Test Preferences File cannot be written")
     finally:
-        f.close()
-
+        if f is not None:
+            f.close()
     #We only want to generate the test file, not run tests
     quit()
 
@@ -437,6 +438,9 @@ if(output_style == "report" or output_style == "report-full"):
         #Create file name using test end time
         htmlFileName = os.getcwd()
         if(outputDirectory is not None):
+            #create directory if it doesn't exist
+            if not os.path.exists(outputDirectory):
+                os.makedirs(outputDirectory)
             htmlFileName = outputDirectory
         htmlFileName += "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
         htmlFile = open(htmlFileName, "w")
@@ -447,8 +451,8 @@ if(output_style == "report" or output_style == "report-full"):
         print("Problem creating report")
     finally:
         #Save html file
-        htmlFile.close()
-
+        if htmlFile is not None:
+            htmlFile.close()
         quit()
 
 #For standard output types:
