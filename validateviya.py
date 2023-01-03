@@ -152,6 +152,9 @@ if(args.generateTestJson is not None):
     try:
         outputFile = os.getcwd()
         if(outputDirectory is not None):
+            #create directory if it doesn't exist
+            if not os.path.exists(outputDirectory):
+                os.makedirs(outputDirectory)
             outputFile = outputDirectory
         outputFile += generateFile
         f = open(outputFile, 'w')
@@ -159,7 +162,8 @@ if(args.generateTestJson is not None):
     except:
         print("JSON Test Preferences File cannot be written")
     finally:
-        f.close()
+        if f is not None:
+            f.close()
 
     #We only want to generate the test file, not run tests
     quit()
@@ -435,6 +439,9 @@ if(output_style == "report" or output_style == "report-full"):
         #Create file name using test end time
         htmlFileName = os.getcwd()
         if(outputDirectory is not None):
+            #create directory if it doesn't exist
+            if not os.path.exists(outputDirectory):
+                os.makedirs(outputDirectory)
             htmlFileName = outputDirectory
         htmlFileName += "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
         htmlFile = open(htmlFileName, "w")
@@ -445,7 +452,8 @@ if(output_style == "report" or output_style == "report-full"):
         print("Problem creating report")
     finally:
         #Save html file
-        htmlFile.close()
+        if htmlFile is not None:
+            htmlFile.close()
 
         quit()
 
