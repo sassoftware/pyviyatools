@@ -1,14 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# validateviya.py September 2022
+# validateviya.py
+# September 2022
 #
-# Validateviya an example of how easy it is to build a new tool. This tool is not really needed as you can do this easily with the CLI
-# it is here for demo purposes. It lists the caslibs and their details accepting the cas server as a parameter
-#
-#
-# Change History
-#
+# ValidateViya runs a swath of tests on a Viya environment, validating that it is running as expected.
+# ValidateViya is designed to be heavily modular, allowing for the creation of custom tests, the alteration
+# of existing tests, and the removal of unneeded tests.
 #
 # Copyright © 2022, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
