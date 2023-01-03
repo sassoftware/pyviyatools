@@ -33,7 +33,7 @@
 #
 
 import argparse , datetime, sys
-from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris
+from sharedfunctions import callrestapi,printresult,getfolderid,getidsanduris,createdatefilter
 from datetime import datetime as dt, timedelta as td
 
 # setup command-line arguements. In this block which is common to all the tools you setup what parameters
@@ -42,27 +42,32 @@ from datetime import datetime as dt, timedelta as td
 
 parser = argparse.ArgumentParser()
 
-parser = argparse.ArgumentParser(description="Query and list files stored in the infrastructure data server.")
+parser = argparse.ArgumentParser(description="Query and list files stored in the Viya Infrastructure Data sSrver.")
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-p","--parent", help="ParentURI starts with.",default=None)
 parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=None)
-parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
+parser.add_argument("-d","--days", help="List files older or younger than this number of days",default='-1')
+parser.add_argument("-do","--olderoryounger", help="For the date subsetting specify older or younger",choices=['older','younger'],default='older')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
-parser.add_argument("-s","--sortby", help="Sort the output descending by this field",default='modifiedTimeStamp')
+parser.add_argument("-s","--sortby", help="Sort the output by this field",default='modifiedTimeStamp')
+parser.add_argument("-so","--sortorder", help="Sort order",choices=['ascending','descending'],default='descending')
+parser.add_argument("-v","--verbosecsv", help="Verbose CSV(only used with -o=csv) ", action='store_false' )
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
 output_style=args.output
-daysolder=args.days
+days=args.days
 modby=args.modifiedby
 sortby=args.sortby
 nameval=args.name
 puri=args.parent
 pfolder=args.parentfolder
 debug=args.debug
-
+verbosecsv=args.verbosecsv
+sortorder=args.sortorder
+olderoryounger=args.olderoryounger
 
 files_result_json=None
 
@@ -73,9 +78,7 @@ if puri !=None and pfolder !=None:
    sys.exit()
 
 # calculate time period for files
-now=dt.today()-td(days=int(daysolder))
-subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-datefilter="le(creationTimeStamp,"+subset_date+")"
+datefilter=createdatefilter(olderoryounger=olderoryounger,datevar='creationTimeStamp',days=days)
 
 # create a list for filter conditions
 filtercond=[]
@@ -94,7 +97,7 @@ delimiter = ','
 if puri!=None: 
    filtercond.append("contains(parentUri,'"+puri+"')")
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
        
 # process items in folders
 elif pfolder!=None:
@@ -102,7 +105,7 @@ elif pfolder!=None:
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
    
    files_in_folder=callrestapi(reqval,reqtype)
       
@@ -126,18 +129,20 @@ elif pfolder!=None:
    
    filtercond.append("in(id,"+inclause+")")
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"g&limit=10000"
    
    
 else:
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":descending&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
 
 if debug: print(reqval)   
 
 files_result_json=callrestapi(reqval,reqtype)
-
-cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
+if verbosecsv:
+   cols=['id','name','contentType','documentType','createdBy','modifiedTimeStamp','size','parentUri']
+else:
+   cols=['id','name','contentType','description','typeDefName','documentType','contentDisposition','fileStatus','searchable','size','creationTimeStamp','createdBy','modifiedBy','modifiedTimeStamp','expirationTimeStamp','encoding','parentUri']
 # print result
 
 if files_result_json == None:

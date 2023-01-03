@@ -164,7 +164,6 @@ if(args.generateTestJson is not None):
     finally:
         if f is not None:
             f.close()
-
     #We only want to generate the test file, not run tests
     quit()
 
@@ -454,7 +453,6 @@ if(output_style == "report" or output_style == "report-full"):
         #Save html file
         if htmlFile is not None:
             htmlFile.close()
-
         quit()
 
 #For standard output types:

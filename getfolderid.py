@@ -11,6 +11,8 @@
 #
 # 27JAN2017 Comments added  
 # 08FEB2020 Added the option to return full json     
+# 04OCT2022 Added the CreatedBy to results returned.
+#	    'getfolderid' from sharedfunctions.py has been updated to enable this.
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -44,6 +46,9 @@ output_style=args.output
 # call the get folderid function and pass it the entered path
 targets=getfolderid(path_to_folder)
 
+# uncomment the following line for debug
+#print("targets = "+str(targets))
+
 # default simple output style prints with original print method
 # but can also choose json or csv
 if output_style=='simple':
@@ -53,4 +58,5 @@ if output_style=='simple':
         print("Id  = "+targets[0])
         print("URI = "+targets[1])
         print("Path = "+targets[2])
+        print("CreatedBy = "+targets[4])
 else: printresult(targets[3],output_style)

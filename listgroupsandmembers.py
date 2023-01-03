@@ -34,6 +34,7 @@
 debug=False
 
 # Import Python modules
+from __future__ import unicode_literals
 import argparse
 import sys
 from sharedfunctions import callrestapi

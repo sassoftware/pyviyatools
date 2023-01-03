@@ -43,7 +43,7 @@
 import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter
 
 
 # get python version
@@ -81,9 +81,11 @@ nameval=args.name
 folderpath=args.folderpath
 
 # calculate time period for files
-now=dt.today()-td(days=int(changeddays))
-subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
-datefilter="ge(modifiedTimeStamp,"+subset_date+")"
+# now=dt.today()-td(days=int(changeddays))
+# subset_date=now.strftime("%Y-%m-%dT%H:%M:%S")
+# datefilter="ge(modifiedTimeStamp,"+subset_date+")"
+
+datefilter=createdatefilter(olderoryounger='younger',datevar='modifiedTimeStamp',days=changeddays)
 
 # create a list for filter conditions
 filtercond=[]
@@ -165,7 +167,11 @@ if areyousure.upper() =='Y':
 					else:
 						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 
-					print(command)
+					try:
+						print(command)
+					except UnicodeEncodeError:
+						print(command.encode('ascii','replace'))
+					
 					subprocess.call(command, shell=True)
 
 					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
@@ -175,7 +181,12 @@ if areyousure.upper() =='Y':
 
 					completefile=os.path.join(path,json_name+'.json')
 					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
-					print(command)
+					
+					try:
+						print(command)
+					except UnicodeEncodeError:
+						print(command.encode('ascii','replace'))
+										
 					subprocess.call(command, shell=True)
 					#time.sleep(1)
 					if autotranferremove:

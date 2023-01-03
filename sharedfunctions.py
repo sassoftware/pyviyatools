@@ -37,6 +37,9 @@
 #  16Jul2021 Edited callrestapi to be able to update the header. (Issue #83)
 #  20Feb2022 Support patch
 #  28Feb2022 Added functionality to callrestapi optionally pass in etags, and to request they be returned, for API endpoints that use them
+#  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
+#  12OCT2022 Build date filter function
+#  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -55,6 +58,7 @@
 
 # Import Python modules
 from __future__ import print_function
+from __future__ import unicode_literals
 import requests
 import sys
 import json
@@ -63,7 +67,7 @@ import os
 import collections
 import inspect
 import re
-
+from datetime import datetime as dt, timedelta as td
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -94,8 +98,9 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   16Jul2021 Added a functionality to update the header if necessary.
 #   20Feb2022 Support patch
 #   28Feb2022 Added functionality to optionally pass in etags, and to request they be returned, for API endpoints that use them
+#   15DEC2022 Added noprint, can be used to suppress the printing of the error messages when stoponerror is disabled, defaults to print for compatibility
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn=''):
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
 
 
     # get the url from the default profile
@@ -103,6 +108,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 
     # get the auth token
     oaval=getauthtoken(baseurl)
+
+    #print(oaval)
 
     # build the authorization header
     head= {'Content-type':contentType,'Accept':acceptType}
@@ -141,8 +148,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # response error if status code between these numbers
     if (400 <= ret.status_code <=599):
 
-       print("http response code: "+ str(ret.status_code))
-       print("ret.text: "+ret.text)
+       if not noprint: print("http response code: "+ str(ret.status_code))
+       if not noprint: print("ret.text: "+ret.text)
        result=None
        if stoponerror: sys.exit()
 
@@ -178,6 +185,7 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 # change history
 #   01dec2017 initial development
 #   08Feb2020 return full json as 4 item in list that is returned
+#   14OCT2022 added 'createdBy' to return array
 
 def getfolderid(path):
 
@@ -186,19 +194,22 @@ def getfolderid(path):
     reqtype='get'
 
     callrestapi(reqval,reqtype)
-
+    
     if result==None:
         print("NOTE: Folder'"+path+"' not found.")
         targetid=None
         targetname=None
         targeturi=None
+        targetcreatedBy=None
     else:
         targetid=result['id']
         targetname=result['name']
         targeturi="/folders/folders/"+targetid
+        targetcreatedBy=result['createdBy']
 
-    return [targetid,targeturi,targetname,result]
-
+    return [targetid,targeturi,targetname,result,targetcreatedBy]
+    
+    
 
 # getbaseurl
 # from the default profile return the baseurl of the Viya server
@@ -273,8 +284,7 @@ def getauthtoken(baseurl):
 
     with open(credential_file) as json_file:
         data = json.load(json_file)
-    type(data)
-
+    
     # the sas-admin profile init creates an empty credential file
     # check that credential is in file, if it is add it to the header, if not exit
 
@@ -288,7 +298,8 @@ def getauthtoken(baseurl):
     if cur_profile in data:
 
         oauthToken=data[cur_profile]['access-token']
-
+        refreshToken=data[cur_profile]['refresh-token']
+        
         oauthTokenType="bearer"
 
         oaval=oauthTokenType + ' ' + oauthToken
@@ -296,21 +307,80 @@ def getauthtoken(baseurl):
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
 
-        # test a connection to rest api if it fails exit
+        # test a connection to rest api if it fails try using the refresh token to re-authenticate
         r = requests.get(baseurl,headers=head)
 
+        if (400 <= r.status_code <=599):
+
+           
+            #do refresh token request
+            #curl -k "${INGRESS_URL}/SASLogon/oauth/token" -H "Accept: application/json" -H "Content-Type: application/x-www-form-urlencoded" -u "sas.cli:" \-d "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}" 
+
+            #did it work
+             
+            # set oauthToken again from the output of the request
+
+            # update oauthToken in credentials file from the output of the request
+
+             refresh_headers = {"Accept": "application/json","Content-Type": "application/x-www-form-urlencoded",}
+    
+             client_id="sas.cli"
+             client_secret=""
+
+             refresh_data = {}
+             refresh_data["grant_type"] =  "refresh_token"
+             refresh_data["refresh_token"] = refreshToken
+
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret))
+             
+             if (400 <= response.status_code <=599):
+                
+                oaval=None
+                print(r.text)
+                print("ERROR: cannot connect to "+baseurl+" with refresh token is your refresh token expired?")
+                print("ERROR: Try refreshing your token with the CLI auth login")
+                sys.exit()
+                
+             else:
+                
+                # set new token and update credentials.json
+                result=response.json()
+                newtoken=result["access_token"]
+                expires_in=result["expires_in"]
+                
+                # calculate new expiration
+                newexpiry=(dt.utcnow()+td(seconds=expires_in)).strftime('%Y-%m-%dT%H:%M:%SZ')
+                oaval=oauthTokenType + ' ' + newtoken
+
+                # write the new token to the credentials file
+                data[cur_profile]['access-token']=newtoken
+                data[cur_profile]['expiry']=newexpiry
+                                
+                filecontent=json.dumps(data,indent=2)
+                with open(credential_file, "w") as outfile:
+                    outfile.write(filecontent)
+
+                
+
+        head= {'Content-type':'application/json','Accept':'application/json' }
+        head.update({"Authorization" : oaval})
+
+        # test a connection to rest api again if it fails exit
+        # tell user to re-authenticate with the sas-viya CLI
+
+        r = requests.get(baseurl,headers=head)
         if (400 <= r.status_code <=599):
 
             oaval=None
             print(r.text)
             print("ERROR: cannot connect to "+baseurl+" is your token expired?")
-            print("ERROR: Try refreshing your token with sas-admin auth login")
+            print("ERROR: Try refreshing your token with the Viya CLI auth login")
             sys.exit()
     else:
 
         oaval=None
         print("ERROR: access token not in file: ", credential_file)
-        print("ERROR: Try refreshing your token with sas-admin auth login")
+        print("ERROR: Try refreshing your token with Viya CLI auth login")
         sys.exit()
 
     return oaval
@@ -386,7 +456,7 @@ def simpleresults(resultdata):
 #   01aug2018  initial development
 #   19dece2018 print  csv in column orderwith only common columns
 
-def csvresults(resultdata,columns=[]):
+def csvresults(resultdata,columns=[],header=1):
 
 
     if 'items' in resultdata:
@@ -420,16 +490,17 @@ def csvresults(resultdata,columns=[]):
             numvals=len(columns)
             z=0
 
-            # print header row of column names
-            for key,val in pairs.items():
+            if header:
+                # print header row of column names
+                for key,val in pairs.items():
 
-                z=z+1
+                    z=z+1
 
-                # seperate with comma except last item
-                if z==numvals: sep=''
-                else: sep=','
+                    # seperate with comma except last item
+                    if z==numvals: sep=''
+                    else: sep=','
 
-                if i==0 and key in columns: print(key,sep,end="")
+                    if i==0 and key in columns: print(key,sep,end="")
 
             print("\n",end="")
 
@@ -443,9 +514,15 @@ def csvresults(resultdata,columns=[]):
                 if z==numvals: sep=''
                 else: sep=','
 
-                if key !=  'links' and key in columns: print('"'+str(val)+'"'+sep, end="")
-
-
+                if key !=  'links' and key in columns: 
+                                                           
+                    try:
+                        print('"'+str(val)+'"'+sep, end="")
+                    except UnicodeEncodeError:
+                        newval=val.encode('ascii','replace')
+                        print('"'+str(newval)+'"'+sep, end="")
+                    
+ 
         print("\n",end="")
 
 
@@ -475,7 +552,13 @@ def csvresults(resultdata,columns=[]):
             if z==numvals: sep=''
             else: sep=','
 
-            if key != 'links': print('"'+str(val)+'"'+sep,end="")
+            if key != 'links': 
+                
+                try:
+                    print('"'+str(val)+'"'+sep, end="")
+                except UnicodeEncodeError:
+                    newval=val.encode('ascii','replace')
+                    print('"'+str(newval)+'"'+sep, end="")
 
         print("\n",end="")
 
@@ -506,7 +589,7 @@ def file_accessible(filepath, mode):
 #   22dec2018 add csv columns only relevent for csv output, defaults provided but can be overriden when called
 #   20feb2020 add simplejson output style
 
-def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"]):
+def printresult(result,output_style,colsforcsv=["id","name","type","description","creationTimeStamp","modifiedTimeStamp"],header=1):
 
 
     # print rest call results
@@ -517,7 +600,7 @@ def printresult(result,output_style,colsforcsv=["id","name","type","description"
         elif output_style=='simplejson':
             simplejsonresults(result)
         elif output_style=='csv':
-            csvresults(result,columns=colsforcsv)
+            csvresults(result,columns=colsforcsv,header=header)
         else:
             print(json.dumps(result,indent=2))
     else: print(result)
@@ -639,6 +722,34 @@ def getpath(objecturi):
 
     return path
 
+
+
+# getobjectdetails
+# Viya objectURI is input, assorted fields are returned
+# change history
+#   14OCT2022 initial development
+
+def getobjectdetails(objecturi):
+
+    # build the request parameters
+    reqval=objecturi
+    reqtype='get'
+
+    callrestapi(reqval,reqtype)
+   
+    # verfiyc objectURI input found and return attributes
+    if result==None:
+        print("NOTE: Object with ObjectURI:'"+objecturi+"' not found.")
+    else:
+        targetname=result['name']
+        targetcreator=result['createdBy']
+        targetid=result['id']
+        targeturi=objecturi
+
+    return [targetname,targetcreator,targetid,targeturi,result]
+    
+    
+
 # getidsanduris
 # given a result json structure, return a dictionary with a list of id's and uri's
 # change history
@@ -709,8 +820,16 @@ def simplejsonresults(resultdata):
 
 
 def get_valid_filename(s):
-	s = str(s).strip().replace(' ', '_')
-	return re.sub(r'(?u)[^-\w.]', '', s)
+	
+
+    #try original method, if it fails with encoding error remove string function
+    try:
+        s = str(s).strip().replace(' ', '_')
+    
+    except UnicodeEncodeError:
+        s = s.strip().replace(' ', '_')
+    
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 # getapplicationproperties
 #   20nov2020 initial development
@@ -725,4 +844,19 @@ def getapplicationproperties():
     myparams=dict(line.strip().split('=') for line in open(prop_file) if line[0].isalpha())
     return myparams
 
+# build a date filter for the REST filter
 
+def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
+    
+    # what date is the filter based on
+    thedate=dt.today()-td(days=int(days))
+
+    # set the timestamp to be at the end of the day for younger and the begining for older
+    if olderoryounger=='older':
+       subset_date=thedate.replace(hour=23, minute=59, second=59, microsecond=999999).strftime("%Y-%m-%dT%H:%M:%S")
+       datefilter="le("+datevar+","+subset_date+")"
+    else:
+       subset_date=thedate.replace(hour=00, minute=00, second=00, microsecond=999999).strftime("%Y-%m-%dT%H:%M:%S")
+       datefilter="ge("+datevar+","+subset_date+")"
+   
+    return datefilter
