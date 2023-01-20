@@ -93,7 +93,7 @@ else:
   else:
     
     if version  > 2:
-      check_deletee = input('Are you sure you want to delete the domain? (Yes/No):')
+      check_delete = input('Are you sure you want to delete the domain? (Yes/No):')
     else:
       check_delete = raw_input('Are you sure you want to delete the domain? (Yes/No):') 
     
