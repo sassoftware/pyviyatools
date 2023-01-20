@@ -45,9 +45,10 @@ type=args.type
 reqval="/credentials/domains/"+domain_name
 reqtype="get"
 test_result_json=callrestapi(reqval,reqtype)
-resp_id=str(test_result_json["id"])
-resp_desc=str(test_result_json["description"])
-resp_type=str(test_result_json["type"])
+print(test_result_json)
+resp_id=test_result_json["id"]
+resp_desc=test_result_json["description"]
+resp_type=test_result_json["type"]
 
 print('Found the domain with ID:' +resp_id+ ', description:' +resp_desc+ ', and type:' +resp_type)
 print("")
