@@ -28,10 +28,12 @@
 
 # Delete a domain
 
-import base64
-import argparse
+import base64, argparse, sys
 
 from sharedfunctions import callrestapi
+
+# get python version
+version=int(str(sys.version_info[0]))
     
 parser = argparse.ArgumentParser(description="Delete a Viya Domain")
 parser.add_argument("-d","--domain", help="Enter the domain name.",required=True)
@@ -45,9 +47,13 @@ type=args.type
 reqval="/credentials/domains/"+domain_name
 reqtype="get"
 test_result_json=callrestapi(reqval,reqtype)
-print(test_result_json)
+
 resp_id=test_result_json["id"]
-resp_desc=test_result_json["description"]
+
+if 'description' in test_result_json:
+   resp_desc=test_result_json["description"]
+else: resp_desc=''
+
 resp_type=test_result_json["type"]
 
 print('Found the domain with ID:' +resp_id+ ', description:' +resp_desc+ ', and type:' +resp_type)
@@ -67,7 +73,11 @@ else:
     print ('Libraries associated with this domain will need to be recreated if the domain is deleted.')
     print ("")
     
-    check_delete = raw_input('Are you sure you want to delete the encryption domain? (Yes/No):')
+    
+    if version  > 2:
+      check_delete = input('Are you sure you want to delete the encryption domain? (Yes/No):')
+    else:
+      check_delete = raw_input('Are you sure you want to delete the encryption domain? (Yes/No):') 
     
     if check_delete == 'Yes':
       
@@ -82,7 +92,10 @@ else:
   
   else:
     
-    check_delete = raw_input('Are you sure you want to delete the domain? (Yes/No):')
+    if version  > 2:
+      check_deletee = input('Are you sure you want to delete the domain? (Yes/No):')
+    else:
+      check_delete = raw_input('Are you sure you want to delete the domain? (Yes/No):') 
     
     if check_delete == 'Yes':
       
