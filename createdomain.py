@@ -37,7 +37,7 @@ import argparse
 
 from sharedfunctions import callrestapi
     
-parser = argparse.ArgumentParser(description="Create a Viya Domain")
+parser = argparse.ArgumentParser(description="Create a Viya Domain (password, token, connection) : Please see createcryptdomain.py to create encryption domains.")
 parser.add_argument("-d","--domain", help="Enter the domain name.",required=True)
 parser.add_argument("-u","--user", help="User ID for the domain.",required=True)
 parser.add_argument("-p","--password", help="Password for the userid.",required=False)
