@@ -46,6 +46,10 @@ groups=args.groups
 desc=args.desc
 type='cryptDomain'
 
+if domain_name.isalnum()==False:
+  print("ERROR: Domain name must be alpha-numeric.")
+  quit()
+
 # create a python list with the groups
 grouplist=groups.split(",")
 

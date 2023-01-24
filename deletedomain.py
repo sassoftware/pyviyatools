@@ -43,6 +43,10 @@ args = parser.parse_args()
 domain_name=args.domain
 type=args.type
 
+if domain_name.isalnum()==False:
+  print("ERROR: Domain name must be alpha-numeric.")
+  quit()
+
 # check the type matches the existing domain
 reqval="/credentials/domains/"+domain_name
 reqtype="get"
