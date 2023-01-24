@@ -99,7 +99,7 @@ else:
     
     if check_delete == 'Yes':
       
-      print ('Deleting encryption domain: '+resp_id)
+      print ('Deleting Domain: '+resp_id)
       reqval="/credentials/domains/"+domain_name+"?includeCredentials=true"
       reqtype="delete"
       
