@@ -37,7 +37,7 @@ version=int(str(sys.version_info[0]))
     
 parser = argparse.ArgumentParser(description="Delete a Viya Domain")
 parser.add_argument("-d","--domain", help="Enter the domain name.",required=True)
-parser.add_argument("-t","--type", help="Type of the domain: password, oauth2.0 (token) or connection (passwordless).",required=True, choices=['password','connection','oauth2.0','cryptDomain'])
+parser.add_argument("-t","--type", help="Type of the domain: password, oauth2.0 (token), connection (passwordless) or encryption.",required=True, choices=['password','connection','oauth2.0','cryptDomain'])
 args = parser.parse_args()
 
 domain_name=args.domain
@@ -81,14 +81,14 @@ else:
     
     if check_delete == 'Yes':
       
-      print ('Deleting encryption domain: '+resp_id)
+      print ('NOTE: Deleting encryption domain: '+resp_id)
       reqval="/credentials/domains/"+domain_name+"?includeCredentials=true"
       reqtype="delete"
       
       callrestapi(reqval,reqtype)
     
     else:
-      print ('NOT Deleting encryption domain: '+resp_id)
+      print ('NOTE: NOT Deleting encryption domain: '+resp_id)
   
   else:
     
@@ -99,13 +99,13 @@ else:
     
     if check_delete == 'Yes':
       
-      print ('Deleting Domain: '+resp_id)
+      print ('NOTE: Deleting Domain: '+resp_id)
       reqval="/credentials/domains/"+domain_name+"?includeCredentials=true"
       reqtype="delete"
       
       callrestapi(reqval,reqtype)
     else:
-      print ('NOT Deleting encryption domain: '+resp_id)
+      print ('NOTE: NOT Deleting domain: '+resp_id)
 
 
 
