@@ -13,7 +13,7 @@
 #  29JAN2017 Added choices to validate type of domain  
 #  29SEP2018 make group list comma seperated 
 #  01DEC2022 add token domain
-
+#  01FEB2023 add --store option to just store the credential
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
