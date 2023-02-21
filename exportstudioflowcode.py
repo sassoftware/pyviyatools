@@ -36,7 +36,7 @@ def writecode():
 version=int(str(sys.version_info[0]))
 
 # get arguements
-parser = argparse.ArgumentParser(description="Create a Code from a Studio Flow.")
+parser = argparse.ArgumentParser(description="Create a Code from a Studio Flow or all flows in folder.")
 parser.add_argument("-t","--type", help="Enter 'Flow' for a single flow or 'Folder' for all flows in a folder.",required=True,choices=['Flow','Folder'])
 parser.add_argument("-n","--name", help="Name of Flow or Folder Path.",required=True)
 parser.add_argument("-d","--directory", help="Directory to store generated code",required='True')
