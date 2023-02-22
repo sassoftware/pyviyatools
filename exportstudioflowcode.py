@@ -5,7 +5,7 @@
 # exportstudioflowcode.py
 # Feb 2022
 #
-# create a code from Viya flows
+# create a code from SAS Studio flows
 #
 # Change History
 #
@@ -18,19 +18,33 @@ from sharedfunctions import callrestapi, getfolderid
 # write code function
 def writecode():
 
-    if os.path.exists(basedir):
-        # remove / from path
-        filename=flow_name.split('.')[0].replace("/","_")
-        file=os.path.join(basedir,filename+'.sas')
+    if debug: print(data)
 
-        print("NOTE: SAS Code output to "+file)
+    reqval="/studioDevelopment/code"
+    reqtype="post"
+    flow_json=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
-        with open(file, "w") as outfile:
-                outfile.write(code)
+    # if code is returned then output to file
+    if flow_json !=None:
 
-    else: 
-        print("ERROR: output directory does not exist.")
-        sys.exit()
+        code=flow_json['code']
+    
+        if os.path.exists(basedir):
+            # remove / from path
+            filename=flow_name.split('.')[0].replace("/","_")
+            file=os.path.join(basedir,filename+'.sas')
+
+            print("NOTE: SAS Code output to "+file)
+
+            with open(file, "w") as outfile:
+                    outfile.write(code)
+
+        else: 
+            print("ERROR: output directory does not exist.")
+            sys.exit()
+    
+    else:
+        print("WARNING: code cannot be generated for "+flow_name)
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -43,10 +57,12 @@ parser.add_argument("-d","--directory", help="Directory to store generated code"
 
 parser.add_argument("--includeinitcode", help="Include init code (default False)",action='store_true')
 parser.add_argument("--includewrappercode", help="Include wrapper code (default False)",action='store_true')
+parser.add_argument("--debug", help="Include wrapper code (default False)",action='store_true')
 
 args = parser.parse_args()
 basedir=args.directory
 type=args.type
+debug=args.debug
 
 # user passed in a single flow
 if type=="Flow":
@@ -64,11 +80,6 @@ if type=="Flow":
     data['wrapperCode']= args.includewrappercode
 
     # run the request and get the code
-    reqval="/studioDevelopment/code"
-    reqtype="post"
-    flow_json=callrestapi(reqval,reqtype,data=data)
-    code=flow_json['code']
-
     writecode()
 
 else:
@@ -81,16 +92,24 @@ else:
     # if the folder is found
     if targets[0] is not None: uri=targets[1]
     else:
-        print("ERROR: Folder does not exist")
+        print("ERROR: Folder does not exist.")
         sys.exit()
 
     reqval=uri+"/members?&limit=100000"
     reqtype='get'
 
     folder_members=callrestapi(reqval,reqtype)
+
+    items=folder_members["items"]
+
+    if len(items)==0:
+        print("NOTE: folder is empty.")
+        sys.exit()
+    
+    count=0
     
     # loop folder members
-    for itemlist in folder_members["items"]:
+    for itemlist in items:
 
         ctype=itemlist["contentType"]
         flow_name=folder_path+"/"+itemlist["name"]
@@ -104,15 +123,17 @@ else:
             reference["type"]="content"
             reference['path']=flow_name
             reference['mediaType']="application/vnd.sas.dataflow"
-            data['initCode'] = True
-            data['wrapperCode']= True
-            
-            reqval="/studioDevelopment/code"
-            reqtype="post"
-            flow_json=callrestapi(reqval,reqtype,data=data)
-            code=flow_json['code']
-           
+            data['initCode'] = args.includeinitcode
+            data['wrapperCode']= args.includewrappercode
+          
             writecode()
+        
+        else:
+            count=count+1
+        
+    if count > 0: print("NOTE: No flows in folder.")
+
+
 
 
 
@@ -126,3 +147,4 @@ else:
 
 
 
+l
