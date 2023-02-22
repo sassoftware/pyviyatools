@@ -113,6 +113,7 @@ else:
             code=flow_json['code']
            
             writecode()
+    else: print("NOTE: no SAS studio flows found in "+name)
 
 
 
