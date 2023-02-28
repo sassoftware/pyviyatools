@@ -31,7 +31,7 @@ The tools will work with either python 2 or python 3.
 
 The following python libraries are used:
 
-* requests http://docs.python-requests.org/en/master/
+* [requests](http://docs.python-requests.org/en/master/)
 * sys
 * json
 * os
@@ -40,6 +40,7 @@ The following python libraries are used:
 * platform
 * argparse
 * urlparse
+* [configobj](https://pypi.org/project/configobj/)
 
 
 ### Installing
