@@ -3,6 +3,7 @@
 #
 # jobmodule.py
 # August 2021
+# March 2023 - Issue #137
 #
 # This module has the following functions in the folder.
 # submit_job_definition is used by submit_jobdef.py to submit a job based on the job definition id. Depending if a
@@ -93,8 +94,9 @@ class jobmodule:
                 }
             }
 
-            url = self.getbaseurl() + "jobExecution/jobRequests"
-            self.submit_job_request(url=url, data=jobReq)
+            # March 2023 - Issue #137 Commented is not needed and the call is to be made for submit_job_request with json
+            # url = self.getbaseurl() + "jobExecution/jobRequests"
+            self.submit_job_request(job_req_json=jobReq)
         elif count >= 1:
             if self.verbose:
                 print ("Job Request Found using job request id {}".format(result.json()['items'][0]['id']))
@@ -126,12 +128,15 @@ class jobmodule:
             if self.verbose:
                 print ("Submitting a new job request.")
             url = self.getbaseurl() + "/jobExecution/jobRequests"
-            result = requests.post(url=url,data=job_req_json,headers=self.head)
+            # March 2023 - Issue #137 Changed data to json.
+            result = requests.post(url=url,json=job_req_json,headers=self.head)
             print ("New Job Request has been created. {}".format(result.json()['id']))
             self.job_requests_id = result.json()['id']
             for links in result.json()['links']:
-                submit_job_url = self.getbaseurl() + links['uri'].strip()
-                self.execute_job(url=submit_job_url)
+                # March 2023 - Issue #137 It was not going to the proper link
+                if result['rel'] == 'submitJob':
+                    submit_job_url = self.getbaseurl() + links['uri'].strip()
+                    self.execute_job(url=submit_job_url)
 
     def execute_job(self, url):
         sasout_loc = None

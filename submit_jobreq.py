@@ -3,6 +3,7 @@
 #
 # submit_jobreq.py
 # August 2021
+# March 2023 - Issue #137
 #
 # This function takes in the job id and verbose variables. id is the only required argument.
 # based on the id, it will check to see, it will start the process of submitting the job
@@ -43,8 +44,8 @@ try:
     profile = os.environ.get("SAS_CLI_PROFILE", "Default")
     x = jobmodule()
 
-    if x.check_context(args.context):
-        x.submit_job_request(id=args.id, verbose=args.verbose)
+    # March 2023 - Issue #137 - It was incorrectly checking for a context which was not needed. 
+    x.submit_job_request(id=args.id, verbose=args.verbose)
 
 
     print("=================================")
