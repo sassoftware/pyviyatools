@@ -101,15 +101,15 @@ if more is None:
     i = 0
     while i < len(urilist):
         path=getpath(urilist[i])
-	# checks for 'o' flag and includes objecturis in output if it's set
+   # checks for 'o' flag and includes objecturis in output if it's set
         # output from: -o -u <objecturi>
-	if oid =="yes":
+    if oid =="yes":
            print(urilist[i]+","+path)
            i=i+1
         # output from: -u <objecturi>
-	else:
-	   print(path)
-	   i=i+1
+    else:
+      print(path)
+      i=i+1
 else:
     # loop to retrieve all objecturi values entered + object name
     i = 0
@@ -118,20 +118,20 @@ else:
         name=getobjectdetails(urilist[i])
         creator=getobjectdetails(urilist[i])
         # checks for 'o' flag and includes objecturis in output if it's set
-	if oid == "yes":
-	   # output from: -o -m name -u <objecturi>
-    	   if more == "name":
-	      print(urilist[i]+","+path+name[0])
-	      i=i+1
+    if oid == "yes":
+      # output from: -o -m name -u <objecturi>
+      if more == "name":
+         print(urilist[i]+","+path+name[0])
+         i=i+1
            # output from: -o -m createdby -u <objecturi>
-	   elif more == "createdby":
-	      print(urilist[i]+","+path+","+creator[1])
-	      i=i+1
+      elif more == "createdby":
+         print(urilist[i]+","+path+","+creator[1])
+         i=i+1
            # output from: -o -m all|<blank> -u <objecturi>
-	   else:
-	      print(urilist[i]+","+path+name[0]+","+creator[1])
-	      i=i+1
-	else:
+      else:
+         print(urilist[i]+","+path+name[0]+","+creator[1])
+         i=i+1
+    else:
            # output from: -m name -u <objecturi>
            if more == "name":
               print(path+name[0])
