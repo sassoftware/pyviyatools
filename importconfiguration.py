@@ -45,32 +45,32 @@ version=int(str(sys.version_info[0]))
 # if the quiet mode flag is not passed then prompt to continue
 if not quietmode:
 
-	if version  > 2:
-		areyousure=input("WARNING: Are you sure? (Y)")
-	else:
-		areyousure=raw_input("WARNING: Are you sure? (Y)")
+    if version  > 2:
+        areyousure=input("WARNING: Are you sure? (Y)")
+    else:
+        areyousure=raw_input("WARNING: Are you sure? (Y)")
 else:
-	areyousure="Y"
+    areyousure="Y"
 
 if areyousure.upper() =='Y':
 
-	# check that directory exists
-	if os.path.isdir(basedir):
+    # check that directory exists
+    if os.path.isdir(basedir):
 
-		# loop files in the directory
-		for filename in os.listdir( basedir ):
+        # loop files in the directory
+        for filename in os.listdir( basedir ):
 
-			# only process json files
-			if filename.lower().endswith('.json'):
-                                command=clicommand+'  configuration configurations update --file '+os.path.join(basedir,filename)
-				print(command)
-				subprocess.call(command, shell=True)
+            # only process json files
+            if filename.lower().endswith('.json'):
+                command=clicommand+'  configuration configurations update --file '+os.path.join(basedir,filename)
+                print(command)
+                subprocess.call(command, shell=True)
 
-				print("NOTE: Configuration import attempted from json file "+filename+" in  directory "+basedir  )
+                print("NOTE: Configuration import attempted from json file "+filename+" in  directory "+basedir  )
 
-	else: print("ERROR: Directory does not exist")
+    else: print("ERROR: Directory does not exist")
 else:
-	 print("NOTE: Operation cancelled")
+     print("NOTE: Operation cancelled")
 
 
 

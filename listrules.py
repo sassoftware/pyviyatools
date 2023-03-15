@@ -121,5 +121,5 @@ elif output_style=='csv':
             outstr=outstr+str(item[column])
       print(outstr)
 else:
-  print "output_style can be json, simple or csv. You specified " + output_style + " which is invalid."
+  print ("output_style can be json, simple or csv. You specified " + output_style + " which is invalid.")
 

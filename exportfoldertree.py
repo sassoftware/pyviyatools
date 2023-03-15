@@ -89,8 +89,9 @@ if areyousure.upper() =='Y':
     reqtype='get'
 
     # folder = NONE means the root folder
-    if folder !='NONE':
-        
+    # also if user passes in root
+    if folder !='NONE' and folder !='/':
+
         # get members of folder passed in
         folderinfo=getfolderid(folder)
         results=(folderinfo[3])
@@ -119,7 +120,7 @@ if areyousure.upper() =='Y':
 
                 i=i+1
                 
-                if folder=='NONE':
+                if folder=='NONE' or folder=='/':
 
                    # get id for root folders and build URI	
                    id=theitem["id"]
