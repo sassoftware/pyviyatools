@@ -91,7 +91,7 @@ if areyousure.upper() =='Y':
     # folder = NONE means the root folder
     # also if user passes in root
     if folder !='NONE' and folder !='/':
-        
+
         # get members of folder passed in
         folderinfo=getfolderid(folder)
         results=(folderinfo[3])
