@@ -367,7 +367,10 @@ def getauthtoken(baseurl):
                         with open(credential_file, "w") as outfile:
                             outfile.write(filecontent)
                     except:
-                        error='Cannot open file just skip update of tokens'
+                        print('Cannot open file just skip update of tokens')
+                else:
+                    print("cannot write to credential file")
+
                             
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
