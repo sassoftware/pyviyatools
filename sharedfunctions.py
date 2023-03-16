@@ -357,11 +357,25 @@ def getauthtoken(baseurl):
                 data[cur_profile]['expiry']=newexpiry
                                 
                 filecontent=json.dumps(data,indent=2)
-                with open(credential_file, "w") as outfile:
-                    outfile.write(filecontent)
 
+                # check if we can write to the credential file
+                # if we cannot just skip
+                # new token will be used with request anyway
                 
+                if os.access(credential_file,os.W_OK):
+                    try:
+                        with open(credential_file, "w") as outfile:
+                            outfile.write(filecontent)
+                    except:
+                        message="NOTE: Cannot open file just skip update of tokens."
+                        #print(message)
+                else:
 
+                    # fail silently if cannot write to credential file
+                    message="NOTE: Cannot write to credential file."
+                    #print(message)
+
+                            
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
 
