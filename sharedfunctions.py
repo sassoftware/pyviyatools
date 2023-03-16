@@ -362,7 +362,7 @@ def getauthtoken(baseurl):
                 # if we cannot jus skip
                 # new token will be used with request anyway
                 
-                if os.access("credential_file",os.W_OK):
+                if os.access(credential_file,os.W_OK):
                     try:
                         with open(credential_file, "w") as outfile:
                             outfile.write(filecontent)
