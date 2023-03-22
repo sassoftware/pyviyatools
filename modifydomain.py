@@ -8,6 +8,7 @@
 # modify a viya domain
 #
 # Change History
+# March 2023, Add support for 'client' identity type
 
 import argparse, sys, base64, json
 
