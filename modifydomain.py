@@ -8,6 +8,7 @@
 # modify a viya domain
 #
 # Change History
+# March 2023, Add support for 'client' identity type
 
 import argparse, sys, base64, json
 
@@ -16,7 +17,7 @@ from sharedfunctions import callrestapi
 parent_parser = argparse.ArgumentParser(add_help=False)
 
 parent_parser.add_argument("-n","--name", help="Domain name.",required=True)
-parent_parser.add_argument("-it","--identitytype", help="User or Group",required=True,choices=['user','group'])
+parent_parser.add_argument("-it","--identitytype", help="User, Group or Client",required=True,choices=['user','group','client'])
 parent_parser.add_argument("-i","--identity", help="List of users OR list of groups (comma seperated)",required=True)
 parent_parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -47,7 +48,8 @@ type=args.type
 identitytype=args.identitytype
 
 if identitytype=='group': epointvar='groups'
-elif identitytype=='user': epointvar='users' 
+elif identitytype=='user': epointvar='users'
+elif identitytype=='client': epointvar='clients'
 
 identitylist=args.identity.split(",")
 debug=args.debug
@@ -70,7 +72,7 @@ data['domainId'] = domain_name
 data['domainType'] = type
 
 if type=='password':
-    
+
     userid=args.userid
     pwval=args.password
 
@@ -80,14 +82,14 @@ if type=='password':
 
 #elif type=='oaauth2.0':
 
-    
+
 elif type=='cryptDomain':
     keyval=args.key
     cred=base64.b64encode(keyval.encode("utf-8")).decode("utf-8")
     data['secrets']={"encryptkey": cred}
 
 elif type=='connection':
-    
+
     userid=args.userid
     data['properties']={"userId": userid}
 
@@ -99,10 +101,10 @@ for identity in identitylist:
     data['identityId'] = identity
     data['identityType'] =  identitytype
 
-    if debug: 
+    if debug:
         print(json.dumps(data,indent=2))
         print(reqval)
-    
+
     # do the magic
     reqval="/credentials/domains/"+domain_name+"/"+epointvar+"/"+identity
     reqtype="put"
