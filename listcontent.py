@@ -88,7 +88,7 @@ def getfoldercontent(path_to_folder):
             path_to_item=getpath(itemuri)
 
             if path_to_item==None: path_to_item="No folder path."
-            print(path_to_item,name,contenttype)
+            if debug: print(path_to_item,name,contenttype)
 
             itemlist[i]["pathtoitem"]=path_to_item
             itemlist[i]["pathanditemname"]=path_to_item+name
