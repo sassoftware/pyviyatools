@@ -45,20 +45,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import argparse
-import csv
-import os
+import argparse, csv, os, sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris
+
+version=int(str(sys.version_info[0]))
+if version==2: from io import open
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create custom groups and establish membership from csv: File Format: column1=groupid,column2=group name,column3=description,optional column4=memberid")
 parser.add_argument("-f","--file", help="Full path to csv file containing groups ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
+parser.add_argument("--encoding",default="ascii")
+
 args = parser.parse_args()
 file=args.file
 skipfirstrow=args.skipfirstrow
 debug=args.debug
+encoding=args.encoding
 
 reqtype="post"
 
@@ -82,7 +86,7 @@ if 'items' in allgroups:
 # file can be read
 if check:
 
-    with open(file, 'rt') as f:
+   with open(file, 'rt',encoding=encoding, errors="ignore") as f:
 
         filecontents = csv.reader(f)
 
@@ -112,20 +116,21 @@ if check:
                 if id in groupslist:
                     print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
                 else:
-                    print ("Note: Trying to creating Group: "+newgroup )
+                    print ("Note: Trying to create Group: "+newgroup )
 
                     reqtype='post'
                     reqval="/identities/groups/"
 
-                    myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0)
+                    myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
-                    if myresult != None: print("Note: Group: "+newgroup+" created" )
+                    if myresult != None: print("Note: Group: with id "+id+" and name "+newgroup+" created." )
+                    else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
 
                 # 4th column is group membership either a userid or groupid, its optional.
                 if cols>=4 and row[3] !="":
 
                     member=row[3]
-                    print("Note: Trying to add user "+ member+ " to group "+newgroup )
+                    print("Note: Trying to add user "+ member+ " to groupwith id "+id+" and name "+newgroup+" created.")
 
                     #test that user exists
                     reqval="/identities/users/"+member
