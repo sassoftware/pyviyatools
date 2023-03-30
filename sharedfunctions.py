@@ -80,7 +80,7 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 
     print("The request is a "+reqtype+" request: ",baseurl+reqval)
 
-    json_data=json.dumps(data, ensure_ascii=False)
+    json_data=json.dumps(data, ensure_ascii=False,encoding='utf-8')
 
     print("Data for Request:")
     print(json_data)
@@ -125,7 +125,7 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     global result
 
     # serialize the data string for the request to json format
-    json_data=json.dumps(data, ensure_ascii=False)
+    json_data=json.dumps(data, ensure_ascii=False,encoding='utf-8')
 
     # call the rest api using the parameters passed in and the requests python library
 
