@@ -46,7 +46,9 @@ parser = argparse.ArgumentParser(description="Create folders that are read from 
 parser.add_argument("-f","--file", help="Full path to csv file containing folders, format of csv: 'folderpath,description ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
-parser.add_argument("--encoding",default="ascii")
+
+if version==2: parser.add_argument("--encoding",default="ascii")
+else: parser.add_argument("--encoding",default="utf-8")
 
 args = parser.parse_args()
 file=args.file

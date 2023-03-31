@@ -49,14 +49,20 @@ import argparse, csv, os, sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris
 
 version=int(str(sys.version_info[0]))
-if version==2: from io import open
+if version==2:
+    from io import open
+    import csv342 as csv
+else:
+    import csv
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create custom groups and establish membership from csv: File Format: column1=groupid,column2=group name,column3=description,optional column4=memberid")
 parser.add_argument("-f","--file", help="Full path to csv file containing groups ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
-parser.add_argument("--encoding",default="ascii")
+
+if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii")
+else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8")
 
 args = parser.parse_args()
 file=args.file
