@@ -51,9 +51,6 @@ from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsand
 version=int(str(sys.version_info[0]))
 if version==2:
     from io import open
-    import csv342 as csv
-else:
-    import csv
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create custom groups and establish membership from csv: File Format: column1=groupid,column2=group name,column3=description,optional column4=memberid")
