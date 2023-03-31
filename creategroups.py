@@ -114,39 +114,48 @@ if check:
 
                 # if group does not exist add it
                 if id in groupslist:
-                    print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
+
+                    print("Note: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
                 else:
-                    print ("Note: Trying to create Group: "+newgroup )
+                    if debug: print ("Note: Trying to create Group: "+newgroup )
 
                     reqtype='post'
                     reqval="/identities/groups/"
 
                     myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
-                    if myresult != None: print("Note: Group: with id "+id+" and name "+newgroup+" created." )
+                    if myresult != None: print("Note: Group: with id '"+id+"' and name '"+newgroup+"' created." )
                     else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
 
                 # 4th column is group membership either a userid or groupid, its optional.
                 if cols>=4 and row[3] !="":
 
                     member=row[3]
-                    print("Note: Trying to add user "+ member+ " to groupwith id "+id+" and name "+newgroup+" created.")
+                    if debug: print("Note: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
 
                     #test that user exists
                     reqval="/identities/users/"+member
                     usertest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                    # user exists try to add to group, if user does not exist print a message
-                    if usertest!=None:
+                    # also test if it is nit a group
+                    reqval="/identities/groups/"+member
+                    grouptest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                        reqval="/identities/groups/"+id+"/userMembers/"+member
+                    # user exists try to add to group, if user does not exist print a message
+                    if usertest!=None or grouptest!=None:
+
+                        # add the user or group membership
+                        if usertest!=None:
+                            reqval="/identities/groups/"+id+"/userMembers/"+member
+                        else: reqval="/identities/groups/"+id+"/groupMembers/"+member
+
                         reqtype='put'
                         myresult=callrestapi(reqval,reqtype,data=data,noprint=1,stoponerror=0)
 
-                        if myresult != None: print("Note: user: "+member+" added to group "+newgroup )
-                        else: print("Note: user: "+member+" is already a member of group "+newgroup )
+                        if myresult != None: print("Note: Identity: "+member+" added to group  with id '"+id+"' and name '"+newgroup+"'")
+                        else: print("Note: Identity: '"+member+"' is already a member group with id '"+id+"' and name '"+newgroup+"'")
 
-                    else: print("WARNING: user: "+member+" does not exist and therefor cannot be added to group.")
+                    else: print("WARNING: Identity: '"+member+"' does not exist and therefor cannot be added to group.")
 
             else: print("WARNING: too few columns in row, row must have at least two columns for group id and group.")
 
