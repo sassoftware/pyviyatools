@@ -164,7 +164,7 @@ if check:
 
                 else: print("WARNING: too few columns in row, row must have at least two columns for group id and group.")
         except csv.Error as e:
-        sys.exit('file {}, line {}: {}'.format(file, filecontents.line_num, e))
+            sys.exit('file {}, line {}: {}'.format(file, filecontents.line_num, e))
         
 else:
     print("ERROR: cannot read csv file: "+file)
