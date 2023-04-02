@@ -95,73 +95,77 @@ if check:
 
         if skipfirstrow: next(filecontents,None)
 
-        for row in filecontents:
+        try:
 
-            cols=len(row)
+            for row in filecontents:
 
-            # skip row and output a message if only 1 column
-            if cols>1:
+                cols=len(row)
 
-                # add a default description if only two columns
-                if cols==2: row.append("Add by pyviyatools creategroups.py")
+                # skip row and output a message if only 1 column
+                if cols>1:
 
-                id=row[0]
-                newgroup=row[1]
-                description=row[2]
+                    # add a default description if only two columns
+                    if cols==2: row.append("Add by pyviyatools creategroups.py")
 
-                data = {}
-                data["id"]=id
-                data['name'] = newgroup
-                data['description'] = description
-                data["state"]="active"
+                    id=row[0]
+                    newgroup=row[1]
+                    description=row[2]
 
-                # if group does not exist add it
-                if id in groupslist:
+                    data = {}
+                    data["id"]=id
+                    data['name'] = newgroup
+                    data['description'] = description
+                    data["state"]="active"
 
-                    print("Note: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
-                else:
-                    if debug: print ("Note: Trying to create Group: "+newgroup )
+                    # if group does not exist add it
+                    if id in groupslist:
 
-                    reqtype='post'
-                    reqval="/identities/groups/"
+                        print("Note: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
+                    else:
+                        if debug: print ("Note: Trying to create Group: "+newgroup )
 
-                    myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
+                        reqtype='post'
+                        reqval="/identities/groups/"
 
-                    if myresult != None: print("Note: Group: with id '"+id+"' and name '"+newgroup+"' created." )
-                    else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
+                        myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
-                # 4th column is group membership either a userid or groupid, its optional.
-                if cols>=4 and row[3] !="":
+                        if myresult != None: print("Note: Group: with id '"+id+"' and name '"+newgroup+"' created." )
+                        else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
 
-                    member=row[3]
-                    if debug: print("Note: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
+                    # 4th column is group membership either a userid or groupid, its optional.
+                    if cols>=4 and row[3] !="":
 
-                    #test that user exists
-                    reqval="/identities/users/"+member
-                    usertest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
+                        member=row[3]
+                        if debug: print("Note: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
 
-                    # also test if it is nit a group
-                    reqval="/identities/groups/"+member
-                    grouptest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
+                        #test that user exists
+                        reqval="/identities/users/"+member
+                        usertest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                    # user exists try to add to group, if user does not exist print a message
-                    if usertest!=None or grouptest!=None:
+                        # also test if it is nit a group
+                        reqval="/identities/groups/"+member
+                        grouptest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                        # add the user or group membership
-                        if usertest!=None:
-                            reqval="/identities/groups/"+id+"/userMembers/"+member
-                        else: reqval="/identities/groups/"+id+"/groupMembers/"+member
+                        # user exists try to add to group, if user does not exist print a message
+                        if usertest!=None or grouptest!=None:
 
-                        reqtype='put'
-                        myresult=callrestapi(reqval,reqtype,data=data,noprint=1,stoponerror=0)
+                            # add the user or group membership
+                            if usertest!=None:
+                                reqval="/identities/groups/"+id+"/userMembers/"+member
+                            else: reqval="/identities/groups/"+id+"/groupMembers/"+member
 
-                        if myresult != None: print("Note: Identity: "+member+" added to group  with id '"+id+"' and name '"+newgroup+"'")
-                        else: print("Note: Identity: '"+member+"' is already a member group with id '"+id+"' and name '"+newgroup+"'")
+                            reqtype='put'
+                            myresult=callrestapi(reqval,reqtype,data=data,noprint=1,stoponerror=0)
 
-                    else: print("WARNING: Identity: '"+member+"' does not exist and therefor cannot be added to group.")
+                            if myresult != None: print("Note: Identity: "+member+" added to group  with id '"+id+"' and name '"+newgroup+"'")
+                            else: print("Note: Identity: '"+member+"' is already a member group with id '"+id+"' and name '"+newgroup+"'")
 
-            else: print("WARNING: too few columns in row, row must have at least two columns for group id and group.")
+                        else: print("WARNING: Identity: '"+member+"' does not exist and therefor cannot be added to group.")
 
+                else: print("WARNING: too few columns in row, row must have at least two columns for group id and group.")
+        except csv.Error as e:
+        sys.exit('file {}, line {}: {}'.format(file, filecontents.line_num, e))
+        
 else:
     print("ERROR: cannot read csv file: "+file)
 
