@@ -28,6 +28,10 @@ echo pyviyatools test using $pyversion
 
 cd ${tooldir}
 
+echo "Show current tool setup"
+${pyversion} showsetup.py
+echo
+
 # echo "Return the json for all the identities"
 # ${pyversion} callrestapi.py -e /identities/identities -m get
 # echo
@@ -49,3 +53,50 @@ ${pyversion} getconfigurationproperties.py -c sas.identities.providers.ldap.user
 echo
 
 
+echo "Show current tool setup"
+${pyversion} showsetup.py
+echo
+
+echo "Test creategroups.py"
+
+tee /tmp/migration_package_pvc.yaml > /dev/null <<EOF
+"Custom Group ID","Custom Group Name / Persona","Notes/Comments","Azure AD Group (Members)"
+"persona_platformadm_prd","Persona: PROD Platform Admin","","sas-viya-prod-platformadm"
+"persona_datamgr_fraud_prd","Persona: PROD Data Manager – Fraud","","sas-viya-prod-datamgr-fraud"
+EOF
+
+
+echo "Test createfolders.py"
+
+tee /tmp/createfolders.csv > /dev/null <<EOF
+"/temporary","Temporary Folder for testing"
+"/temporary/folder1",Folder1"
+"/temporary/folder2","Folder2"
+"/temporary/Création","French"
+"/temporary/ÆØandÅ","Danish"
+EOF
+
+
+${pyversion} createfolders.py -f /tmp/createfolders.csv
+echo
+
+# remove folders that testing createdcall
+${pyversion} deletefolder.py -f /temporary -q
+
+
+echo "Test creategroups.py"
+
+tee /tmp/creategroups.csv > /dev/null <<EOF
+"Custom Group ID","Custom Group Name / Persona","Notes/Comments","Members"
+"sas-viya-prod-test1","Test New group sas-viya-prod-test1","Add sasadm","sasadm"
+"sas_viya_group1","Test nerw group sas_viya_group1","Add another group as member","sas-viya-prod-test1"
+"Création","Création Group"
+EOF
+
+${pyversion} creategroups.py -f /tmp/creategroups.csv --skipfirstrow
+echo
+
+# delete the groups from the previous test
+${pyversion} callrestapi.py -m delete -e /identities/groups/sas_viya_group1
+${pyversion} callrestapi.py -m delete -e /identities/groups/sas-viya-prod-test1
+${pyversion} callrestapi.py -m delete -e /identities/groups/Création
