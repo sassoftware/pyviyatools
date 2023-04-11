@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # creategroups.py
-# Februar 2020
+# February 2020
 #
 # create custom groups and add members using a csv file as input
 # you can also add members to existing groups
@@ -67,6 +67,8 @@ file=args.file
 skipfirstrow=args.skipfirstrow
 debug=args.debug
 encoding=args.encoding
+
+print(debug)
 
 reqtype="post"
 

@@ -1,4 +1,5 @@
 #!/usr/bin/sh
+
 #
 # unittestviya4.sh
 # April 2023
@@ -24,7 +25,20 @@
 pyversion=python3
 tooldir=/opt/pyviyatools
 
-echo pyviyatools test using $pyversion
+while getopts :p:d:i: option
+do
+case "${option}"
+in
+n) opnamespace=${OPTARG};;
+d) backupfolder=${OPTARG};;
+h) usage="$(basename "$0") [-p python version] [-d tool directory] "
+   echo ${usage}
+   exit 2
+esac
+done
+
+
+echo NOTE: pyviyatools test tools in ${tooldir} using $pyversion
 
 cd ${tooldir}
 
@@ -57,15 +71,6 @@ echo "Show current tool setup"
 ${pyversion} showsetup.py
 echo
 
-echo "Test creategroups.py"
-
-tee /tmp/migration_package_pvc.yaml > /dev/null <<EOF
-"Custom Group ID","Custom Group Name / Persona","Notes/Comments","Azure AD Group (Members)"
-"persona_platformadm_prd","Persona: PROD Platform Admin","","sas-viya-prod-platformadm"
-"persona_datamgr_fraud_prd","Persona: PROD Data Manager – Fraud","","sas-viya-prod-datamgr-fraud"
-EOF
-
-
 echo "Test createfolders.py"
 
 tee /tmp/createfolders.csv > /dev/null <<EOF
@@ -84,12 +89,12 @@ echo
 ${pyversion} deletefolder.py -f /temporary -q
 
 
-echo "Test creategroups.py"
+echo "NOTE: Test ${pyversion} creategroups.py -f /tmp/creategroups.csv --skipfirstrow"
 
 tee /tmp/creategroups.csv > /dev/null <<EOF
 "Custom Group ID","Custom Group Name / Persona","Notes/Comments","Members"
 "sas-viya-prod-test1","Test New group sas-viya-prod-test1","Add sasadm","sasadm"
-"sas_viya_group1","Test nerw group sas_viya_group1","Add another group as member","sas-viya-prod-test1"
+"sas_viya_group1","Test new group sas_viya_group1","Add another group as member","sas-viya-prod-test1"
 "Création","Création Group"
 EOF
 
