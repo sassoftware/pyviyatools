@@ -68,8 +68,6 @@ skipfirstrow=args.skipfirstrow
 debug=args.debug
 encoding=args.encoding
 
-print(debug)
-
 reqtype="post"
 
 check=file_accessible(file,'r')
