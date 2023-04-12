@@ -92,7 +92,7 @@ if targets[0] is not None:
                             reqtype=(linkval['method']).lower()		    		
                             callrestapi(reqval,reqtype) 
 		
-        print("NOTE: Deleting folde and content from "+ path_to_folder+" "+uri)
+        print("NOTE: Deleting folder and content from "+ path_to_folder+" "+uri)
 
         reqval=uri+"?recursive=true"
         reqtype='delete'
