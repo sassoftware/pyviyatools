@@ -130,15 +130,15 @@ echo
 
 # Clean up temporary files and content
 
-# echo "NOTE: delete temporary folder: {pyversion} deletefolder.py -f /temporary -q"
+echo "NOTE: delete temporary folder: {pyversion} deletefolder.py -f /temporary -q"
 ${pyversion} deletefolderandcontent.py -f /temporary -q
 
 
 # # delete the groups from the previous test
-# echo "NOTE: delete custom groups: ${pyversion} callrestapi.py -m delete -e /endpoint"
+echo "NOTE: delete custom groups: ${pyversion} callrestapi.py -m delete -e /endpoint"
 ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest-group1
 ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_group2
 ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_Création_group3
 
 
-#rm -rf ${testdir}
+rm -rf ${testdir}

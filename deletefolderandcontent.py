@@ -43,7 +43,7 @@ parser.add_argument("-f","--folderpath", help="Enter the path to the viya folder
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 args = parser.parse_args()
 
-print(args.folderpath)
+print("NOTE: folder= "+args.folderpath)
 path_to_folder=args.folderpath
 quietmode=args.quiet
 
@@ -92,12 +92,12 @@ if targets[0] is not None:
                             reqtype=(linkval['method']).lower()		    		
                             callrestapi(reqval,reqtype) 
 		
-        print("Deleting folder= "+ path_to_folder+" "+uri)
+        print("NOTE: Deleting folde and content from "+ path_to_folder+" "+uri)
 
         reqval=uri+"?recursive=true"
         reqtype='delete'
         callrestapi(reqval,reqtype)
-        print('Folder Deleted.')
+        print('NOTE: Folder Deleted.')
 				
     else:
         print("Good thing I asked!")
