@@ -103,7 +103,8 @@ echo "NOTE: Pass the folder path and return the folder id and uri: ${pyversion} 
 ${pyversion} listcontent.py -f /temporary -o csv
 echo
 
-# remove folders that testing create
+# snapshot reports
+${pyversion} snapshotreports.py -d ${testdir}/reportsnapshot -n pyviyatest -t
 
 
 echo "NOTE: Create custom groups: ${pyversion} creategroups.py -f ${testdir}/creategroups.csv --skipfirstrow"
