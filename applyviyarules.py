@@ -6,18 +6,22 @@
 #
 # Change History
 #
-# 05Apr23 Initial development
+# 12Apr23 Initial development
 #
 # Format of input csv file is 6 columns
-# Column 1 is the Object URI
-# Column 2 is the principal type ["group" | "user"]
-# Column 3 is the principal id [<groupID> | <userID>]
-# Column 4 is the access setting ["grant" | "prohibit")
-# Column 5 is the applicable permissions ["read","delete","add","create","remove","secure","update"]
-# Column 6 is the conveyed permissions on the folder's contents
+# Column 1: Object URI
+# Column 2: Principal type ["group" | "user"]
+# Column 3: Principal id [<groupID> | <userID>]
+# Column 4: Access setting ["grant" | "prohibit")
+# Column 5: Applicable permissions ["read","delete","add","create","remove","secure","update"]
+# Column 6: Rule's status ["true" | "false"]
+# Column 7: Rule's condition, if applicable.
+#           This column must either be left blank OR contain a VALID SpEL condition.
+#           Use of an invalid condition will see the rule not be created in Viya.
+#           If unsure of a conditions validity, test it using the Viya EVM Rules interface.
 #
 # For example:
-# /gelcontent/gelcorp/marketing/reports,group,Marketing,grant,"read,add,remove","read,update,add,remove,delete,secure"
+# "/scoreExecution/executions/**","group","role_developer","grant","read,delete,create,secure,update",True,""
 #
 # Copyright 2023, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -39,22 +43,22 @@ import os
 import json
 import subprocess
 import sys
-from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult,getapplicationproperties
+from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties
 
 # get cli location from properties
 propertylist=getapplicationproperties()
 
+## Temporily commented out during script development ##
 #clidir=propertylist["sascli.location"]
+#
 clidir='/opt/sas/viya4'
 cliexe=propertylist["sascli.executable"]
-
 clicommand=os.path.join(clidir,cliexe)
 
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Apply bulk auths from a CSV file to folders and contents")
-##parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'folderpath,principaltype,principalid,grant_or_prohibit,perms_on_folder,perms_on_contents",required='True')
-parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'objecturi,principaltype,principalid,grant_or_prohibit,perms",required='True')
+parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'objecturi,principaltype,principalid,grant_or_prohibit,perms,enabled,condition",required='True')
 args = parser.parse_args()
 file=args.file
 
@@ -63,9 +67,8 @@ reqtype="post"
 check=file_accessible(file,'r')
 constructed_bulk_rules_list=[]
 
-# file can be read
+## Checks that file can be read
 if check:
-#    print("file: "+file)
     with open(file, 'rt') as f:
         filecontents = csv.reader(f)
         for row in filecontents:
@@ -74,59 +77,42 @@ if check:
             principalname=row[2]
             accesssetting=row[3]
             perms=row[4]
-#            conveyedpermissions=row[5]
+            enabled=row[5]
+            condition=row[6]
 
             print("Creating auth rules for "+objecturi)
 
-#            folderid=getfolderid(folderpath)
-#            folderuri=folderid[0]
-#            objecturi=objecturi[0]
-#            reqval='/folders/folders/'+folderuri
             reqval=objecturi
-#            print=("after numeric"+objecturi)
-#            print=("requval= "+reqval)
-# Construct JSON objects from auth rules defined in CSV. Two JSON objects are created for each row of CSV; one for perms on the folder object, one for conveyed perms on the object's contents.
-#            value_dict_object={"description":"Created by applyfolderauthorizations.py",
+
+## Construct JSON objects from auth rules defined in CSV.
             value_dict_object={"description":"Created by applyviyarules.py",
                         "objectUri":reqval,
                         "permissions":perms.split(','),
                         "principalType":principaltype,
                         "principal":principalname,
-                        "type":accesssetting
+                        "type":accesssetting,
+                        "enabled":enabled,
+                        "condition":condition                        
                        }
-#            value_dict_container={"description":"Created by applyfolderauthorizations.py",
-#                                  "containerUri":reqval,
-#                                  "permissions":conveyedpermissions.split(','),
-#                                  "principalType":principaltype,
-#                                  "principal":principalname,
-#                                  "type":accesssetting
-#                                 }
 
             constructed_rule_dict_object={
                                    "op":"add",
                                     "value":value_dict_object
                                    }
-#            constructed_rule_dict_container={
-#                                       "op":"add",
-#                                       "value":value_dict_container
-#                                      }
+
             constructed_bulk_rules_list.append(constructed_rule_dict_object)
-#            constructed_bulk_rules_list.append(constructed_rule_dict_container)
 
 else:
     print("ERROR: cannot read "+file)
 
 print("Writing out bulk rule JSON file to bulk_rules_list.json")
+
 # Construct JSON schema containing rules
 bulk_rules_list_string=json.dumps(constructed_bulk_rules_list,indent=2)
 with open("bulk_rules_list.json", "w") as text_file:
     text_file.write(bulk_rules_list_string+'\n')
 
-## testing
-#print("bulk_rules_list.json")
-
 # Execute sas-admin CLI to apply rules from JSON schema
 command=clicommand+' authorization create-rules --file bulk_rules_list.json'
-#command=/opt/sas/viya4/sas-viya+' authorization create-rules --file bulk_rules_list.json'
 print("Executing command: "+command)
 subprocess.call(command, shell=True)
