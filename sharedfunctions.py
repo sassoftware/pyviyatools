@@ -80,7 +80,7 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 
     print("The request is a "+reqtype+" request: ",baseurl+reqval)
 
-    json_data=json.dumps(data, ensure_ascii=False)
+    json_data=json.dumps(data, ensure_ascii=True)
 
     print("Data for Request:")
     print(json_data)
@@ -125,7 +125,14 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     global result
 
     # serialize the data string for the request to json format
-    json_data=json.dumps(data, ensure_ascii=False)
+    json_data=json.dumps(data, ensure_ascii=True)
+
+    #convert if python 2
+    # get python version
+    # if we don't do this any request with foreign characters fails
+    version=int(str(sys.version_info[0]))
+    #if version==2: json_data = json_data.encode(encoding='utf-8')
+    json_data.encode(encoding='utf-8')
 
     # call the rest api using the parameters passed in and the requests python library
 
@@ -194,7 +201,7 @@ def getfolderid(path):
     reqtype='get'
 
     callrestapi(reqval,reqtype)
-    
+
     if result==None:
         print("NOTE: Folder'"+path+"' not found.")
         targetid=None
@@ -208,8 +215,8 @@ def getfolderid(path):
         targetcreatedBy=result['createdBy']
 
     return [targetid,targeturi,targetname,result,targetcreatedBy]
-    
-    
+
+
 
 # getbaseurl
 # from the default profile return the baseurl of the Viya server
@@ -284,7 +291,7 @@ def getauthtoken(baseurl):
 
     with open(credential_file) as json_file:
         data = json.load(json_file)
-    
+
     # the sas-admin profile init creates an empty credential file
     # check that credential is in file, if it is add it to the header, if not exit
 
@@ -299,7 +306,7 @@ def getauthtoken(baseurl):
 
         oauthToken=data[cur_profile]['access-token']
         refreshToken=data[cur_profile]['refresh-token']
-        
+
         oauthTokenType="bearer"
 
         oaval=oauthTokenType + ' ' + oauthToken
@@ -312,18 +319,18 @@ def getauthtoken(baseurl):
 
         if (400 <= r.status_code <=599):
 
-           
+
             #do refresh token request
-            #curl -k "${INGRESS_URL}/SASLogon/oauth/token" -H "Accept: application/json" -H "Content-Type: application/x-www-form-urlencoded" -u "sas.cli:" \-d "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}" 
+            #curl -k "${INGRESS_URL}/SASLogon/oauth/token" -H "Accept: application/json" -H "Content-Type: application/x-www-form-urlencoded" -u "sas.cli:" \-d "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}"
 
             #did it work
-             
+
             # set oauthToken again from the output of the request
 
             # update oauthToken in credentials file from the output of the request
 
              refresh_headers = {"Accept": "application/json","Content-Type": "application/x-www-form-urlencoded",}
-    
+
              client_id="sas.cli"
              client_secret=""
 
@@ -332,22 +339,22 @@ def getauthtoken(baseurl):
              refresh_data["refresh_token"] = refreshToken
 
              response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret))
-             
+
              if (400 <= response.status_code <=599):
-                
+
                 oaval=None
                 print(r.text)
                 print("ERROR: cannot connect to "+baseurl+" with refresh token is your refresh token expired?")
                 print("ERROR: Try refreshing your token with the CLI auth login")
                 sys.exit()
-                
+
              else:
-                
+
                 # set new token and update credentials.json
                 result=response.json()
                 newtoken=result["access_token"]
                 expires_in=result["expires_in"]
-                
+
                 # calculate new expiration
                 newexpiry=(dt.utcnow()+td(seconds=expires_in)).strftime('%Y-%m-%dT%H:%M:%SZ')
                 oaval=oauthTokenType + ' ' + newtoken
@@ -355,13 +362,13 @@ def getauthtoken(baseurl):
                 # write the new token to the credentials file
                 data[cur_profile]['access-token']=newtoken
                 data[cur_profile]['expiry']=newexpiry
-                                
+
                 filecontent=json.dumps(data,indent=2)
 
                 # check if we can write to the credential file
                 # if we cannot just skip
                 # new token will be used with request anyway
-                
+
                 if os.access(credential_file,os.W_OK):
                     try:
                         with open(credential_file, "w") as outfile:
@@ -375,7 +382,7 @@ def getauthtoken(baseurl):
                     message="NOTE: Cannot write to credential file."
                     #print(message)
 
-                            
+
         head= {'Content-type':'application/json','Accept':'application/json' }
         head.update({"Authorization" : oaval})
 
@@ -528,15 +535,15 @@ def csvresults(resultdata,columns=[],header=1):
                 if z==numvals: sep=''
                 else: sep=','
 
-                if key !=  'links' and key in columns: 
-                                                           
+                if key !=  'links' and key in columns:
+
                     try:
                         print('"'+str(val)+'"'+sep, end="")
                     except UnicodeEncodeError:
                         newval=val.encode('ascii','replace')
                         print('"'+str(newval)+'"'+sep, end="")
-                    
- 
+
+
         print("\n",end="")
 
 
@@ -566,8 +573,8 @@ def csvresults(resultdata,columns=[],header=1):
             if z==numvals: sep=''
             else: sep=','
 
-            if key != 'links': 
-                
+            if key != 'links':
+
                 try:
                     print('"'+str(val)+'"'+sep, end="")
                 except UnicodeEncodeError:
@@ -750,7 +757,7 @@ def getobjectdetails(objecturi):
     reqtype='get'
 
     callrestapi(reqval,reqtype)
-   
+
     # verfiyc objectURI input found and return attributes
     if result==None:
         print("NOTE: Object with ObjectURI:'"+objecturi+"' not found.")
@@ -761,8 +768,8 @@ def getobjectdetails(objecturi):
         targeturi=objecturi
 
     return [targetname,targetcreator,targetid,targeturi,result]
-    
-    
+
+
 
 # getidsanduris
 # given a result json structure, return a dictionary with a list of id's and uri's
@@ -834,15 +841,15 @@ def simplejsonresults(resultdata):
 
 
 def get_valid_filename(s):
-	
+
 
     #try original method, if it fails with encoding error remove string function
     try:
         s = str(s).strip().replace(' ', '_')
-    
+
     except UnicodeEncodeError:
         s = s.strip().replace(' ', '_')
-    
+
     return re.sub(r'(?u)[^-\w.]', '', s)
 
 # getapplicationproperties
@@ -861,7 +868,7 @@ def getapplicationproperties():
 # build a date filter for the REST filter
 
 def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
-    
+
     # what date is the filter based on
     thedate=dt.today()-td(days=int(days))
 
@@ -872,5 +879,5 @@ def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
     else:
        subset_date=thedate.replace(hour=00, minute=00, second=00, microsecond=999999).strftime("%Y-%m-%dT%H:%M:%S")
        datefilter="ge("+datevar+","+subset_date+")"
-   
+
     return datefilter

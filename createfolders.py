@@ -35,16 +35,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import argparse
-import csv
-import os
+import argparse, csv, os, sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible
 
-# setup command-line arguements    
+version=int(str(sys.version_info[0]))
+if version==2: from io import open
+
+# setup command-line arguements
 parser = argparse.ArgumentParser(description="Create folders that are read from a csv file")
-parser.add_argument("-f","--file", help="Full path to csv file containing folders, format of csv: 'folderpath,description ",required='True')
+parser.add_argument("-f","--file", help="Full path to csv file containing folders, format of csv: 'folderpath,description'",required='True')
+parser.add_argument("--debug", action='store_true', help="Debug")
+parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
+
+if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
+else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
+
 args = parser.parse_args()
 file=args.file
+skipfirstrow=args.skipfirstrow
+debug=args.debug
+encoding=args.encoding
 
 reqtype="post"
 
@@ -53,41 +63,48 @@ check=file_accessible(file,'r')
 # file can be read
 if check:
 
-    with open(file, 'rt') as f:
-        
+    with open(file, 'rt',encoding=encoding, errors="ignore") as f:
+
         filecontents = csv.reader(f)
+
+        if skipfirstrow: next(filecontents,None)
+
         for row in filecontents:
-            
-            #print(row)
-            newfolder=row[0]
-            description=row[1]
-          
-                       
-            if newfolder[0]!='/': newfolder="/"+newfolder 
-            
-            folder=os.path.basename(os.path.normpath(newfolder))
-            parent_folder=os.path.dirname(newfolder)
-            
-            data = {}
-            data['name'] = folder
-            data['description'] = description
-            
-            
-            print ("Creating folder "+newfolder )
-                 
-            if parent_folder=="/": reqval='/folders/folders'  
-            else:  # parent folder create a child
-                                                 
-                parentinfo=getfolderid(parent_folder)
-                
-                if parentinfo != None:    
-                 
-                    parenturi=parentinfo[1]
-                    reqval='/folders/folders?parentFolderUri='+parenturi
-                                   
-                else: print("Parent folder not found")
-    
-            myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0) 
+
+            cols=len(row)
+
+            # skip row and output a message if only 1 column
+            if cols>1:
+
+                if cols==1: row.append("Created by pyviyatools createfolders.py")
+
+                newfolder=row[0]
+                description=row[1]
+
+                if newfolder[0]!='/': newfolder="/"+newfolder
+
+                folder=os.path.basename(os.path.normpath(newfolder))
+                parent_folder=os.path.dirname(newfolder)
+
+                data = {}
+                data['name'] = folder
+                data['description'] = description
+
+                print ("NOTE: Creating folder "+newfolder )
+
+                if parent_folder=="/": reqval='/folders/folders'
+                else:  # parent folder create a child
+
+                    parentinfo=getfolderid(parent_folder)
+
+                    if parentinfo != None:
+
+                        parenturi=parentinfo[1]
+                        reqval='/folders/folders?parentFolderUri='+parenturi
+
+                    else: print("NOTE: Parent folder not found.")
+            else: print("WARNING: too few columns in row, row must have at least two columns for folder path and description")
+
+            myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0)
 else:
     print("ERROR: cannot read "+file)
-        

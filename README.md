@@ -139,7 +139,7 @@ Check back for additional tools and if you build a tool feel free to contribute 
 **Examples**
 
 Most of the tools have examples of usage documented in  [EXAMPLES.md](EXAMPLES.md)
-## Troubelshooting
+## Troubleshooting
 
 The most common problem is an expired access token. You may see a message like:
 
@@ -159,12 +159,17 @@ Set the environment variable for the SSL certificate file. For example:
 
 
 If you get this error:
+
+```log
 Raise SSLError(e, request=request)
 requests.exceptions.SSLError: HTTPSConnectionPool(host='intviya01.race.sas.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, u'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)'),))
+```
 
 Set the environment variable for the SSL certificate file. For example:
 
 `export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem`
+
+Encoding has been a problem. If you run into any encoding issues try using python3 the experience there is much better than python2.
 
 
 ## Developing with the existing functions

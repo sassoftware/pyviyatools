@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # creategroups.py
-# Februar 2020
+# February 2020
 #
 # create custom groups and add members using a csv file as input
 # you can also add members to existing groups
@@ -45,20 +45,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import argparse
-import csv
-import os
+import argparse, csv, os, sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris
+
+version=int(str(sys.version_info[0]))
+
+if version==2:
+    from io import open
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create custom groups and establish membership from csv: File Format: column1=groupid,column2=group name,column3=description,optional column4=memberid")
 parser.add_argument("-f","--file", help="Full path to csv file containing groups ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
+
+if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
+else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
+
 args = parser.parse_args()
 file=args.file
 skipfirstrow=args.skipfirstrow
 debug=args.debug
+encoding=args.encoding
 
 reqtype="post"
 
@@ -82,7 +90,7 @@ if 'items' in allgroups:
 # file can be read
 if check:
 
-    with open(file, 'rt') as f:
+   with open(file, 'rt',encoding=encoding, errors="ignore") as f:
 
         filecontents = csv.reader(f)
 
@@ -110,38 +118,48 @@ if check:
 
                 # if group does not exist add it
                 if id in groupslist:
-                    print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
+
+                    print("Note: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
                 else:
-                    print ("Note: Trying to creating Group: "+newgroup )
+                    if debug: print ("Note: Trying to create Group: "+newgroup )
 
                     reqtype='post'
                     reqval="/identities/groups/"
 
-                    myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0)
+                    myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
-                    if myresult != None: print("Note: Group: "+newgroup+" created" )
+                    if myresult != None: print("Note: Group: with id '"+id+"' and name '"+newgroup+"' created." )
+                    else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
 
                 # 4th column is group membership either a userid or groupid, its optional.
                 if cols>=4 and row[3] !="":
 
                     member=row[3]
-                    print("Note: Trying to add user "+ member+ " to group "+newgroup )
+                    if debug: print("Note: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
 
                     #test that user exists
                     reqval="/identities/users/"+member
                     usertest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                    # user exists try to add to group, if user does not exist print a message
-                    if usertest!=None:
+                    # also test if it is nit a group
+                    reqval="/identities/groups/"+member
+                    grouptest=callrestapi(reqval,'get',noprint=1,stoponerror=0)
 
-                        reqval="/identities/groups/"+id+"/userMembers/"+member
+                    # user exists try to add to group, if user does not exist print a message
+                    if usertest!=None or grouptest!=None:
+
+                        # add the user or group membership
+                        if usertest!=None:
+                            reqval="/identities/groups/"+id+"/userMembers/"+member
+                        else: reqval="/identities/groups/"+id+"/groupMembers/"+member
+
                         reqtype='put'
                         myresult=callrestapi(reqval,reqtype,data=data,noprint=1,stoponerror=0)
 
-                        if myresult != None: print("Note: user: "+member+" added to group "+newgroup )
-                        else: print("Note: user: "+member+" is already a member of group "+newgroup )
+                        if myresult != None: print("Note: Identity: "+member+" added to group  with id '"+id+"' and name '"+newgroup+"'")
+                        else: print("Note: Identity: '"+member+"' is already a member group with id '"+id+"' and name '"+newgroup+"'")
 
-                    else: print("WARNING: user: "+member+" does not exist and therefor cannot be added to group.")
+                    else: print("WARNING: Identity: '"+member+"' does not exist and therefor cannot be added to group.")
 
             else: print("WARNING: too few columns in row, row must have at least two columns for group id and group.")
 
