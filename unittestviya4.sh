@@ -104,7 +104,7 @@ ${pyversion} listcontent.py -f /temporary -o csv
 echo
 
 # snapshot reports
-${pyversion} snapshotreports.py -d ${testdir}/reportsnapshot -n pyviyatest -t
+${pyversion} snapshotreports.py -d ${testdir}/reportsnapshot -f "/Products/SAS Visual Analytics/Samples" -q
 
 
 echo "NOTE: Create custom groups: ${pyversion} creategroups.py -f ${testdir}/creategroups.csv --skipfirstrow"
@@ -131,14 +131,14 @@ echo
 # Clean up temporary files and content
 
 # echo "NOTE: delete temporary folder: {pyversion} deletefolder.py -f /temporary -q"
-# ${pyversion} deletefolderandcontent.py -f /temporary -q
+${pyversion} deletefolderandcontent.py -f /temporary -q
 
 
 # # delete the groups from the previous test
 # echo "NOTE: delete custom groups: ${pyversion} callrestapi.py -m delete -e /endpoint"
-# ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest-group1
-# ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_group2
-# ${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_Création_group3
+${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest-group1
+${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_group2
+${pyversion} callrestapi.py -m delete -e /identities/groups/pyviyatest_Création_group3
 
 
-rm -f ${testdir}
+#rm -rf ${testdir}
