@@ -3,6 +3,7 @@
 #
 # applyviyarules.py
 #
+# Reads in a CSV file, converts it to json format and imports into Viya 
 #
 # Change History
 #
