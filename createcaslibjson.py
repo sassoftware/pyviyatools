@@ -48,9 +48,7 @@ from sharedfunctions import callrestapi, getfolderid, file_accessible, printresu
 # get cli location from properties
 propertylist=getapplicationproperties()
 
-## Temporily commented out during script development ##
 clidir=propertylist["sascli.location"]
-#clidir='/opt/sas/viya4'
 cliexe=propertylist["sascli.executable"]
 clicommand=os.path.join(clidir,cliexe)
 
