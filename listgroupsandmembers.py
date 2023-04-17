@@ -31,8 +31,6 @@
 #  limitations under the License.
 #
 
-debug=False
-
 # Import Python modules
 from __future__ import unicode_literals
 import argparse

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # creategroups.py
-# Februar 2020
+# February 2020
 #
 # create custom groups and add members using a csv file as input
 # you can also add members to existing groups
@@ -58,8 +58,8 @@ parser.add_argument("-f","--file", help="Full path to csv file containing groups
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
 
-if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii")
-else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8")
+if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
+else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
 
 args = parser.parse_args()
 file=args.file

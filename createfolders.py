@@ -43,12 +43,12 @@ if version==2: from io import open
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create folders that are read from a csv file")
-parser.add_argument("-f","--file", help="Full path to csv file containing folders, format of csv: 'folderpath,description ",required='True')
+parser.add_argument("-f","--file", help="Full path to csv file containing folders, format of csv: 'folderpath,description'",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
 
-if version==2: parser.add_argument("--encoding",default="ascii")
-else: parser.add_argument("--encoding",default="utf-8")
+if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
+else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
 
 args = parser.parse_args()
 file=args.file
@@ -73,33 +73,37 @@ if check:
 
             cols=len(row)
 
-            if cols==1: row.append("Created by pyviyatools createfolders.py")
+            # skip row and output a message if only 1 column
+            if cols>1:
 
-            newfolder=row[0]
-            description=row[1]
+                if cols==1: row.append("Created by pyviyatools createfolders.py")
 
-            if newfolder[0]!='/': newfolder="/"+newfolder
+                newfolder=row[0]
+                description=row[1]
 
-            folder=os.path.basename(os.path.normpath(newfolder))
-            parent_folder=os.path.dirname(newfolder)
+                if newfolder[0]!='/': newfolder="/"+newfolder
 
-            data = {}
-            data['name'] = folder
-            data['description'] = description
+                folder=os.path.basename(os.path.normpath(newfolder))
+                parent_folder=os.path.dirname(newfolder)
 
-            print ("NOTE: Creating folder "+newfolder )
+                data = {}
+                data['name'] = folder
+                data['description'] = description
 
-            if parent_folder=="/": reqval='/folders/folders'
-            else:  # parent folder create a child
+                print ("NOTE: Creating folder "+newfolder )
 
-                parentinfo=getfolderid(parent_folder)
+                if parent_folder=="/": reqval='/folders/folders'
+                else:  # parent folder create a child
 
-                if parentinfo != None:
+                    parentinfo=getfolderid(parent_folder)
 
-                    parenturi=parentinfo[1]
-                    reqval='/folders/folders?parentFolderUri='+parenturi
+                    if parentinfo != None:
 
-                else: print("NOTE: Parent folder not found.")
+                        parenturi=parentinfo[1]
+                        reqval='/folders/folders?parentFolderUri='+parenturi
+
+                    else: print("NOTE: Parent folder not found.")
+            else: print("WARNING: too few columns in row, row must have at least two columns for folder path and description")
 
             myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0)
 else:

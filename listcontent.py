@@ -93,19 +93,19 @@ def getfoldercontent(path_to_folder):
             itemlist[i]["pathtoitem"]=path_to_item
             itemlist[i]["pathanditemname"]=path_to_item+name
 
-        newitems = [ ]
+        # newitems = [ ]
 
-        # remove folders
-        for i in range(0,returned_items):
+        # # remove folders
+        # for i in range(0,returned_items):
 
-             if 'contenttype' in folders_result_json['items'][i]:
+        #      if 'contenttype' in folders_result_json['items'][i]:
 
-                if folders_result_json['items'][i]["contentType"]!="folder":
-                    newitems.append(folders_result_json['items'][i])
+        #         if folders_result_json['items'][i]["contentType"]!="folder":
+        #             newitems.append(folders_result_json['items'][i])
 
-        folders_result_json["count"]=len(newitems)
-        folders_result_json["items"]=newitems
-
+        # folders_result_json["count"]=len(newitems)
+        # folders_result_json["items"]=newitems
+        
     return folders_result_json
 
 # root folder, loop sub-folders and print
