@@ -59,7 +59,7 @@ delimiter=','
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
 
 if len(filtercond)>0:
-    completefilter = '?filter=and('+delimiter.join(filtercond)+')'
+    completefilter = '&filter=and('+delimiter.join(filtercond)+')'
 else: completefilter=""
 
 
@@ -68,8 +68,7 @@ if not noheader:
     print('server,caslib')
  
     
-endpoint='/casManagement/servers'+completefilter
-if debug: print(endpoint)
+endpoint='/casManagement/servers'
 method='get'
 
 #make the rest call
@@ -85,7 +84,7 @@ for server in servers:
     servername=server['name']
 
     # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'
+    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'+completefilter
     method='get'
     caslibs_result_json=callrestapi(endpoint,method)
     if debug:
