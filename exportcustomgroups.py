@@ -65,7 +65,7 @@ nameval=args.name
 filtercond=[]
 filtercond.append('eq(providerId,"local")')
 if idval!=None: filtercond.append('contains(id,"'+idval+'")')
-if nameval!=None: filtercond.append('contains(id,"'+nameval+'")')
+if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
 delimiter = ','
 
 completefilter = 'and('+delimiter.join(filtercond)+')'

@@ -47,6 +47,9 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
 sys.excepthook = exception_handler
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
+parser.add_argument("--name", help="Subset based on name containing a string",default=None )
+
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-e","--email", action='store_true', help="Show email addresses for users")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
@@ -55,6 +58,19 @@ noheader=args.noheader
 debug=args.debug
 show_email=args.email
 
+
+idval=args.id
+nameval=args.name
+
+# create filter
+filtercond=[]
+filtercond.append('eq(state,"active")')
+if idval!=None: filtercond.append('contains(id,"'+idval+'")')
+if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
+delimiter = ','
+
+completefilter = 'and('+delimiter.join(filtercond)+')'
+
 # Print header row unless noheader argument was specified
 if not noheader:
     if show_email:
@@ -62,7 +78,7 @@ if not noheader:
     else:
         print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
 
-endpoint='/identities/groups?limit=10000'
+endpoint='/identities/groups?limit=10000&filter='+completefilter
 method='get'
 
 #make the rest call
