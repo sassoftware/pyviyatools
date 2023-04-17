@@ -64,7 +64,6 @@ nameval=args.name
 
 # create filter
 filtercond=[]
-filtercond.append('eq(state,"active")')
 if idval!=None: filtercond.append('contains(id,"'+idval+'")')
 if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
 delimiter = ','
