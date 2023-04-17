@@ -48,7 +48,7 @@ parser = argparse.ArgumentParser(description="Export Custom Groups to a Package"
 
 parser.add_argument("-f","--filename", help="Full path to file. (No extension)",default="/tmp/customgroups")
 parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
-parser.add_argument("--desc", help="Subset based on description containing a string",default=None )
+parser.add_argument("--name", help="Subset based on name containing a string",default=None )
 
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
@@ -59,15 +59,14 @@ filename=args.filename
 debug=args.debug
 
 idval=args.id
-descval=args.desc
+nameval=args.name
 
 # create filter
 filtercond=[]
-delimiter = ','
 filtercond.append('eq(providerId,"local")')
-
 if idval!=None: filtercond.append('contains(id,"'+idval+'")')
-if descval!=None: filtercond.append('contains(id,"'+descval+'")')
+if nameval!=None: filtercond.append('contains(id,"'+nameval+'")')
+delimiter = ','
 
 completefilter = 'and('+delimiter.join(filtercond)+')'
 
