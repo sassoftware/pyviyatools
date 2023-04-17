@@ -69,6 +69,7 @@ if not noheader:
  
     
 endpoint='/casManagement/servers'+completefilter
+if debug: print(endpoint)
 method='get'
 
 #make the rest call
