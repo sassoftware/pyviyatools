@@ -45,29 +45,16 @@ sys.excepthook = exception_handler
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
-
 args = parser.parse_args()
 noheader=args.noheader
 debug=args.debug
 
-nameval=args.name
-filtercond=[]
-delimiter=','
-if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
-
-if len(filtercond)>0:
-    completefilter = '&filter=and('+delimiter.join(filtercond)+')'
-else: completefilter=""
-
-
 # Print header row unless noheader argument was specified
 if not noheader:
     print('server,caslib')
- 
-    
+
 endpoint='/casManagement/servers'
 method='get'
 
@@ -84,7 +71,7 @@ for server in servers:
     servername=server['name']
 
     # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'+completefilter
+    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'
     method='get'
     caslibs_result_json=callrestapi(endpoint,method)
     if debug:
