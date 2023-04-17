@@ -56,7 +56,7 @@ debug=args.debug
 nameval=args.name
 filtercond=[]
 delimiter=','
-if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
+if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
 
 if len(filtercond)>0:
     completefilter = '&filter=and('+delimiter.join(filtercond)+')'
