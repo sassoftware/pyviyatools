@@ -48,11 +48,13 @@ identity_cols=['identity','identityType']
 permissions=['readInfo','select','limitedPromote','promote','createTable','dropTable','deleteSource','insert','update','delete','alterTable','alterCaslib','manageAccess']
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-n","--name", help="Caslib name contains",default=None)
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 args = parser.parse_args()
 noheader=args.noheader
 debug=args.debug
+name=args.name
 
 # Print header row unless noheader argument was specified
 if not noheader:
@@ -83,26 +85,29 @@ for server in servers:
     caslibs=caslibs_result_json['items']
 
     for caslib in caslibs:
-        caslibname=caslib['name']
-        #print(servername+','+caslibname)
 
-        # Get effective Access Controls on this caslib
-        endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective&limit=10000'
-        method='get'
-        caslibaccess_result_json=callrestapi(endpoint,method)
+        if name in caslib:
 
-        #print(caslibaccess_result_json)
-        for ai in caslibaccess_result_json['items']:
-            output=servername+','+caslibname
-            for col in identity_cols:
-                if col in ai:
-                     output=output+','+ai[col]
-                else:
-                     output=output+','
-            for col in permissions:
-                if col in ai:
-                     output=output+','+ai[col]
-                else:
-                     output=output+','
-            print(output)
+            caslibname=caslib['name']
+            #print(servername+','+caslibname)
+
+            # Get effective Access Controls on this caslib
+            endpoint='/casAccessManagement/servers/'+servername+'/caslibControls/'+caslibname+'?accessControlType=effective&limit=10000'
+            method='get'
+            caslibaccess_result_json=callrestapi(endpoint,method)
+
+            #print(caslibaccess_result_json)
+            for ai in caslibaccess_result_json['items']:
+                output=servername+','+caslibname
+                for col in identity_cols:
+                    if col in ai:
+                        output=output+','+ai[col]
+                    else:
+                        output=output+','
+                for col in permissions:
+                    if col in ai:
+                        output=output+','+ai[col]
+                    else:
+                        output=output+','
+                print(output)
 
