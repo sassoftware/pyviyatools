@@ -78,8 +78,11 @@ if not noheader:
     else:
         print('groupid,groupname,grouptype,groupproviderid,memberid,membername,membertype,memberproviderid')
 
+
 endpoint='/identities/groups?limit=10000&filter='+completefilter
 method='get'
+
+if debug: print(endpoint)
 
 #make the rest call
 groupslist_result_json=callrestapi(endpoint,method)
