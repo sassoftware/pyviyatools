@@ -86,7 +86,7 @@ for server in servers:
 
     for caslib in caslibs:
 
-        if name in caslib:
+        if name in caslib["name"]:
 
             caslibname=caslib['name']
             #print(servername+','+caslibname)
