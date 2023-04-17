@@ -134,12 +134,6 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     #if version==2: json_data = json_data.encode(encoding='utf-8')
     json_data.encode(encoding='utf-8')
 
-    #convert if python 2
-    # get python version
-    # if we don't do this any request with foreign characters fails
-    version=int(str(sys.version_info[0]))
-    if version==2: json_data = json_data.encode(encoding='utf-8')
-
     # call the rest api using the parameters passed in and the requests python library
 
     if reqtype=="get":

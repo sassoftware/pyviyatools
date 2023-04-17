@@ -49,6 +49,7 @@ import argparse, csv, os, sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris
 
 version=int(str(sys.version_info[0]))
+
 if version==2:
     from io import open
 
