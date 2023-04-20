@@ -48,13 +48,16 @@ identity_cols=['identity','identityType']
 permissions=['readInfo','select','limitedPromote','promote','createTable','dropTable','deleteSource','insert','update','delete','alterTable','alterCaslib','manageAccess']
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n","--name", help="Caslib name contains",default="NOCASLIB")
+parser.add_argument("-n","--name", help="Caslib name contains",default=None)
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 args = parser.parse_args()
 noheader=args.noheader
 debug=args.debug
-name=args.name
+
+nameval=args.name
+if nameval !=None: namefilter='&filter=contains(name,"'+nameval+'")'
+else: namefilter=""
 
 # Print header row unless noheader argument was specified
 if not noheader:
@@ -76,8 +79,9 @@ for server in servers:
     servername=server['name']
 
     # List the caslibs in this server
-    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'
+    endpoint='/casManagement/servers/'+servername+'/caslibs?excludeItemLinks=true&limit=10000'+namefilter
     method='get'
+
     caslibs_result_json=callrestapi(endpoint,method)
     if debug:
         print(caslibs_result_json)
@@ -86,8 +90,7 @@ for server in servers:
 
     for caslib in caslibs:
 
-        if name in caslib["name"]:
-
+       
             caslibname=caslib['name']
             #print(servername+','+caslibname)
 
