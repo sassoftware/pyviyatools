@@ -3,9 +3,10 @@
 #
 # listcastablesandeffectiveaccess.py
 # January 2019
+# April 2023 added -n for name filtering 
 #
 # Usage:
-# listcastablesandeffectiveaccess.py [--noheader] [--rowlevelsecurity] [--sourcetables] [-d]
+# listcastablesandeffectiveaccess.py [-n <name> ] [--noheader] [--rowlevelsecurity] [--sourcetables] [-d]
 #
 # Examples:
 #
@@ -48,6 +49,7 @@ identity_cols=['identity','identityType']
 permissions=['readInfo','select','limitedPromote','promote','createTable','dropTable','deleteSource','insert','update','delete','alterTable','alterCaslib','manageAccess']
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-n","--name", help="Table name contains",default=None)
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("--rowlevelsecurity", action='store_true', help="Get row level security (i.e. table filters on the select permission)")
 parser.add_argument("--sourcetables", action='store_true', help="Get effective permissions for source tables, rather than in-memory tables which is the default")
@@ -57,6 +59,10 @@ noheader=args.noheader
 rowlevelsecurity=args.rowlevelsecurity
 sourcetables=args.sourcetables
 debug=args.debug
+
+nameval=args.name
+if nameval !=None: namefilter='&filter=contains(name,"'+nameval+'")'
+else: namefilter=""
 
 if rowlevelsecurity:
     permissions.append("tableFilter")
@@ -95,7 +101,7 @@ for server in servers:
         #print(servername+','+caslibname)
 
         # Get the tables in the caslib
-        endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true&limit=10000'
+        endpoint='/casManagement/servers/'+servername+'/caslibs/'+caslibname+'/tables?excludeItemLinks=true&limit=10000'+namefilter
         method='get'
         #print('about to list tables')
 
@@ -136,7 +142,7 @@ for server in servers:
                                 output=output+','+ai[col]
                             else:
                                 output=output+','
-                        print output
+                        print(output)
         else:
             #tables_result_json is None
             print(servername+','+caslibname+',[error getting tables]')

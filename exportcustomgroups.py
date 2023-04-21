@@ -47,6 +47,9 @@ tempdir=tempfile.gettempdir()
 parser = argparse.ArgumentParser(description="Export Custom Groups to a Package")
 
 parser.add_argument("-f","--filename", help="Full path to file. (No extension)",default="/tmp/customgroups")
+parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
+parser.add_argument("--name", help="Subset based on name containing a string",default=None )
+
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 
@@ -55,11 +58,23 @@ args= parser.parse_args()
 filename=args.filename
 debug=args.debug
 
+idval=args.id
+nameval=args.name
+
+# create filter
+filtercond=[]
+filtercond.append('eq(providerId,"local")')
+if idval!=None: filtercond.append('contains(id,"'+idval+'")')
+if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
+delimiter = ','
+
+completefilter = 'and('+delimiter.join(filtercond)+')'
+
 # create the requests file of the custom groups
 
 # get all groups that are custom
 reqtype='get'
-reqval='/identities/groups/?filter=eq(providerId,"local")&limit=10000'
+reqval='/identities/groups/?limit=10000&filter='+completefilter
 groupslist_result_json=callrestapi(reqval,reqtype)
 
 groups = groupslist_result_json['items']
