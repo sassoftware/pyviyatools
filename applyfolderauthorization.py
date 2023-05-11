@@ -105,7 +105,8 @@ if check:
                                        "value":value_dict_container
                                       }
             constructed_bulk_rules_list.append(constructed_rule_dict_object)
-            constructed_bulk_rules_list.append(constructed_rule_dict_container)
+            if len(conveyedpermissions) > 0:
+                constructed_bulk_rules_list.append(constructed_rule_dict_container)
 
 else:
     print("ERROR: cannot read "+file)
