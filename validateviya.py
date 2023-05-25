@@ -239,67 +239,71 @@ if(len(computationTests) == 1):
     print("Computation Test Started: " + test['name'])
     #Get the job execution compute context:
     getComputeContextReq="/compute/contexts?filter=contains(name, 'Job Execution')"
-    computeContext_result_json = callrestapi(getComputeContextReq, "get")
-    contextId = computeContext_result_json['items'][0]['id']
+    computeContext_result_json = callrestapi(getComputeContextReq, "get", stoponerror=False)
+    if(computeContext_result_json is None):
+        print("An error occurred running test " + str(test['id']))
+        failingTests.append(test)
+    else:
+        contextId = computeContext_result_json['items'][0]['id']
 
-    verbosePrint("Compute Context Found with id: " + contextId, verbose)
-    #Create a compute session for the test code:
-    createSessionReq="/compute/contexts/" + contextId + "/sessions"
-    newSession = callrestapi(createSessionReq, "post")
-    sessionId = newSession['id']
+        verbosePrint("Compute Context Found with id: " + contextId, verbose)
+        #Create a compute session for the test code:
+        createSessionReq="/compute/contexts/" + contextId + "/sessions"
+        newSession = callrestapi(createSessionReq, "post")
+        sessionId = newSession['id']
 
-    verbosePrint("Compute Session Created with id: " + sessionId, verbose)
+        verbosePrint("Compute Session Created with id: " + sessionId, verbose)
 
-    #Keep it in a try loop to ensure we will always end our compute session
-    try:
-        #Homemade json object for storing test code data:
-        executeData_result_json = {"runSuccessful": False, "log": []}
+        #Keep it in a try loop to ensure we will always end our compute session
+        try:
+            #Homemade json object for storing test code data:
+            executeData_result_json = {"runSuccessful": False, "log": []}
 
-        #Execute SAS code using our compute session:
-        executeCodeReq="/compute/sessions/" + sessionId + "/jobs"
-        #Our code uses proc print and proc cas:
-        run_code_json = {
-            "name":"Test SAS Code Request",
-            "code":'proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
-        }
-        executeCode = callrestapi(executeCodeReq, "post", data=run_code_json)
+            #Execute SAS code using our compute session:
+            executeCodeReq="/compute/sessions/" + sessionId + "/jobs"
+            #Our code uses proc print and proc cas:
+            run_code_json = {
+                "name":"Test SAS Code Request",
+                "code":'proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
+            }
+            executeCode = callrestapi(executeCodeReq, "post", data=run_code_json)
 
-        verbosePrint("Code Executed", verbose)
-        #Get our job id from our job request:
-        jobId = executeCode['id']
+            verbosePrint("Code Executed", verbose)
+            #Get our job id from our job request:
+            jobId = executeCode['id']
 
-        #Get job state - we want to see if it ran successfully
-        getJobStateReq="/compute/sessions/" + sessionId + "/jobs/" + jobId + "/state?wait=10"
-        jobState = callrestapi(getJobStateReq, "get")
-        #Continually check the job state until it is no longer running:
-        while(jobState == "running"):
+            #Get job state - we want to see if it ran successfully
+            getJobStateReq="/compute/sessions/" + sessionId + "/jobs/" + jobId + "/state?wait=10"
             jobState = callrestapi(getJobStateReq, "get")
+            #Continually check the job state until it is no longer running:
+            while(jobState == "running"):
+                jobState = callrestapi(getJobStateReq, "get")
 
-        #Record our final job state:
-        executeData_result_json['jobState'] = jobState
-        verbosePrint("Code Has Completed Execution with State: " + jobState, verbose)
-        #Get job log - can be used for debugging
-        getJobLogReq="/compute/sessions/" + sessionId + '/jobs/' + jobId + "/log"
-        getJobLog = callrestapi(getJobLogReq, "get")
-        executeData_result_json['log'] = getJobLog['items']
+            #Record our final job state:
+            executeData_result_json['jobState'] = jobState
+            verbosePrint("Code Has Completed Execution with State: " + jobState, verbose)
+            #Get job log - can be used for debugging
+            getJobLogReq="/compute/sessions/" + sessionId + '/jobs/' + jobId + "/log"
+            getJobLog = callrestapi(getJobLogReq, "get")
+            executeData_result_json['log'] = getJobLog['items']
 
-        #If our code ran succesfully, we want to take note of that
-        if(jobState == "completed"):
-            executeData_result_json['runSuccessful'] = True
-            passingTests.append(test)
-        else:
-            print("An error occurred running test " + str(test['id']) + ": " + test['name'])
-            failingTests.append(test)
-    finally:
-        #We include this in a finally block just in case our session exists and
-        #the test code fails - we want to close the session no matter what
-        if(sessionId):
-            #Close session: delete /sessions/SESSIONID
-            closeSessionReq = "/compute/sessions/" + sessionId
-            closeSession = callrestapi(closeSessionReq, "delete")
-            verbosePrint("Compute session with session id " + sessionId + " closed successfully", verbose)
+            #If our code ran succesfully, we want to take note of that
+            if(jobState == "completed"):
+                executeData_result_json['runSuccessful'] = True
+                passingTests.append(test)
+            else:
+                print("An error occurred running test " + str(test['id']) + ": " + test['name'])
+                failingTests.append(test)
+        finally:
+            #We include this in a finally block just in case our session exists and
+            #the test code fails - we want to close the session no matter what
+            if(sessionId):
+                #Close session: delete /sessions/SESSIONID
+                closeSessionReq = "/compute/sessions/" + sessionId
+                closeSession = callrestapi(closeSessionReq, "delete")
+                verbosePrint("Compute session with session id " + sessionId + " closed successfully", verbose)
 
-        test['results'].append(executeData_result_json)
+            test['results'].append(executeData_result_json)
 
 testEndTime = datetime.datetime.now()
 timeElapsed = testEndTime - testStartTime
