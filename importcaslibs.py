@@ -22,6 +22,7 @@
 # Change History
 #
 # 14APR2023 - Added 'superuser' argument
+# 01JUN2034 - Include 'superuser' with authorization apply
 #
 # Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -106,10 +107,15 @@ if areyousure.upper() =='Y':
                               access_file=file_accessible(authfile,'r')
 
                               if access_file==True:
-                                                command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
-                                                print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
-                                                print(command)
-                                                subprocess.call(command, shell=True)           
+                                    
+                                    if su:
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --su --source-file '+authfile
+                                    else:
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
+
+                                    print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
+                                    print(command)
+                                    subprocess.call(command, shell=True)           
 
             if not tryimport: print("NOTE: no caslib files available for import.")
 
