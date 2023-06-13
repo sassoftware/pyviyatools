@@ -26,15 +26,22 @@ import argparse, os, shutil
 parser = argparse.ArgumentParser(description="Applies the CSV files output by the ViyaAuthModel project (https://gitlab.sas.com/snztst/viyaauthmodel) and applies them to a Viya environment.")
 parser.add_argument("-e","--env", help="Name of environment that is to be extracted.",required='True')
 parser.add_argument("-d","--directory", help="Directory that contains CSV auth files to be implemented.",required='True')
+parser.add_argument("--dryrun", help="Compiles commands for review without running them.",action='store_true')
 #parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt when creating CASLIBs.", action='store_true')
 args = parser.parse_args()
 viyaenv=args.env
 indir=args.directory
+dryrun=args.dryrun
 #quietmode=args.quiet
 viyaglobal="ALL"
 cwd=os.getcwd()
 caslibdir=os.path.join(indir, 'caslibs')
 
+
+## Check for presence of dryrun arg
+if dryrun:
+    print("\n********** DRY-RUN MODE ********** \n")
+    dryrunnote="Command preview: "
 
 
 #### Stage 1 - Prework ####
@@ -49,18 +56,25 @@ if os.path.exists(caslibdir):
 print("Preparing CASLIB files...")
 command=os.path.join(cwd, 'createcaslibjson.py -f "')
 csvfile=os.path.join(indir, viyaenv+' - CASLIB Auth.csv"')
-os.system(command+csvfile)
-
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 ## Convert "<env> - CASLIB Auth (Perms).csv" to _authorization_ files
 ## Uses createcaslibsjsonauth.py
 command=os.path.join(cwd, 'createcaslibjsonauth.py -f "')
 csvfile=os.path.join(indir, viyaenv+' - CASLIB Auth (Perms).csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 # Moves caslibs dir to the directory location input when running applyauthmodel.py
 tempcaslibdir=os.path.join(cwd, 'caslibs')
-shutil.move(tempcaslibdir,indir)
+if os.path.exists(tempcaslibdir):
+    shutil.move(tempcaslibdir,indir)
+
 
 #### End Stage 1 ###
 
@@ -73,28 +87,40 @@ shutil.move(tempcaslibdir,indir)
 print("Implementing Capability Roles...")
 command=os.path.join(cwd, 'creategroups.py --skipfirstrow -f "')
 csvfile=os.path.join(indir, viyaglobal+' - Cap. Roles.csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 ## Implement OAGs
 ## Uses creategroups.py to read "ALL - Org Access Groups (OAGs).csv"
 print("Implementing OAGs...")
 command=os.path.join(cwd, 'creategroups.py --skipfirstrow -f "')
 csvfile=os.path.join(indir, viyaglobal+' - Org Access Groups (OAGs).csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 ## Implement Personas
 ## Uses creategroups.py to read "<env> - Personas.csv"
 print("Implementing Personas...")
 command=os.path.join(cwd, 'creategroups.py --skipfirstrow -f "')
 csvfile=os.path.join(indir, viyaenv+' - Personas.csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 ## Implement Inheritance (Custom Group nesting)
 ## Uses creategroups.py to read "<env> - Inheritance Model.csv"
 print("Implementing inheritance...")
 command=os.path.join(cwd, 'creategroups.py --skipfirstrow -f "')
 csvfile=os.path.join(indir, viyaenv+' - Inheritance Model.csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 
 #### End Stage 2 ####
@@ -108,14 +134,20 @@ os.system(command+csvfile)
 print("Creating Viya folders...")
 command=os.path.join(cwd, 'createfolders.py --skipfirstrow -f "')
 csvfile=os.path.join(indir, viyaenv+' - Folder Security.csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 ## Apply security to folders
 ## Uses "applyfolderauthorization.py" to read "<env> - Folder Security (Perms).csv"
 print("Implementing security to Viya folders...")
 command=os.path.join(cwd, 'applyfolderauthorization.py -f "')
 csvfile=os.path.join(indir, viyaenv+' - Folder Security (Perms).csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 
 #### End Stage 3 ####
@@ -132,7 +164,11 @@ command=os.path.join(cwd, 'importcaslibs.py -su -q -d "')
 #    command=os.path.join(cwd, 'importcaslibs.py -su -q -d "')
 #else:
 #    command=os.path.join(cwd, 'importcaslibs.py -su -d "')
-os.system(command+caslibdir+'"')
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
+
 
 #### End Stage 4 ####
 
@@ -142,12 +178,28 @@ os.system(command+caslibdir+'"')
 
 ## Implement rules
 ## Uses "applyviyarules.py" to read "ALL - Rules2Json.csv"
-print("Creating rules...")
+print("Applying new rules...")
 command=os.path.join(cwd, 'applyviyarules.py -f "')
 csvfile=os.path.join(indir, viyaglobal+' - Rules2Json.csv"')
-os.system(command+csvfile)
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
+
+## Disable OOTB rules
+## Uses "toggleviyarules.py" to read "ALL - Rules2Disable.csv"
+print("Disabling old rules...")
+command=os.path.join(cwd, 'toggleviyarules.py --skipfirstrow -o disable -f "')
+csvfile=os.path.join(indir, viyaglobal+' - Rules2Disable.csv"')
+if not dryrun:
+    os.system(command+csvfile)
+else:
+    print(dryrunnote+command+csvfile)
 
 
 ### End Stage 5 ####
 
-print("Auth Model implementation successfully completed.")
+if not dryrun:
+    print("Auth Model implementation successfully completed.")
+else:
+    print("\n********** DRY-RUN COMPLETE ********** \n")
