@@ -71,9 +71,12 @@ else:
     print(dryrunnote+command+csvfile)
 
 # Moves caslibs dir to the directory location input when running applyauthmodel.py
-tempcaslibdir=os.path.join(cwd, 'caslibs')
-if os.path.exists(tempcaslibdir):
-    shutil.move(tempcaslibdir,indir)
+if not dryrun:
+    tempcaslibdir=os.path.join(cwd, 'caslibs')
+    if os.path.exists(tempcaslibdir):
+        shutil.move(tempcaslibdir,indir)
+else:
+    pass
 
 
 #### End Stage 1 ###
@@ -159,15 +162,15 @@ else:
 ## Implement CASLIBs and their authorisation
 ## Uses "importcaslibs.py" to read the contents of a "caslibs" directory
 print("Implementing CASLIBs...")
-command=os.path.join(cwd, 'importcaslibs.py -su -q -d "')
+command=os.path.join(cwd, 'importcaslibs.py -su -q -d '+indir+'/caslibs')
 #if quietmode:
 #    command=os.path.join(cwd, 'importcaslibs.py -su -q -d "')
 #else:
 #    command=os.path.join(cwd, 'importcaslibs.py -su -d "')
 if not dryrun:
-    os.system(command+csvfile)
+    os.system(command)
 else:
-    print(dryrunnote+command+csvfile)
+    print(dryrunnote+command)
 
 
 #### End Stage 4 ####
