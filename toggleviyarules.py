@@ -61,6 +61,16 @@ reqtype="post"
 check=file_accessible(file,'r')
 
 
+## Checks for previous unfinished or partial runs and clears tmp files
+if os.path.exists('tmpcsv.csv'):
+    os.remove('tmpcsv.csv')
+else: pass
+
+if os.path.exists('tmpcsv2.csv'):
+    os.remove('tmpcsv2.csv')
+else: pass
+
+
 ## Checks that file can be read
 if check:
     with open(file, 'rt') as f:
@@ -79,8 +89,8 @@ if check:
 ## Removes the header lines that are returned when getruleid.py is run
 with open("tmpcsv.csv", "r") as input, open("tmpcsv2.csv", "w") as tmpout:
     for line in input:
-            # if text matches then don't write it
-        if not line.strip("\n").startswith('id'):
+        # only keep lines which begin with a quote
+        if line.startswith('"'):
             tmpout.write(line)
 
 
