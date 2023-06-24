@@ -1,18 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# getauditrecords.py January 2020
+# getactivityrecords.py June 2023
 #
-# Extract list of audit records from SAS Infrastructure Data Server using REST API.
+# Extract list of activity records from SAS Infrastructure Data Server using REST API.
 #
 # Examples:
 #
 # 1. Return list of audit events from all users and applications 
-#        ./getauditrecords.py
+#        ./getactivityrecords.py
 #
 # Change History
 #
-# 10JAN2020 Comments added
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -38,54 +37,56 @@ parser = argparse.ArgumentParser()
 #parser.add_argument("-a","--application", help="Filter by Application or Service name",default=None)
 parser.add_argument("-l","--limit", help="Maximum number of records to display",default='1000')
 parser.add_argument("-t","--type", help="Filter by entry Type",default=None)
-#parser.add_argument("-d","--description", help="Filter by entry Description",default=None)
-parser.add_argument("-A","--application", help="Filter by entry State",default=None)
-parser.add_argument("-n","--name", help="Filter by Name",default=None)
-parser.add_argument("-m","--modified-after", help="Filter entries that are created after the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
-parser.add_argument("-b","--modified-before", help="Filter entries that are created before the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
-parser.add_argument("-c","--created-before", help="Filter entries that are created after the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
-parser.add_argument("-a","--created-after", help="Filter entries that are created after the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
-parser.add_argument("-s","--sortby", help="Sort the output ascending by this field",default=None)
+parser.add_argument("-a","--application", help="Filter by entry Application",default=None)
+parser.add_argument("-c","--action", help="Filter by entry Action",default=None)
+parser.add_argument("-d","--admin-action", help="Filter by Administrative Action",default=None)
+parser.add_argument("-s","--state", help="Filter by entry State",default=None)
+parser.add_argument("-u","--user", help="Filter by Username",default=None)
+parser.add_argument("-A","--after", help="Filter entries that are created after the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
+parser.add_argument("-B","--before", help="Filter entries that are created before the specified timestamp. For example: 2020-01-03 or 2020-01-03T18:15Z",default=None)
+parser.add_argument("-S","--sortby", help="Sort the output ascending by this field",default='timeStamp')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='csv')
 
 args = parser.parse_args()
 appname=args.application
-output_style=args.output
+username=args.user
+entry_type=args.type
+entry_state=args.state
+entry_action=args.action
+admin_action=args.admin_action
+ts_after=args.after
+ts_before=args.before
 sort_order=args.sortby
 output_limit=args.limit
-username=args.name
-entry_type=args.type
-#entry_desc=args.description
-#entry_state=args.state
-modts_after=args.modified_after
-modts_before=args.modified_before
-createts_after=args.created_after
-createts_before=args.created_before
-
+output_style=args.output
 
 # Create list for filter conditions
 filtercond=[]
 if appname!=None: filtercond.append("eq(application,'"+appname+"')")
-if username!=None: filtercond.append("eq(name,'"+username+"')")
+if username!=None: filtercond.append("eq(user,'"+username+"')")
 if entry_type!=None: filtercond.append("eq(type,'"+entry_type+"')")
-#if entry_desc!=None: filtercond.append("eq(description,'"+entry_desc+"')")
-#if entry_state!=None: filtercond.append("eq(state,'"+entry_state+"')")
-if createts_after!=None: filtercond.append("ge(creationTimeStamp,'"+createts_after+"')")
-if createts_before!=None: filtercond.append("le(creationTimeStamp,'"+createts_before+"')")
-if modts_after!=None: filtercond.append("ge(modifiedTimeStamp,'"+modts_after+"')")
-if modts_before!=None: filtercond.append("le(modifiedTimeStamp,'"+modts_before+"')")
+if entry_state!=None: filtercond.append("eq(state,'"+entry_state+"')")
+if entry_action!=None: filtercond.append("eq(action,'"+entry_action+"')")
+if admin_action!=None: filtercond.append("eq(admin_action,'"+admin_action+"')")
+if ts_after!=None: filtercond.append("ge(timeStamp,'"+ts_after+"')")
+if ts_before!=None: filtercond.append("le(timeStamp,'"+ts_before+"')")
 
 
-
+#print(len(filtercond))
 # Construct filter 
 delimiter = ','
-completefilter  = 'and('+delimiter.join(filtercond)+')'
+if len(filtercond)==0:
+    reqval = "/audit/activities?limit="+output_limit+"&sortBy="+sort_order    
+elif len(filtercond)==1:
+    completefilter  = delimiter.join(filtercond)
+    print completefilter
+    reqval = "/audit/activities?filter="+completefilter+"&limit="+output_limit+"&sortBy="+sort_order
+    #print(completefilter)
+else:
+    completefilter  = 'and('+delimiter.join(filtercond)+')'
+    reqval = "/audit/activities?filter="+completefilter+"&limit="+output_limit+"&sortBy="+sort_order
 
-# Set request
 reqtype = 'get'
-#reqval = "/audit/entries?filter="+completefilter+"&limit="+output_limit+"&sortBy="+sort_order
-#reqval = "/audit/activities?filter="+completefilter+"&limit="+output_limit+"&sortBy="+sort_order
-reqval = "/audit/activities"
 
 # Construct & print endpoint URL
 baseurl=getbaseurl()
@@ -94,6 +95,6 @@ print("REST endpoint: " +endpoint)
 
 # Make REST API call, and process & print results
 files_result_json=callrestapi(reqval,reqtype)
-cols=['id','action','type','administrativeAction','sessionSignature','timeStamp','state','user','remoteAddress','application']
+cols=['id','type','action','administrativeAction','state','user','application','timeStamp','remoteAddress']
 #printresult(files_result_json,output_style,cols)
 printresult(files_result_json,output_style,cols)
