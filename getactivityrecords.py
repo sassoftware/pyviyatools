@@ -81,7 +81,7 @@ if filter_str:
 # Construct and print the endpoint URL
 baseurl = getbaseurl()
 endpoint = baseurl + reqval
-print("REST endpoint:", endpoint)
+#print("REST endpoint:", endpoint)
 
 # Make the REST API call and process & print results
 files_result_json = callrestapi(reqval, 'get')
