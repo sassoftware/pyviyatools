@@ -79,7 +79,7 @@ if areyousure.upper() =='Y':
             for filename in os.listdir( basedir ):
 
                   fullfile=os.path.join(basedir,filename)
-
+                  
                   # only process json files
                   if filename.lower().endswith('.json'):
 
@@ -94,9 +94,9 @@ if areyousure.upper() =='Y':
                               casserver=data['server']
                               # creates then runs the caslib creation command, with superuser perms where selected
                               if su:
-                                    command=clicommand+' cas caslibs create path --source-file '+fullfile+' --su'
+                                    command=clicommand+' cas caslibs create path --source-file "'+fullfile+'" --su'
                               else:
-                                    command=clicommand+' cas caslibs create path --source-file '+fullfile
+                                    command=clicommand+' cas caslibs create path --source-file "'+fullfile+'"'
                               print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
                               print(command)
                               subprocess.call(command, shell=True)
@@ -109,15 +109,15 @@ if areyousure.upper() =='Y':
                               if access_file==True:
                                     
                                     if su:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --su --source-file '+authfile
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --su --source-file "'+authfile+'"'
                                     else:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file '+authfile
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file "'+authfile+'"'
 
                                     print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
                                     print(command)
                                     subprocess.call(command, shell=True)           
 
-            if not tryimport: print("NOTE: no caslib files available for import.")
+            if not tryimport: print("NOTE: No caslib files available for import.")
 
       else: print("ERROR: Directory does not exist.")
 else:
