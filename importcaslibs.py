@@ -90,8 +90,6 @@ if areyousure.upper() =='Y':
                               with open(fullfile) as json_file:
                                     data = json.load(json_file)
                               
-                              print(data)
-
                               caslibname=data['name']
                               casserver=data['server']
                               # creates then runs the caslib creation command, with superuser perms where selected
