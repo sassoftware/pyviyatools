@@ -89,6 +89,8 @@ if areyousure.upper() =='Y':
                               # get some caslib attributes for the authorization import
                               with open(fullfile) as json_file:
                                     data = json.load(json_file)
+                              
+                              print(data)
 
                               caslibname=data['name']
                               casserver=data['server']
