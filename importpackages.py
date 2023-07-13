@@ -36,10 +36,13 @@ clicommand=os.path.join(clidir,cliexe)
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
 parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
+parser.add_argument("-ea","--excludeauthorization", help="Exclude the import of authorization rules.", action='store_true')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
+
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+noauth=args.excludeauthorization
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -71,6 +74,15 @@ if areyousure.upper() =='Y':
 				print(command)
 				subprocess.call(command, shell=True)
 
+				# create mapping file to exclude authorization
+				if noauth:
+
+					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
+					json_object = json.dumps(mappingdict, indent=4)
+
+					with open ("/tmp/_mapping_json.json",'w') as outfile:
+						outfile.write(json_object)
+
 				#print the json from the upload
 				with open('/tmp/packageid.json') as json_file:
 					package_data = json.load(json_file)
@@ -79,11 +91,19 @@ if areyousure.upper() =='Y':
 
 				# get the packageid and import the package
 				packageid=package_data["id"]
-				command=clicommand+' --output text -q transfer import --id '+packageid
+
+				if noauth:
+				    command=clicommand+' --output text -q transfer import --id '+packageid+' --mapping /tmp/_mapping_json.json'
+				else:
+				    command=clicommand+' --output text -q transfer import --id '+packageid
+
 				print(command)
 
 				subprocess.call(command, shell=True)
 				print("NOTE: Viya content imported from json files in "+basedir)
+
+				if noauth:
+					os.remove("/tmp/_mapping_json.json")
 
 	else: print("ERROR: Directory does not exist")
 else:
