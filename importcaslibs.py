@@ -109,9 +109,9 @@ if areyousure.upper() =='Y':
                               if access_file==True:
                                     
                                     if su:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --su --source-file "'+authfile+'"'
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name "'+ caslibname+'" --force --su --source-file "'+authfile+'"'
                                     else:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name '+ caslibname+' --force --source-file "'+authfile+'"'
+                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name "'+ caslibname+'" --force --source-file "'+authfile+'"'
 
                                     print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
                                     print(command)
