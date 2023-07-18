@@ -91,7 +91,7 @@ if check:
                 caslib=row[2].strip()
                 casserver=row[3].strip()
             
-                command=clicommand+' --output fulljson cas format-libraries create --format-library" '+formatlib+'" --caslib="'+caslib+'" --source-path '+pathtofile+' --server='+casserver+ '--search-order append --su --force' 
+                command=clicommand+' --output fulljson cas format-libraries create --format-library "'+formatlib+'" --caslib="'+caslib+'" --source-path '+pathtofile+' --server='+casserver+' --search-order append --su --force' 
                 print(command)
                 subprocess.call(command, shell=True)
             
