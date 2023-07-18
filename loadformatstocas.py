@@ -90,11 +90,6 @@ if check:
                 casserver=row[3].strip()
             
                 command=clicommand+' --output fulljson cas format-libraries create --format-library"'+formatlib+'" --caslib="'+caslib+'" --source-path '+pathtofile+' --server='+casserver+ '--search-order append --su --force' 
-'
-
-                 --format-library slformats  --source-path /gelcontent/gelcorp/sales/formats/SLFORMATS.sashdat --caslib formats 
-                print(command)
-                subprocess.call(command, shell=True)
             
             else: print("WARNING: too few columns in row, row must have at least three columns: caslib, tablename, and casserver.")
 
