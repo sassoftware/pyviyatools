@@ -83,8 +83,10 @@ if check:
 
             cols=len(row)
 
+            print(cols)
+
             # skip row and output a message if only 1 column
-            if cols>2:
+            if cols>3:
 
                 formatlib=row[0].strip()
                 pathtofile=row[1].strip()
@@ -93,7 +95,7 @@ if check:
             
                 command=clicommand+' --output fulljson cas format-libraries create --format-library"'+formatlib+'" --caslib="'+caslib+'" --source-path '+pathtofile+' --server='+casserver+ '--search-order append --su --force' 
             
-            else: print("WARNING: too few columns in row, row must have at least three columns: caslib, tablename, and casserver.")
+            else: print("WARNING: too few columns in row, row must have four columns.")
 
 else:
     print("ERROR: cannot read csv file: "+file)
