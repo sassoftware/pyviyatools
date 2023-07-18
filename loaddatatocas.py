@@ -4,7 +4,7 @@
 # loaddatatocas.py
 # July2023
 #
-# load data to cas
+# load data to cas from a csv
 #
 #
 #  Column 1 caslib
