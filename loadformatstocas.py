@@ -79,6 +79,8 @@ if check:
 
         for row in filecontents:
 
+            if debug: print(row)
+
             cols=len(row)
 
             # skip row and output a message if only 1 column
