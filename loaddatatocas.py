@@ -11,10 +11,12 @@
 #  Column 2 table name (or *)
 #  Column 3 casserver
 #
+#  You do not need the column names in the first two. If you do want tp include them
+#  use --skipfirstrow
+#
 # caslib, tablename, casserver
 # hrdl, *, cas-shared-default
 # salesdl, *, cas-shared-default
-# Format of csv file is two columns
 #
 # Copyright 2023, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -50,7 +52,7 @@ if version==2:
 parser = argparse.ArgumentParser(description="Load CAS data: File Format: column1=caslib,column2=tablename,column3=casserver")
 parser.add_argument("-f","--file", help="Full path to csv file containing data to load ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
-parser.add_argument("--skipfirstrow", action='store_false', help="Skip the first row if it is a header")
+parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header.")
 
 if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
 else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
