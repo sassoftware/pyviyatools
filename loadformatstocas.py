@@ -83,17 +83,17 @@ if check:
 
             cols=len(row)
 
-            print(cols)
-
             # skip row and output a message if only 1 column
             if cols>3:
-
+                
                 formatlib=row[0].strip()
                 pathtofile=row[1].strip()
                 caslib=row[2].strip()
                 casserver=row[3].strip()
             
                 command=clicommand+' --output fulljson cas format-libraries create --format-library"'+formatlib+'" --caslib="'+caslib+'" --source-path '+pathtofile+' --server='+casserver+ '--search-order append --su --force' 
+                print(command)
+                subprocess.call(command, shell=True)
             
             else: print("WARNING: too few columns in row, row must have four columns.")
 
