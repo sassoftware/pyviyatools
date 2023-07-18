@@ -48,9 +48,9 @@ if version==2:
 
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Load CAS data: File Format: column1=caslib,column2=tablename,column3=casserver")
-parser.add_argument("-f","--file", help="Full path to csv file containing groups ",required='True')
+parser.add_argument("-f","--file", help="Full path to csv file containing data to load ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
-parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header")
+parser.add_argument("--skipfirstrow", action='store_false', help="Skip the first row if it is a header")
 
 if version==2: parser.add_argument("--encoding",default="ascii",help="default is ascii for python2")
 else: parser.add_argument("--encoding",default="utf-8",help="default is utf-8 for python3")
@@ -81,9 +81,9 @@ if check:
             # skip row and output a message if only 1 column
             if cols>2:
 
-                caslib=row[0]
-                tablename=row[1]
-                casserver=row[2]
+                caslib=row[0].strip()
+                tablename=row[1].strip()
+                casserver=row[2].strip()
             
                 command=clicommand+' --output fulljson cas tables load --caslib="'+caslib+'" --table='+tablename+' --server='+casserver
                 print(command)
