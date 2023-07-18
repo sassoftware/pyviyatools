@@ -119,9 +119,9 @@ if check:
                 # if group does not exist add it
                 if id in groupslist:
 
-                    print("Note: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
+                    print("NOTE: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
                 else:
-                    if debug: print ("Note: Trying to create Group: "+newgroup )
+                    if debug: print ("NOTE: Trying to create Group: "+newgroup )
 
                     reqtype='post'
                     reqval="/identities/groups/"
@@ -129,13 +129,13 @@ if check:
                     myresult=callrestapi(reqval,reqtype,data=data,stoponerror=0,noprint=1)
 
                     if myresult != None: print("Note: Group: with id '"+id+"' and name '"+newgroup+"' created." )
-                    else: print("Note: group with name "+newgroup+"  and id "+id+" already exists." )
+                    else: print("NOTE: group with name "+newgroup+"  and id "+id+" already exists." )
 
                 # 4th column is group membership either a userid or groupid, its optional.
                 if cols>=4 and row[3] !="":
 
                     member=row[3]
-                    if debug: print("Note: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
+                    if debug: print("NOTE: Trying to add identity '"+ member+ "' to group with id '"+id+"' and name '"+newgroup+"'")
 
                     #test that user exists
                     reqval="/identities/users/"+member

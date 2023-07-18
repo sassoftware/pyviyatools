@@ -50,8 +50,8 @@ if version==2:
     from io import open
 
 # setup command-line arguements
-parser = argparse.ArgumentParser(description="Load CAS data: File Format: column1=caslib,column2=tablename,column3=casserver")
-parser.add_argument("-f","--file", help="Full path to csv file containing data to load ",required='True')
+parser = argparse.ArgumentParser(description="Load CAS data: File Format: column1=format library,column2=full path to file ,colum3=cas library,column4=casserver")
+parser.add_argument("-f","--file", help="Full path to csv file containing formatso load ",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("--skipfirstrow", action='store_true', help="Skip the first row if it is a header.")
 
