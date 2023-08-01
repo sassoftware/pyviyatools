@@ -13,13 +13,14 @@
 # Once an Auth Model Supplement document has been converted to csv files, that that collection of files
 # may be applied to a Viya environment using this script.
 #
-# Usage:
-# applyauthmodel.py -e <ENV> -d <DIR>
+# Usage examples:
+# applyauthmodel.py -e <ENV> -d <DIR> 
+# applyauthmodel.py -e <ENV> -d <DIR> --dryrun
+# applyauthmodel.py -e <ENV> -d <DIR> --dryrun --replacerules
 #
 # ENV refers to the same ENV value that was used for the extraction from the Supplement doc.
 # DIR refers to the directory that contains the csv files extracted.
-
-
+#
 import argparse, os, shutil
 
 # setup command-line arguements
@@ -27,11 +28,14 @@ parser = argparse.ArgumentParser(description="Applies the CSV files output by th
 parser.add_argument("-e","--env", help="Name of environment that is to be extracted.",required='True')
 parser.add_argument("-d","--directory", help="Directory that contains CSV auth files to be implemented.",required='True')
 parser.add_argument("--dryrun", help="Compiles commands for review without running them.",action='store_true')
+parser.add_argument("--replacerules", help="Changes the function of toggleviyarules call from \'disable\' to \'replace\' \
+                    - creating replacement rules for the Viya service account \'sasapp\'.",action='store_true')
 #parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt when creating CASLIBs.", action='store_true')
 args = parser.parse_args()
 viyaenv=args.env
 indir=args.directory
 dryrun=args.dryrun
+reprules=args.replacerules
 #quietmode=args.quiet
 viyaglobal="ALL"
 cwd=os.getcwd()
@@ -192,7 +196,10 @@ else:
 ## Disable OOTB rules
 ## Uses "toggleviyarules.py" to read "ALL - Rules2Disable.csv"
 print("Disabling old rules...")
-command=os.path.join(cwd, 'toggleviyarules.py --skipfirstrow -o disable -f "')
+if not reprules:
+    command=os.path.join(cwd, 'toggleviyarules.py --skipfirstrow -o disable -f "')
+else:
+    command=os.path.join(cwd, 'toggleviyarules.py --skipfirstrow -o replace -p sasapp -ptype group -f "')
 csvfile=os.path.join(indir, viyaglobal+' - Rules2Disable.csv"')
 if not dryrun:
     os.system(command+csvfile)
