@@ -398,8 +398,7 @@ if(output_style == "report" or output_style == "report-full"):
             for col in columns:
                 htmlStr += "<th>" + col + "</th>"
             htmlStr += "</tr>\n</thead>\n"
-            #print(htmlStr)
-
+           
             for result in test['results']:
                 #Create tbody
                 htmlStr += '<tbody>\n<tr>\n'
@@ -423,8 +422,7 @@ if(output_style == "report" or output_style == "report-full"):
                             htmlStr += "<td>" + str(item.get(col)) + "</td>\n"
                         htmlStr += "</tr>\n"
                 else:
-
-                    print(json.dumps(result,indent=2))
+                    
                     #Remove all columns except those specified
                     for key in list(result):
                         if key not in test['cols']: del result[key]
@@ -434,8 +432,6 @@ if(output_style == "report" or output_style == "report-full"):
                     # htmlStr += '</tr>\n'
                     #Create a row for each result
                     htmlStr += "<tr>\n"
-
-                    print(json.dumps(result,indent=2))
                     
                     #sasgnn use the column name to get the value do not rely on the order
                     for resultvalue in columns: 
@@ -444,8 +440,7 @@ if(output_style == "report" or output_style == "report-full"):
                     # for value in list(result.values()):
                     #     htmlStr += '<td>' + str(value) + '</td>\n'
                     htmlStr += '</tr>\n'
-                    print(htmlStr)
-
+                    
                 htmlStr += '</tbody>\n'
             htmlStr += "</table>"
 
