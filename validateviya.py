@@ -17,6 +17,10 @@
 #  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 #  express or implied. See the License for the specific language governing permissions and limitations under the License.
 #
+# Change History
+#
+# AUG2023 Fixed bug in order of columns for HTML output
+#
 
 from __future__ import print_function
 
@@ -150,15 +154,22 @@ else:
 if(args.generateTestJson is not None):
     #Write tests preferences JSON to file (default OR those specified via -c)
     try:
-        outputFile = os.getcwd()
+
+            
         if(outputDirectory is not None):
             #create directory if it doesn't exist
             if not os.path.exists(outputDirectory):
                 os.makedirs(outputDirectory)
-            outputFile = outputDirectory
-        outputFile += generateFile
+        else: outputDirectory = os.getcwd()
+        
+       
+        outputFile = outputDirectory
+        outputFile = os.path.join(outputFile,generateFile)
+        print(outputFile)
         f = open(outputFile, 'w')
+        
         f.write(json.dumps(testPreferences, indent=2))
+
     except:
         print("JSON Test Preferences File cannot be written")
     finally:
@@ -381,9 +392,13 @@ if(output_style == "report" or output_style == "report-full"):
         #Create the table with the results only if the output style is report-full
         if(output_style == "report-full"):
             htmlStr += "<table>\n<thead>\n<tr>"
-            for col in test.get('cols'):
+            
+            columns=test['cols']
+
+            for col in columns:
                 htmlStr += "<th>" + col + "</th>"
             htmlStr += "</tr>\n</thead>\n"
+           
             for result in test['results']:
                 #Create tbody
                 htmlStr += '<tbody>\n<tr>\n'
@@ -391,6 +406,7 @@ if(output_style == "report" or output_style == "report-full"):
                 #If the 'items' key exists, we collect 1 or more rows of data from there
                 #if it does not, we collect 1 row from result
                 if('items' in result):
+                    
                     #Remove all columns except those specified
                     for item in result['items']:
                         for key in list(item):
@@ -406,6 +422,7 @@ if(output_style == "report" or output_style == "report-full"):
                             htmlStr += "<td>" + str(item.get(col)) + "</td>\n"
                         htmlStr += "</tr>\n"
                 else:
+                    
                     #Remove all columns except those specified
                     for key in list(result):
                         if key not in test['cols']: del result[key]
@@ -415,10 +432,15 @@ if(output_style == "report" or output_style == "report-full"):
                     # htmlStr += '</tr>\n'
                     #Create a row for each result
                     htmlStr += "<tr>\n"
-                    for value in list(result.values()):
-                        htmlStr += '<td>' + str(value) + '</td>\n'
-                    htmlStr += '</tr>\n'
+                    
+                    #sasgnn use the column name to get the value do not rely on the order
+                    for resultvalue in columns: 
+                        htmlStr += '<td>' + str(result[resultvalue]) + '</td>\n'                        
 
+                    # for value in list(result.values()):
+                    #     htmlStr += '<td>' + str(value) + '</td>\n'
+                    htmlStr += '</tr>\n'
+                    
                 htmlStr += '</tbody>\n'
             htmlStr += "</table>"
 
@@ -439,20 +461,22 @@ if(output_style == "report" or output_style == "report-full"):
 
     #Create the html file to write
     try:
-        #Create file name using test end time
-        htmlFileName = os.getcwd()
+                    
         if(outputDirectory is not None):
             #create directory if it doesn't exist
             if not os.path.exists(outputDirectory):
                 os.makedirs(outputDirectory)
-            htmlFileName = outputDirectory
-        htmlFileName += "/report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html"
+        else: outputDirectory=os.getcwd()
+               
+        htmlFileName=os.path.join(outputDirectory,"report-" + testEndTime.strftime("%m.%d.%y-%H.%M.%S") + ".html")
+        
         htmlFile = open(htmlFileName, "w")
         #Write to html file
         htmlFile.write(htmlStr)
-        verbosePrint("Report created at " + htmlFileName, verbose)
+        verbosePrint("NOTE: Report created at " + htmlFileName, verbose)
+
     except:
-        print("Problem creating report")
+        print("ERROR: Problem creating report")
     finally:
         #Save html file
         if htmlFile is not None:
