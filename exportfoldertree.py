@@ -13,6 +13,7 @@
 #
 # SEP2022 Added option to specify the root folder to start at
 # MAR2023 Option to remove transfer objects and some general cleanup
+# AUG2023 Option to suppress the incremental number suffix on downloaded file names 
 #
 # Copyright Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -51,12 +52,14 @@ parser.add_argument("-d","--directory", help="Directory to store Export Packages
 parser.add_argument("-f","--folder", help="Folder to start export at (root is default)",default="NONE")
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
+parser.add_argument("-n","--nonincrament", help="Do not add an incremental number at the end of the downloaded JSON file ", action='store_true')
 args= parser.parse_args()
 
 basedir=args.directory
 folder=args.folder
 quietmode=args.quiet
 autotranferremove=args.tranferremove
+nonincrament=args.nonincrament
 
 
 # prompt if directory exists because existing json files are deleted
@@ -132,7 +135,10 @@ if areyousure.upper() =='Y':
 
                 # generate a unique name for the package in the Infrastructure Data Server
                 package_name=str(uuid.uuid1())
-                json_name=theitem["name"].replace(" ","")+'_'+str(i)
+                if nonincrament:
+                    json_name=theitem["name"].replace(" ","")
+                else:
+                    json_name=theitem["name"].replace(" ","")+'_'+str(i)
 
                 # export
                 command=clicommand+' transfer export -u '+folderuri+' --name "'+package_name+'"'
