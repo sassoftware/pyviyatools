@@ -150,6 +150,8 @@ input.close()
 
 #### Optional sub-section for the 'replace' operator's functions
 if replaceop == 'replace': 
+    
+
 
     ## Validates arguments being parsed in
     if args.princtype is None:
@@ -164,6 +166,9 @@ if replaceop == 'replace':
         principaltype="--"+str(args.princtype)
         replaceprinc=args.princ
 
+    ## Formats variables with quotes, required for delta checking in applyviyarules.py
+    replaceprinc=f'"{replaceprinc}"'
+    principaltype=f'"{principaltype}"'
 
     ## Reads in the tmptxt.txt file created in earlier section, and formats the output into single rows
     with open('tmptxt.txt') as rulesin, open ('tmptxt2.txt', 'w') as rulesout:
@@ -202,8 +207,12 @@ if replaceop == 'replace':
             condition=f'"{row[0]}"'
             objecturi=f'"{row[1]}"'
             permissions=f'"{row[2]}"'
+            if condition == "\"\"":
+                grant_type = '"grant"'
+            else:
+                grant_type = '"conditional grant"'
             with open ('replacementrules.csv', 'a') as newcsv:
-                rule=objecturi+','+principaltype+','+replaceprinc+',grant,'+permissions+',True,'+condition+'\n'
+                rule=objecturi+','+principaltype+','+replaceprinc+','+grant_type+','+permissions+',"True",'+condition+'\n'
                 newcsv.write(rule)
             input.close()
 

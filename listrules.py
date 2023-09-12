@@ -46,7 +46,8 @@ limitval=10000
 
 # Define columns we want to output for each rule item (whether the item has a value for that column or not)
 desired_output_columns=['objectUri','containerUri','principalType','principal','setting','permissions','description','reason','createdBy','createdTimestamp','modifiedBy','modifiedTimestamp','condition','matchParams','mediaType','enabled','version','id']
-valid_permissions=['read','update','delete','secure','add','remove','create']
+#valid_permissions=['read','update','delete','secure','add','remove','create']
+valid_permissions=['remove','read','update','create','delete','add','secure']
 
 # build the request depending on what options were passed in
 if ident.lower()=='authenticatedusers': ident='authenticatedUsers'
