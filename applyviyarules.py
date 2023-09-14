@@ -113,7 +113,7 @@ newrules='rulesapplied_'+runtime+'.csv'
 
 print("Checking for new rules to apply... \n")
 print("Printing results (CSV format) to: \033[1;34m"+newrules+"\033[0m \n")
-grepcom='grep -Fxiv -f existing_rules.csv '+ file + ' > '+newrules
+grepcom='grep -Fiv -f existing_rules.csv '+'"'+ file +'"' + ' > '+newrules
 subprocess.call(grepcom, shell=True)
 ##########################################################
 # End of Temporary section 1
@@ -139,14 +139,18 @@ try:
 except:
     print("There are \033[1;33mNO NEW RULES\033[0m to be applied. \n ")
 else:
+    mask= dfgrants['condition'] != ""
+    dfgrants= dfgrants[~mask]
     dfgrants.to_csv(newrules, header=False, index=None, quoting=csv.QUOTE_ALL)
     print("\033[1;32mFound",len(dfgrants),"\033[0mNEW RULE(S) to be applied \033[1;32mautomatically. \033[0m \n")
 
 try:
-    dfcondgrants= df2.get_group("conditional grant") 
+    dfcondgrants= df2.get_group("conditional grant")
 except:
     pass
 else:
+    mask= dfcondgrants['condition'] != ""
+    dfcondgrants= dfcondgrants[mask]
     dfcondgrants.to_csv(open(conditionalrules,'w'), header=False, index=None, quoting=csv.QUOTE_NONNUMERIC)
     print("\033[1;32mFound",len(dfcondgrants),"\033[0mNEW CONDITIONAL RULE(S) to be applied \033[1;31mmanually. \033[0m \n")
 
