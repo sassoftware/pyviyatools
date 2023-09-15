@@ -93,7 +93,7 @@ filtercond=[]
 filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
 
 # set the request type
 reqtype='get'
