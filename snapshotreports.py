@@ -94,7 +94,7 @@ filtercond=[]
 filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
 
 # add the start and end and comma delimit the filter
 delimiter = ','

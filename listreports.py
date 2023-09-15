@@ -57,7 +57,7 @@ filtercond=[]
 
 # there is always a number of days, the default is 1825
 filtercond.append(datefilter)
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
 
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')

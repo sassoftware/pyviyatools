@@ -20,7 +20,7 @@
 #
 # 27JAN2019 Comments added
 # 12SEP2019 Added the ability to specifiy a folder as an alternative to a URI
-#
+# 15SEP2023 BUG need to quote modified by
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -87,7 +87,7 @@ filtercond=[]
 filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
 
 # set the request type
 reqtype='get'

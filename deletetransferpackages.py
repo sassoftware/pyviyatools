@@ -67,8 +67,8 @@ filtercond=[]
 filtercond.append(datefilter)
 
 if nameval!=None: filtercond.append('contains($primary,name,"'+nameval+'")')
-if createby!=None: filtercond.append("eq(createdBy,"+createby+")")
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if createby!=None: filtercond.append("eq(createdBy,'"+createby+"')")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
 
 # set the request type
 reqtype='get'

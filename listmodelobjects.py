@@ -57,7 +57,8 @@ filtercond.append(datefilter)
 # construct filter
 delimiter = ','
 if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
-if modby!=None: filtercond.append("eq(modifiedBy,"+modby+")")
+if modby!=None: filtercond.append("eq(modifiedBy,'"+modby+"')")
+
 completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # prepare the request according to content type

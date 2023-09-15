@@ -116,13 +116,22 @@ if(args.customTests is not None):
 
     #Convert count to int
     numTests = int(customPreferences['count'])
+    numTestsinJSON=int(len(list(customPreferences['tests'])))
+
     #Assure that the number of tests is equal to the actual number of tests
-    assert(numTests == len(list(customPreferences['tests'])))
+    if numTests != numTestsinJSON:
+        print("ERROR: count field in JSON custom test is "+str(numTests)+" and based on the number of tests in the file it should be "+str(numTestsinJSON))
+        exit()
 
     #Assure the number of tests is default amount
     for i in range(0, numTests):
         #Assure each test has an id, counting up from 0 to numTests-1
-        assert(int(customPreferences['tests'][i]['id']) == i)
+        #assert(int(customPreferences['tests'][i]['id']) == i)
+        testnum=int(customPreferences['tests'][i]['id'])
+        if  testnum != i:
+            print("ERROR: in the Custom test file. Test number "+str(i)+" has id number "+str(testnum))
+            exit()
+
         #Convert ids to int
         customPreferences['tests'][i]['id'] = int(customPreferences['tests'][i]['id'])
         #Assure each test contains the active parameter, either True or False
