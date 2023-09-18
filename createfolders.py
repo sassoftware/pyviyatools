@@ -8,6 +8,7 @@
 # Change History
 #
 # 30oct2018 Initial development
+# 18sep2023 remove trailing slash from new folders
 #
 # Format of csv file is two columns
 # Column 1 is the full path to the folder
@@ -81,7 +82,7 @@ if check:
                 newfolder=row[0]
                 description=row[1]
 
-                if newfolder[0]!='/': newfolder="/"+newfolder
+                if newfolder[0]!='/': newfolder="/"+newfolder.rstrip("/")
 
                 folder=os.path.basename(os.path.normpath(newfolder))
                 parent_folder=os.path.dirname(newfolder)
