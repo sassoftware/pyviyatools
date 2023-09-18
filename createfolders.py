@@ -79,10 +79,10 @@ if check:
 
                 if cols==1: row.append("Created by pyviyatools createfolders.py")
 
-                newfolder=row[0]
+                newfolder=row[0].rstrip("/")
                 description=row[1]
 
-                if newfolder[0]!='/': newfolder="/"+newfolder.rstrip("/")
+                if newfolder[0]!='/': newfolder="/"+newfolder
 
                 folder=os.path.basename(os.path.normpath(newfolder))
                 parent_folder=os.path.dirname(newfolder)
