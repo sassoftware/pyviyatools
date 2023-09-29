@@ -71,8 +71,13 @@ if check:
             principaltype=row[1]
             principalname=row[2]
             accesssetting=row[3]
-            folderpermissions=row[4]
+            folderpermissions=row[4].lower()
             conveyedpermissions=row[5]
+            # checks if the ObjectURI will need /** appended to it
+            if folderpermissions == "read" and len(conveyedpermissions) == 0:
+              wildcard="/**"
+            else:
+              wildcard=""
 
 #            print("Creating auth rules for "+folderpath)
 
@@ -82,7 +87,7 @@ if check:
 
 # Construct JSON objects from auth rules defined in CSV. Two JSON objects are created for each row of CSV; one for perms on the folder object, one for conveyed perms on the object's contents.
             value_dict_object={"description":"Created by applyfolderauthorizations.py",
-                        "objectUri":reqval,
+                        "objectUri":reqval+wildcard,
                         "permissions":folderpermissions.split(','),
                         "principalType":principaltype,
                         "principal":principalname,
