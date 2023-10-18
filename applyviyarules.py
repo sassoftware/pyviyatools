@@ -17,12 +17,13 @@
 #          a warning notifications and splits the rules to alternative CSV file for manual
 #          implementation.
 #          (PMCPFR-1364)
+# 18Oct23  Fixed a bug that was stopping the conditional rules from being filtered off correctly.
 #
 # Format of input csv file is 6 columns
 # Column 1: Object URI
 # Column 2: Principal type ["group" | "user"]
 # Column 3: Principal id [<groupID> | <userID>]
-# Column 4: Access grant type ["grant" | "conditional grant" | "prohibit")
+# Column 4: Access grant type ["grant" | "prohibit")
 # Column 5: Applicable permissions ["read","delete","add","create","remove","secure","update"]
 # Column 6: Rule's status ["true" | "false"]
 # Column 7: Rule's condition, if applicable.
@@ -145,7 +146,7 @@ else:
     print("\033[1;32mFound",len(dfgrants),"\033[0mNEW RULE(S) to be applied \033[1;32mautomatically. \033[0m \n")
 
 try:
-    dfcondgrants= df2.get_group("conditional grant")
+    dfcondgrants= df2.get_group("grant")
 except:
     pass
 else:
