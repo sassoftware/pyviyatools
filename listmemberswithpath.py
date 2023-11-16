@@ -35,13 +35,13 @@
 #  limitations under the License.
 #
 
-debug=False
-
 # Import Python modules
 from __future__ import unicode_literals
 import argparse
 import sys
 from sharedfunctions import callrestapi,getpath
+
+debug=False
 
 # Define exception handler so that we only output trace info from errors when in debug mode
 def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
