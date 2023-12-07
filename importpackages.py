@@ -33,9 +33,14 @@ cliexe=propertylist["sascli.executable"]
 
 clicommand=os.path.join(clidir,cliexe)
 
+def Merge(dict1, dict2):
+    res = {**dict1, **dict2}
+    return res
+
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
 parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
+parser.add_argument("-m","--mapping", help="A mapping file to use with the import.",required='True',default=None)
 parser.add_argument("-ea","--excludeauthorization", help="Exclude the import of authorization rules.", action='store_true')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 
@@ -43,6 +48,7 @@ args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 noauth=args.excludeauthorization
+mapping=args.mapping
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -74,15 +80,27 @@ if areyousure.upper() =='Y':
 				print(command)
 				subprocess.call(command, shell=True)
 
+				mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
+
 				# create mapping file to exclude authorization
-				if noauth:
-
-					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
+				if noauth and not mapping:
+					
 					json_object = json.dumps(mappingdict, indent=4)
-
 					with open ("/tmp/_mapping_json.json",'w') as outfile:
-						outfile.write(json_object)
-
+						outfile.write(json_object)				
+					mapfile="/tmp/_mapping_json.json"
+					
+				elif noauth and mapping:
+					json_object = json.dumps(mappingdict, indent=4)
+					with open(mapping) as map_file:
+      						map_dict = json.load(map_file)
+					newmap=Merge(mappingdict,map_dict)
+					
+					with open ("/tmp/_mapping_json.json",'w') as outfile:
+						outfile.write(map_dict)
+					mapfile="/tmp/_mapping_json.json"
+				else mapfile=mapping
+			
 				#print the json from the upload
 				with open('/tmp/packageid.json') as json_file:
 					package_data = json.load(json_file)
