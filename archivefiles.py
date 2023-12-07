@@ -54,7 +54,8 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
-parser.add_argument("-x","--delete", help="Delete Files from Viya",action='store_true')
+parser.add_argument("-x","--delete", help="Delete archived Files from Viya",action='store_true')
+parser.add_argument("-xx","--deletenoarch", help="Delete Files without Archiving from Viya",action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
@@ -64,6 +65,7 @@ nameval=args.name
 puri=args.parent
 path=args.path
 dodelete=args.delete
+deletenoarch=args.deletenoarch
 pfolder=args.parentfolder
 debug=args.debug
 
@@ -100,21 +102,27 @@ reqtype='get'
 delimiter = ','
 
 # process items not in folders
-if puri!=None: 
+if puri!=None:
+
+   print("NOTE: processing files with parent uri: "+puri) 
+
    filtercond.append("contains(parentUri,'"+puri+"')")
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items'] 
         
 # process items in folders
 elif pfolder!=None:
 
+   print("NOTE: processing files with parentfolder: "+pfolder) 
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
-   completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&limit=10000"
-   
+
+   reqval="/folders/folders/"+folderid+"/members"
+ 
    files_in_folder=callrestapi(reqval,reqtype)
-      
+    
    #now get the file objects using the ids returned
    iddict=getidsanduris(files_in_folder)
    
@@ -135,95 +143,122 @@ elif pfolder!=None:
    filtercond.append("in(id,"+inclause+")")
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items'] 
 
 else:
-
+   
+   print("NOTE: processing files that are not stored in folders.")
+   # no parent folder or URI provided
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items']
 
+   filesnotinfolders=[]
 
-files_result_json=callrestapi(reqval,reqtype) 
+   # post process so this list is only items that do not exist in folders
+   for file in files:
 
+      fileid=file['id']
+      contenttype=file['contentType']
+      filename=file['name']
+
+      # is this item in a folder
+      afolder=callrestapi("/folders/ancestors?childUri=/files/files/"+fileid,"get",stoponerror=0,noprint=1)
+      #if afolder == None: print("NOTE: NOT in a folder.")
+      #else: 
+      if afolder ==  None: filesnotinfolders.append(file)
+   
+   files=filesnotinfolders
   
 #create a directory with a name of the timestamp only if running in execute mode
 newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
-
 archivepath=os.path.join(path,newdirname )
 if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
-files = files_result_json['items']
 
 if debug:
    print(reqval)
    #print(json.dumps(files,indent=2))
 
-if len(files):
+if len(files) and not deletenoarch :
    if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
 # list that contains files that can be archived
 passlist=[]
+filesdeleted=0
 
 # process each file
 for file in files:
 
    fileid=file['id']
    contenttype=file['contentType']
-
-     
    filename=file['name'] 
-   archivefile=os.path.join(archivepath,filename )
-       
-   reqtype='get'	   
-   reqval="/files/files/"+fileid+"/content"
-   
-   content=callrestapi(reqval,reqtype)
+ 
+   if deletenoarch:
+      reqtype='delete'
+      reqval="/files/files/"+fileid
+      callrestapi(reqval,reqtype)
+      filesdeleted=1
 
-            
-   out_type='w'
-      
-   # decide on write style w+b is binary w is text
-   # currently cannot process binary files
-   if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
-   
-      out_type="wb"
-
-      print('NOTE: '+filename+' of content type ' +contenttype+' not supported')
-      
    else:
-   # if files is not binary write it to the archive
+          
+      archivefile=os.path.join(archivepath,filename )
+         
+      reqtype='get'	   
+      reqval="/files/files/"+fileid+"/content"
+      
+      content=callrestapi(reqval,reqtype)
+               
+      out_type='w'
+         
+      # decide on write style w+b is binary w is text
+      # currently cannot process binary files
+      if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
+      
+         out_type="wb"
+
+         print('NOTE: '+filename+' of content type ' +contenttype+' not supported for archive, but will be deleted if -x or -xx selected.')
+         
+      else:
+      # if files is not binary write it to the archive
+               
+         if type(content) is dict:
             
-       if type(content) is dict:
-          
-          with open(archivefile, out_type) as fp:
-             json.dump(content,fp,indent=4)
-        
-          fp.close()
-          passlist.append(filename)
-                  
-       elif type(content) is unicode or type(content) is str:
-          
-           with open(archivefile, out_type) as fp:
+            with open(archivefile, out_type) as fp:
+               json.dump(content,fp,indent=4)
+         
+            fp.close()
+            passlist.append(filename)
+                     
+         elif type(content) is unicode or type(content) is str:
+            
+            with open(archivefile, out_type) as fp:
 
-               if version < 3:
-                  fp.write(content.encode('utf8'))          
-               else: fp.write(content)
+                  if version < 3:
+                     fp.write(content.encode('utf8'))          
+                  else: fp.write(content)
 
-           fp.close()
-           passlist.append(filename)
-       
-       else: print('NOTE: '+filename+' content type not supported')
-       
-       # delete requested
-       if dodelete:
+            fp.close()
+            passlist.append(filename)
+         
+         else: print('NOTE: '+filename+' content type not supported for archive.')
+         
+      # delete requested
+      if dodelete:
 
-          reqtype='delete'
-          reqval="/files/files/"+fileid
-                   
-          callrestapi(reqval,reqtype)
+         reqtype='delete'
+         reqval="/files/files/"+fileid
+         callrestapi(reqval,reqtype)
+         filesdeleted=1
       
 
-if len(passlist):	  
-   print('NOTE: files archived to the directory '+archivepath)
-   if dodelete: print('NOTE: files deleted from Viya.')
-else:
-   print('NOTE: No files that can be processed were found.')
+if len(passlist): print('NOTE: files archived to the directory '+archivepath)
+else: print('NOTE: No files that can be archived were found.')
+
+if dodelete or deletenoarch:
+
+   if filesdeleted: print('NOTE: files matching criteria were deleted.')
+   else: print('NOTE: No files deleted.')
+
