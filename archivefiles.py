@@ -45,7 +45,7 @@ if version >= 3: unicode = str
 # the --output parameter is a common one which supports the styles of output json, simplejson, simple or csv
 
 parser = argparse.ArgumentParser()
-parser = argparse.ArgumentParser(description="Archive and optionally delete files stored in the infrastructure data server.")
+parser = argparse.ArgumentParser(description="Archive and optionally delete files stored in the Viya infrastructure data server.")
 
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
@@ -54,7 +54,7 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
-parser.add_argument("-x","--delete", help="Delete archived Files from Viya",action='store_true')
+parser.add_argument("-x","--delete", help="Delete Files ater archiving from Viya",action='store_true')
 parser.add_argument("-xx","--deletenoarch", help="Delete Files without Archiving from Viya",action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -149,6 +149,7 @@ elif pfolder!=None:
 else:
    
    print("NOTE: processing files that are not stored in folders.")
+   print("NOTE: files stored in folders are only processed with the -[f option.]")
    # no parent folder or URI provided
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
@@ -176,7 +177,6 @@ else:
 newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
 archivepath=os.path.join(path,newdirname )
 if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
-
 
 if debug:
    print(reqval)
@@ -253,9 +253,12 @@ for file in files:
          callrestapi(reqval,reqtype)
          filesdeleted=1
       
+# print out final messages
 
-if len(passlist): print('NOTE: files archived to the directory '+archivepath)
-else: print('NOTE: No files that can be archived were found.')
+if len(passlist):
+    print('NOTE: files archived to the directory '+archivepath)
+else:
+   if not deletenoarch: print('NOTE: No files that can be archived were found.')
 
 if dodelete or deletenoarch:
 
