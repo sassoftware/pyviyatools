@@ -153,10 +153,12 @@ if areyousure.upper() =='Y':
                 newconnection["target"]=connection["mapTargetProperties"][0]["value"]
                 newconnection["source"]=connection["mapSourceProperties"][0]["value"]
 
-                type=connection["type"]
-
-                if type=="Table":
+                # upcase comparison as it seems to be inconsistent
+                type=connection["type"].upper()
+               
+                if type.upper()=="TABLE":
                     tables.append(newconnection)
+                    
                 elif type=="UserGroup":
                     usergroups.append(newconnection)
                 elif type=="User":
