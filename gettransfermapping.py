@@ -158,7 +158,7 @@ if areyousure.upper() =='Y':
                
                 if type.upper()=="TABLE":
                     tables.append(newconnection)
-                    print(newconnection)
+                    
                 elif type=="UserGroup":
                     usergroups.append(newconnection)
                 elif type=="User":
