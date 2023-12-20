@@ -103,9 +103,9 @@ if puri!=None:
 elif pfolder!=None:
 
    folderid=getfolderid(pfolder)[0]     
-   # add the start and end and comma delimit the filter
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
+   reqval="/folders/folders/"+folderid+"/members?&sortBy="+sortby+":"+sortorder+"&limit=10000"
+   #if debug: print(reqval)
    
    files_in_folder=callrestapi(reqval,reqtype)
       
@@ -129,7 +129,7 @@ elif pfolder!=None:
    
    filtercond.append("in(id,"+inclause+")")
    completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"g&limit=10000"
+   reqval="/files/files?filter="+completefilter+"&sortBy="+sortby+":"+sortorder+"&limit=10000"
    
    
 else:
@@ -146,7 +146,7 @@ else:
 # print result
 
 if files_result_json == None:
-   print("No files returned by query")
+   print("WARNING: No files returned by query.")
 else:
    printresult(files_result_json,output_style,cols)
  
