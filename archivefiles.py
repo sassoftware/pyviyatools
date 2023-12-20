@@ -45,7 +45,12 @@ if version >= 3: unicode = str
 # the --output parameter is a common one which supports the styles of output json, simplejson, simple or csv
 
 parser = argparse.ArgumentParser()
-parser = argparse.ArgumentParser(description="Archive and optionally delete files stored in the infrastructure data server.")
+parser = argparse.ArgumentParser(
+   formatter_class=argparse.RawDescriptionHelpFormatter,
+   description='''DETAILS: Archive and optionally delete files stored in the Viya infrastructure data server.
+NOTE: By default files in folders are not processed. You must use -pf to process files stored in folders.''',  
+   epilog='''WARNING: if you use -xx your files cannot be recovered.
+WARNING: Binary files are deleted and not archived if you choose to delete.''')
 
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
@@ -54,7 +59,8 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
-parser.add_argument("-x","--delete", help="Delete Files from Viya",action='store_true')
+parser.add_argument("-x","--delete", help="Delete Files after archiving from Viya",action='store_true')
+parser.add_argument("-xx","--deletenoarch", help="Delete Files without Archiving from Viya",action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
@@ -64,8 +70,11 @@ nameval=args.name
 puri=args.parent
 path=args.path
 dodelete=args.delete
+deletenoarch=args.deletenoarch
 pfolder=args.parentfolder
 debug=args.debug
+
+binaryTypes=['application/octet-stream','audio','image','video','application/msword','application/gzip','application/java-archive','application/pdf','application/rtf','application/x-tar','application/vnd.ms-excel']
 
 # you can subset by parenturi or parentfolder but not both
 if puri !=None and pfolder !=None: 
@@ -73,15 +82,30 @@ if puri !=None and pfolder !=None:
    print("ERROR: Use -pf for folder parents and -p for service parents.")
    sys.exit()
 
+if deletenoarch and not dodelete:
+   print("ERROR: cannot choose -xx (--deletenorarch) without choosing -x (--delete).")
+   sys.exit()
+
+
 # prompt if delete is requested
 if dodelete:
 
-   if version  > 2:
-      areyousure=input("The files will be archived. Do you also want to delete the files? (Y)")
-   else:
-      areyousure=raw_input("The files will be archived. Do you also want to delete the files? (Y))") 
+   if deletenoarch:
 
-   if areyousure !='Y': dodelete=False
+      if version  > 2:
+         areyousure=input("The files will be deleted. Do you want to continue? (Y)")
+      else:
+         areyousure=raw_input("The files will be deleted. Do you want to continue? (Y)") 
+
+      if areyousure !='Y': 
+         print("NOTE: you chose to not delete or archive.")
+         sys.exit()
+   else:
+      if version  > 2:
+         areyousure=input("The files will be archived. Do you also want to delete the files? (Y)")
+      else:
+         areyousure=raw_input("The files will be archived. Do you also want to delete the files? (Y))") 
+      if areyousure !='Y': dodelete=False
 
 # calculate time period for files
 datefilter=createdatefilter(olderoryounger='older',datevar='creationTimeStamp',days=daysolder)
@@ -100,21 +124,27 @@ reqtype='get'
 delimiter = ','
 
 # process items not in folders
-if puri!=None: 
+if puri!=None:
+
+   print("NOTE: processing files with parent uri contains: "+puri) 
+
    filtercond.append("contains(parentUri,'"+puri+"')")
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items'] 
         
 # process items in folders
 elif pfolder!=None:
 
+   print("NOTE: processing files with parentfolder equals: "+pfolder) 
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
-   completefilter = 'and('+delimiter.join(filtercond)+')'
-   reqval="/folders/folders/"+folderid+"/members?filter="+completefilter+"&limit=10000"
-   
+
+   reqval="/folders/folders/"+folderid+"/members"
+ 
    files_in_folder=callrestapi(reqval,reqtype)
-      
+    
    #now get the file objects using the ids returned
    iddict=getidsanduris(files_in_folder)
    
@@ -135,95 +165,142 @@ elif pfolder!=None:
    filtercond.append("in(id,"+inclause+")")
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items'] 
 
 else:
-
+   
+   print("NOTE: processing files that are not stored in folders.")
+   print("NOTE: files stored in folders are only processed with the -pf option.")
+   # no parent folder or URI provided
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
+   files_result_json=callrestapi(reqval,reqtype)
+   files = files_result_json['items']
 
+   filesnotinfolders=[]
 
-files_result_json=callrestapi(reqval,reqtype) 
+   # post process so this list is only items that do not exist in folders
+   for file in files:
 
+      fileid=file['id']
+      contenttype=file['contentType']
+      filename=file['name']
+
+      # is this item in a folder
+      afolder=callrestapi("/folders/ancestors?childUri=/files/files/"+fileid,"get",stoponerror=0,noprint=1)
+      #if afolder == None: print("NOTE: NOT in a folder.")
+      #else: 
+      if afolder ==  None: filesnotinfolders.append(file)
+   
+   files=filesnotinfolders
   
 #create a directory with a name of the timestamp only if running in execute mode
 newdirname="D"+dt.today().strftime("%Y%m%dT%H%MS")
-
 archivepath=os.path.join(path,newdirname )
 if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
-
-files = files_result_json['items']
 
 if debug:
    print(reqval)
    #print(json.dumps(files,indent=2))
 
-if len(files):
+if len(files) and not deletenoarch :
    if os.path.isdir(archivepath)==False: os.makedirs(archivepath)
 
 # list that contains files that can be archived
 passlist=[]
+filesdeleted=0
 
 # process each file
 for file in files:
 
    fileid=file['id']
    contenttype=file['contentType']
-
-     
    filename=file['name'] 
-   archivefile=os.path.join(archivepath,filename )
-       
-   reqtype='get'	   
-   reqval="/files/files/"+fileid+"/content"
-   
-   content=callrestapi(reqval,reqtype)
 
-            
-   out_type='w'
-      
-   # decide on write style w+b is binary w is text
-   # currently cannot process binary files
-   if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
-   
-      out_type="wb"
+   if debug:
+      print("NOTE: processing file "+filename+" of contentype "+contenttype)
+ 
+   if deletenoarch:
+      reqtype='delete'
+      reqval="/files/files/"+fileid
+      callrestapi(reqval,reqtype)
+      filesdeleted=filesdeleted+1
 
-      print('NOTE: '+filename+' of content type ' +contenttype+' not supported')
-      
    else:
-   # if files is not binary write it to the archive
-            
-       if type(content) is dict:
           
-          with open(archivefile, out_type) as fp:
-             json.dump(content,fp,indent=4)
-        
-          fp.close()
-          passlist.append(filename)
-                  
-       elif type(content) is unicode or type(content) is str:
-          
-           with open(archivefile, out_type) as fp:
-
-               if version < 3:
-                  fp.write(content.encode('utf8'))          
-               else: fp.write(content)
-
-           fp.close()
-           passlist.append(filename)
-       
-       else: print('NOTE: '+filename+' content type not supported')
-       
-       # delete requested
-       if dodelete:
-
-          reqtype='delete'
-          reqval="/files/files/"+fileid
-                   
-          callrestapi(reqval,reqtype)
+      archivefile=os.path.join(archivepath,filename )
+         
+      reqtype='get'	   
+      reqval="/files/files/"+fileid+"/content"
       
+      content=callrestapi(reqval,reqtype)
+               
+      out_type='w'
+         
+      # decide on write style w+b is binary w is text
+      # currently cannot process binary files
+      #if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
+      
+         
+      binaryTypes=['application/octet-stream','application/gzip','application/java-archive','application/pdf','application/rtf','application/x-tar','application/vnd.ms-excel']   
+      
+      binary=False
+      if contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('image') or contenttype in binaryTypes: binary=True 
+          
+      # for typevar in binaryTypes:
+      #    if contenttype.startswith(typevar):
+      #       binary=True 
+      #       break 
 
-if len(passlist):	  
-   print('NOTE: files archived to the directory '+archivepath)
-   if dodelete: print('NOTE: files deleted from Viya.')
+      if binary:
+
+         out_type="wb"
+         print('NOTE: '+filename+' of content type ' +contenttype+' not supported for archive, but will be deleted if -x or -xx selected.')
+         
+      else:
+      # if files is not binary write it to the archive
+               
+         if type(content) is dict:
+            
+            with open(archivefile, out_type) as fp:
+               json.dump(content,fp,indent=4)
+         
+            fp.close()
+            passlist.append(filename)
+                     
+         elif type(content) is unicode or type(content) is str:
+            
+            with open(archivefile, out_type) as fp:
+
+                  if version < 3:
+                     fp.write(content.encode('utf8'))          
+                  else: fp.write(content)
+
+            fp.close()
+            passlist.append(filename)
+         
+         else: print('NOTE: '+filename+' content type not supported for archive.')
+         
+      # delete requested
+      if dodelete:
+
+         reqtype='delete'
+         reqval="/files/files/"+fileid
+         callrestapi(reqval,reqtype)
+         filesdeleted=1
+      
+# print out final messages
+
+total_archived=len(passlist)
+
+if total_archived:
+    print('NOTE: '+str(total_archived) +' file(s) archived to the directory '+archivepath)
 else:
-   print('NOTE: No files that can be processed were found.')
+   if not deletenoarch: print('NOTE: No files that can be archived were found.')
+
+if dodelete or deletenoarch:
+
+   if filesdeleted: print('NOTE: '+str(filesdeleted)+' file(s) matching criteria were deleted.')
+   else: print('NOTE: No files deleted.')
+
