@@ -45,7 +45,12 @@ if version >= 3: unicode = str
 # the --output parameter is a common one which supports the styles of output json, simplejson, simple or csv
 
 parser = argparse.ArgumentParser()
-parser = argparse.ArgumentParser(description="Archive and optionally delete files stored in the Viya infrastructure data server.")
+parser = argparse.ArgumentParser(
+   formatter_class=argparse.RawDescriptionHelpFormatter,
+   description='''DETAILS: Archive and optionally delete files stored in the Viya infrastructure data server.
+NOTE: By default files in folders are not processed. You must use -pf to process files stored in folders.''',  
+   epilog='''WARNING: if you use -xx your files cannot be recovered.
+WARNING: Binary files are deleted and not archived if you choose to delete.''')
 
 parser.add_argument("-n","--name", help="Name contains",default=None)
 parser.add_argument("-c","--type", help="Content Type in.",default=None)
@@ -54,7 +59,7 @@ parser.add_argument("-pf","--parentfolder", help="Parent Folder Name.",default=N
 parser.add_argument("-d","--days", help="List files older than this number of days",default='-1')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals",default=None)
 parser.add_argument("-fp","--path", help="Path of directory to store files",default='/tmp')
-parser.add_argument("-x","--delete", help="Delete Files ater archiving from Viya",action='store_true')
+parser.add_argument("-x","--delete", help="Delete Files after archiving from Viya",action='store_true')
 parser.add_argument("-xx","--deletenoarch", help="Delete Files without Archiving from Viya",action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
@@ -69,21 +74,38 @@ deletenoarch=args.deletenoarch
 pfolder=args.parentfolder
 debug=args.debug
 
+binaryTypes=['application/octet-stream','audio','image','video','application/msword','application/gzip','application/java-archive','application/pdf','application/rtf','application/x-tar','application/vnd.ms-excel']
+
 # you can subset by parenturi or parentfolder but not both
 if puri !=None and pfolder !=None: 
    print("ERROR: cannot use both -p parent and -pf parentfolder at the same time.")
    print("ERROR: Use -pf for folder parents and -p for service parents.")
    sys.exit()
 
+if deletenoarch and not dodelete:
+   print("ERROR: cannot choose -xx (--deletenorarch) without choosing -x (--delete).")
+   sys.exit()
+
+
 # prompt if delete is requested
 if dodelete:
 
-   if version  > 2:
-      areyousure=input("The files will be archived. Do you also want to delete the files? (Y)")
-   else:
-      areyousure=raw_input("The files will be archived. Do you also want to delete the files? (Y))") 
+   if deletenoarch:
 
-   if areyousure !='Y': dodelete=False
+      if version  > 2:
+         areyousure=input("The files will be deleted. Do you want to continue? (Y)")
+      else:
+         areyousure=raw_input("The files will be deleted. Do you want to continue? (Y)") 
+
+      if areyousure !='Y': 
+         print("NOTE: you chose to not delete or archive.")
+         sys.exit()
+   else:
+      if version  > 2:
+         areyousure=input("The files will be archived. Do you also want to delete the files? (Y)")
+      else:
+         areyousure=raw_input("The files will be archived. Do you also want to delete the files? (Y))") 
+      if areyousure !='Y': dodelete=False
 
 # calculate time period for files
 datefilter=createdatefilter(olderoryounger='older',datevar='creationTimeStamp',days=daysolder)
@@ -104,7 +126,7 @@ delimiter = ','
 # process items not in folders
 if puri!=None:
 
-   print("NOTE: processing files with parent uri: "+puri) 
+   print("NOTE: processing files with parent uri contains: "+puri) 
 
    filtercond.append("contains(parentUri,'"+puri+"')")
    completefilter = 'and('+delimiter.join(filtercond)+')'
@@ -115,7 +137,7 @@ if puri!=None:
 # process items in folders
 elif pfolder!=None:
 
-   print("NOTE: processing files with parentfolder: "+pfolder) 
+   print("NOTE: processing files with parentfolder equals: "+pfolder) 
    folderid=getfolderid(pfolder)[0]     
    # add the start and end and comma delimit the filter
 
@@ -149,7 +171,7 @@ elif pfolder!=None:
 else:
    
    print("NOTE: processing files that are not stored in folders.")
-   print("NOTE: files stored in folders are only processed with the -[f option.]")
+   print("NOTE: files stored in folders are only processed with the -pf option.")
    # no parent folder or URI provided
    completefilter = 'and('+delimiter.join(filtercond)+')'
    reqval="/files/files?filter="+completefilter+"&limit=10000"
@@ -195,12 +217,15 @@ for file in files:
    fileid=file['id']
    contenttype=file['contentType']
    filename=file['name'] 
+
+   if debug:
+      print("NOTE: processing file "+filename+" of contentype "+contenttype)
  
    if deletenoarch:
       reqtype='delete'
       reqval="/files/files/"+fileid
       callrestapi(reqval,reqtype)
-      filesdeleted=1
+      filesdeleted=filesdeleted+1
 
    else:
           
@@ -215,10 +240,22 @@ for file in files:
          
       # decide on write style w+b is binary w is text
       # currently cannot process binary files
-      if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
+      #if contenttype.startswith('application/v') or  contenttype.startswith('image') or  contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('application/pdf'): 
       
-         out_type="wb"
+         
+      binaryTypes=['application/octet-stream','application/gzip','application/java-archive','application/pdf','application/rtf','application/x-tar','application/vnd.ms-excel']   
+      
+      binary=False
+      if contenttype.startswith('video') or  contenttype.startswith('audio') or  contenttype.startswith('image') or contenttype in binaryTypes: binary=True 
+          
+      # for typevar in binaryTypes:
+      #    if contenttype.startswith(typevar):
+      #       binary=True 
+      #       break 
 
+      if binary:
+
+         out_type="wb"
          print('NOTE: '+filename+' of content type ' +contenttype+' not supported for archive, but will be deleted if -x or -xx selected.')
          
       else:
@@ -255,13 +292,15 @@ for file in files:
       
 # print out final messages
 
-if len(passlist):
-    print('NOTE: files archived to the directory '+archivepath)
+total_archived=len(passlist)
+
+if total_archived:
+    print('NOTE: '+str(total_archived) +' file(s) archived to the directory '+archivepath)
 else:
    if not deletenoarch: print('NOTE: No files that can be archived were found.')
 
 if dodelete or deletenoarch:
 
-   if filesdeleted: print('NOTE: files matching criteria were deleted.')
+   if filesdeleted: print('NOTE: '+str(filesdeleted)+' file(s) matching criteria were deleted.')
    else: print('NOTE: No files deleted.')
 
