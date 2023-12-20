@@ -20,6 +20,7 @@
 #
 # change log
 # renamed to importpackages.py to be more descriptive of actual usage
+# DEC202023 added the ability to use a mapping file
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
@@ -36,6 +37,7 @@ clicommand=os.path.join(clidir,cliexe)
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
 parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
+parser.add_argument("-m","--mapping", help="A mapping file to use with the import.",default=None)
 parser.add_argument("-ea","--excludeauthorization", help="Exclude the import of authorization rules.", action='store_true')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 
@@ -43,6 +45,7 @@ args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 noauth=args.excludeauthorization
+mapping=args.mapping
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -74,15 +77,43 @@ if areyousure.upper() =='Y':
 				print(command)
 				subprocess.call(command, shell=True)
 
+				# create or use mapping file if we need to
+
+				# no mapping required
+				if not mapping and not noauth:
+					mapping_options=""
 				# create mapping file to exclude authorization
-				if noauth:
+				elif not mapping and noauth:
+					
+					#create no authorization mapping file 
+					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
+					json_object = json.dumps(mappingdict, indent=4)
+					with open ("/tmp/_mapping_json.json",'w') as outfile:
+						outfile.write(json_object)				
+					mapping_options=" --mapping /tmp/_mapping_json.json"
+
+				# need to merge mapping file and noauth	
+				elif noauth and mapping:
 
 					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
 					json_object = json.dumps(mappingdict, indent=4)
+					with open(mapping) as map_file:
+						map_dict = json.load(map_file)
+					
+					#newmap={**mappingdict,**map_dict} #only in python3
+					newmap=map_dict.copy()
+					newmap.update(mappingdict)
+					print(newmap)
 
+					json_map = json.dumps(newmap, indent=4)					
 					with open ("/tmp/_mapping_json.json",'w') as outfile:
-						outfile.write(json_object)
-
+						outfile.write(json_map)
+					mapping_options=" --mapping /tmp/_mapping_json.json"
+				
+				elif mapping and not noauth:
+					mapping_options=" --mapping "+mapping
+				
+							
 				#print the json from the upload
 				with open('/tmp/packageid.json') as json_file:
 					package_data = json.load(json_file)
@@ -92,18 +123,13 @@ if areyousure.upper() =='Y':
 				# get the packageid and import the package
 				packageid=package_data["id"]
 
-				if noauth:
-				    command=clicommand+' --output text -q transfer import --id '+packageid+' --mapping /tmp/_mapping_json.json'
-				else:
-				    command=clicommand+' --output text -q transfer import --id '+packageid
-
+				command=clicommand+' --output text -q transfer import --id '+packageid+' '+mapping_options
 				print(command)
 
 				subprocess.call(command, shell=True)
 				print("NOTE: Viya content imported from json files in "+basedir)
 
-				if noauth:
-					os.remove("/tmp/_mapping_json.json")
+				if noauth:	os.remove("/tmp/_mapping_json.json")
 
 	else: print("ERROR: Directory does not exist")
 else:

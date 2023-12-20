@@ -32,7 +32,7 @@ import argparse, json, os, sys
 from sharedfunctions import callrestapi, printresult, getidsanduris
 
 parser = argparse.ArgumentParser(description="Create a JSON Mapping File from a Viya Mapping Set.")
-parser.add_argument("-n","--name", help="Name of the Mapping Set (also the name of the output file).",required='True',default='system')
+parser.add_argument("-n","--name", help="Name of the Mapping Set (also the name of the output file).",default='@systemMap')
 parser.add_argument("-d","--directory", help="Directory where mapping files are written.",required='True')
 parser.add_argument("--debug", action='store_true', help="Debug")
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
