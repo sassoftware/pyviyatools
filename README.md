@@ -8,6 +8,7 @@ The pyviyatools are a set of command-line tools that call the SAS Viya REST API'
     - [Installing](#installing)
   - [Running](#running)
     - [Creating a Profile and Logging on](#creating-a-profile-and-logging-on)
+    - [Certificates](#certificates)
     - [Using the tools](#using-the-tools)
   - [Available Tools](#available-tools)
   - [Troubleshooting](#troubleshooting)
@@ -70,6 +71,21 @@ The CLI allows for multiple profiles. To use a profile other than the default pr
 
 * LINUX: `unset SAS_CLI_PROFILE`
 * WINDOWS: `set SAS_CLI_PROFILE=`
+
+### Certificates
+
+The documentation https://documentation.sas.com/doc/en/sasadmincdc/default/calcli/titlepage.htm covers setting the certificate environment variables. You may need to set the following three variables.
+
+```sh
+export SSL_CERT_FILE="/opt/sas/spre/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem"    
+# else loginviauthinfo complains "Login failed due to an error with the security certificate. The certificate is signed by an unknown authority"
+
+export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
+# else loginviauthinfo complains "ConnectionError: HTTPSConnectionPool(host='intviya01.race.sas.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, u'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)'),))"
+
+export CAS_CLIENT_SSL_CA_LIST=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/vault-ca.crt
+# else swat complains "ERROR: SSL Error: Missing CA trust list"
+```
 
 ### Using the tools
 
