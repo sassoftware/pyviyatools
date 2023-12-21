@@ -69,6 +69,7 @@ sascli.executable=sas-viya
 The required python packages are listed in the `requirements.txt` file and may be installed using the following command.
 
 ```sh
+cd pyviyatools
 pip install -r requirements.txt
 ```
 
