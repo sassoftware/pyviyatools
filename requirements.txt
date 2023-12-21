@@ -12,4 +12,4 @@ pytz==2022.1
 requests==2.27.1
 six==1.16.0
 swat==1.6.1
-urllib3==1.26.9
+urllib3==1.26.18
