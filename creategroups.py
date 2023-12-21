@@ -19,6 +19,7 @@
 # 03feb2020 Initial development
 # 30mar2023 Added some more error checking
 # 30mar2023 Added -skipfirstrow for situations where first row is a header
+# 21dec2023 skip rows with no id
 #
 # Format of csv file is two columns
 #  Column 1 group id
@@ -96,8 +97,10 @@ if check:
 
         if skipfirstrow: next(filecontents,None)
 
+        rownum=0
         for row in filecontents:
 
+            rownum=rownum+1
             cols=len(row)
 
             # skip row and output a message if only 1 column
@@ -107,6 +110,7 @@ if check:
                 if cols==2: row.append("Add by pyviyatools creategroups.py")
 
                 id=row[0]
+                
                 newgroup=row[1]
                 description=row[2]
 
@@ -117,7 +121,9 @@ if check:
                 data["state"]="active"
 
                 # if group does not exist add it
-                if id in groupslist:
+                if not id or not id.strip():
+                    print ("NOTE: row "+str(rownum)+" skipped, you cannot pass an empty id.")
+                elif id in groupslist:
 
                     print("NOTE: Group: with id '"+id+"' and name '"+newgroup+"' already exists." )
                 else:
