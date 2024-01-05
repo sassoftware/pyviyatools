@@ -20,6 +20,7 @@ ValidateViya is run in the command line like any other tool in pyviyatools:
 | -g/--generate-tests   	| Creates a custom tests file for editing 	|
 | -c/--custom-tests     	| Uses a custom tests file for testing    	|
 | -d/--output-directory 	| Selects the directory to output files   	|
+| -p/--program           	| Uses an external file for Compute testing	|
 
 
 ## -v/--verbose
@@ -57,6 +58,10 @@ Loads in a custom test suite created off of the template provided with --generat
 ## -d/--output-directory
 
 Selects the output directory for ValidateViya actions that save a file (--output report/report-full and --generate-tests). The directory must first exist before it is specified with --output-directory.
+
+## -p/--program
+
+Loads in an external SAS Program for use in Computation Tests.
 
 ## Creating Custom Tests
 
