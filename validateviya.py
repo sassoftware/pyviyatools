@@ -25,7 +25,7 @@
 from __future__ import print_function
 
 import argparse
-from sharedfunctions import callrestapi,printresult
+from sharedfunctions import callrestapi,printresult,file_accessible
 import json
 import os
 import sys
@@ -92,12 +92,15 @@ parser.add_argument("-v", "--verbose", help="Add Output Verbosity", action="stor
 parser.add_argument("-s", "--silent", help="Limit Output to Results Only", action="store_true")
 #Output directory for instances where a file is outputted
 parser.add_argument('-d',"--output-directory", dest="directory", help="Output Directory for Generated Files", metavar="directory")
+#Program parameter to allow user to specify external SAS Program for the computationTests
+parser.add_argument("-p","--program", dest="program", help="Full Path to an External Program for Computation Tests")
 
 args = parser.parse_args()
 output_style=args.output
 generateFile=args.generateTestJson
 verbose = args.verbose
 outputDirectory = args.directory
+externalComputePgm = args.program
 
 testPreferences = None
 defaultNumTests = 8
@@ -205,6 +208,30 @@ failingTests = []
 
 testStartTime = datetime.datetime.now()
 
+#If computationTests are requested, check if external program was specified
+#Valiate and use external program (if supplied):
+if(len(computationTests) == 1):
+    #Check to see if external program was supplied:
+    if externalComputePgm is not None:
+
+        #Check that external program is available and can be read
+        check=file_accessible(externalComputePgm,'r')
+
+        if check==False:
+            oaval=None
+            print("ERROR: Cannot Read Specififed File At: ", externalComputePgm)
+            sys.exit()
+
+        #Open and read the file
+        with open(externalComputePgm) as file:
+            computeCode = file.read()
+            # close the file
+            file.close()
+    else:
+        #If external compute program was not supplied, use default compute code
+        #Default code uses proc print and proc cas:
+        computeCode='proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
+
 #Run Data Collection Tests
 for test in dataCollectionTests:
     print("Data Collection Test Started: " + test['name'])
@@ -281,10 +308,10 @@ if(len(computationTests) == 1):
 
             #Execute SAS code using our compute session:
             executeCodeReq="/compute/sessions/" + sessionId + "/jobs"
-            #Our code uses proc print and proc cas:
+
             run_code_json = {
                 "name":"Test SAS Code Request",
-                "code":'proc print data=sashelp.class; run; cas casauto; proc cas; table.fetch table={name="zipcode.sashdat", caslib="AppData"}; run; quit; cas casauto terminate;',
+                "code":computeCode,
             }
             executeCode = callrestapi(executeCodeReq, "post", data=run_code_json)
 
