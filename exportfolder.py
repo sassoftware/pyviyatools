@@ -28,18 +28,20 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob
 
-from sharedfunctions import getfolderid, callrestapi, getapplicationproperties, printresult
+from sharedfunctions import getfolderid, callrestapi, getapplicationproperties, printresult, getclicommand
 
 # get python version
 version=int(str(sys.version_info[0]))
 
 # get cli location from properties
-propertylist=getapplicationproperties()
+# propertylist=getapplicationproperties()
 
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
+# clidir=propertylist["sascli.location"]
+# cliexe=propertylist["sascli.executable"]
 
-clicommand=os.path.join(clidir,cliexe)
+# clicommand=os.path.join(clidir,cliexe)
+
+clicommand=getclicommand()
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export a Viya Folder and its sub-folders")
@@ -48,7 +50,6 @@ parser.add_argument("-f","--folderpath", help="Folder path to export",required='
 parser.add_argument("-d","--directory", help="Directory for Export",required='True')
 parser.add_argument("--filename", help="File name without extension. Optional, default name is the folder path.",default="XNOFILENAMEX")
 parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
-
 
 
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
