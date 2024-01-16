@@ -55,14 +55,10 @@ import csv
 import os
 import subprocess
 import sys
-from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties
+from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties,getclicommand
 
-## Get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 
 ## Setup command-line arguements

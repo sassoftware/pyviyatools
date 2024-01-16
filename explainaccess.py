@@ -61,18 +61,13 @@ import subprocess
 import json
 import sys
 import os
-from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
+from sharedfunctions import getfolderid,callrestapi,getapplicationproperties, getclicommand
 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 debug=False
 direct_only=False

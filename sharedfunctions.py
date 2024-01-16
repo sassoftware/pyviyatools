@@ -882,16 +882,16 @@ def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
 
     return datefilter
 
-def getclicommand(execfile=""):
+def getclicommand():
 
     propertylist=getapplicationproperties()
     clidir=propertylist["sascli.location"]
     cliexe=propertylist["sascli.executable"]
     clicommand=os.path.join(clidir,cliexe)
 
-    if not file_accessible(execfile,'r'):
-        print("ERROR: cannot find CLI at "+execfile+" check and update values in application.properties.")
-        clicommande=None
+    if not file_accessible(clicommand,'r'):
+        print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
+        clicommand=None
         sys.exit()
    
     return clicommand

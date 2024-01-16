@@ -34,15 +34,10 @@
 ####################################################################
 
 import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi, getapplicationproperties, getinputjson
+from sharedfunctions import callrestapi, getapplicationproperties, getinputjson,getclicommand
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 parser = argparse.ArgumentParser(description="Upload templates")
 parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')

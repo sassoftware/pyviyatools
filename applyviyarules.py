@@ -58,16 +58,10 @@ import sys
 import re
 import pandas as pd
 from datetime import datetime
-from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties
+from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties, getclicommand
 
-
-## get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-clicommand=os.path.join(clidir,cliexe)
-
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 ## setup command-line arguements
 parser = argparse.ArgumentParser(description="Apply bulk auths from a CSV file to folders and contents")

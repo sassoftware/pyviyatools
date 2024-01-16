@@ -35,15 +35,10 @@
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi, getapplicationproperties, file_accessible
+from sharedfunctions import callrestapi, getapplicationproperties, file_accessible, getclicommand
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that define path-based CASLIBS from directory. All json files in directory will be imported.")

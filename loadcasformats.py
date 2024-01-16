@@ -34,17 +34,12 @@
 #  limitations under the License.
 #
 import argparse, csv, os, sys, subprocess
-from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris, getapplicationproperties
+from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsanduris, getapplicationproperties,getclicommand
 
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 if version==2:
     from io import open

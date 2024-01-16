@@ -47,7 +47,7 @@ import os
 import argparse
 import json
 
-from sharedfunctions import file_accessible,getapplicationproperties
+from sharedfunctions import file_accessible,getapplicationproperties,getclicommand
 
 try:
     # Python 3
@@ -57,13 +57,8 @@ except ImportError:
     from urlparse import urlparse
 
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 
 debug=0

@@ -43,19 +43,14 @@
 import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand
 
 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 
 # get input parameters

@@ -38,19 +38,14 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, os, glob
-from sharedfunctions import callrestapi, getapplicationproperties
+from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 
 # get input parameters

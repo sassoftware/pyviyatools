@@ -45,14 +45,6 @@ import subprocess
 import sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-clicommand=os.path.join(clidir,cliexe)
-
-
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Create basic CASLIBs from a CSV file")
 parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'name,path,casserver,type,subdirs",required='True')
