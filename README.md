@@ -3,19 +3,21 @@
 The pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. The tools are designed to be used in conjunction with the SAS Administration command line interfaces(CLI). A subset of the tools also make calls to the cli.
 
 - [Python Tools for SAS Viya](#python-tools-for-sas-viya)
-- [Getting Started](#getting-started)
+  - [Getting Started](#getting-started)
   - [Documentation](#documentation)
     - [Installing](#installing)
   - [Running](#running)
     - [Creating a Profile and Logging on](#creating-a-profile-and-logging-on)
+    - [Certificates](#certificates)
     - [Using the tools](#using-the-tools)
   - [Available Tools](#available-tools)
   - [Troubleshooting](#troubleshooting)
   - [Developing with the existing functions](#developing-with-the-existing-functions)
   - [Contributing](#contributing)
   - [License](#license)
+## Getting Started
 
-# Getting Started
+You can find an inventory of pyviyatools at [INVENTORY.md](INVENTORY.md)
 
 ## Documentation
 
