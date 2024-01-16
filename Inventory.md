@@ -5,7 +5,6 @@ Inventory of tools.
 | Group| Tool | Description | Note
 |  ---  |  ---  |  --- | --- |
 | General | callrestapi.py |calls a Viya REST endpoint | |
-| General | callrestapi.py |calls a Viya REST endpoint | |
 | General | getfolderid.py | return ID or URI from folder path | |
 | General | getpath.py | return folder path from ID ir URI | |
 | General | getpathsplus.py | return folder path and additional details from ID ir URI | |
