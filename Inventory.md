@@ -1,7 +1,5 @@
 # Inventory of pyviyatools
 
-Inventory of tools.
-
 | Group| Tool | Description | Note
 |  ---  |  ---  |  --- | --- |
 | General | callrestapi.py |calls a Viya REST endpoint | |
