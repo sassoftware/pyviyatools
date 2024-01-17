@@ -67,6 +67,7 @@ import os
 import collections
 import inspect
 import re
+import platform
 from datetime import datetime as dt, timedelta as td
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -889,7 +890,11 @@ def getclicommand():
     cliexe=propertylist["sascli.executable"]
     clicommand=os.path.join(clidir,cliexe)
 
-    if not file_accessible(clicommand,'r'):
+    # for windows add the .exe before checking the file
+    if platform.system() == 'Windows': filetocheck=clicommand+'.exe'
+    else: filetocheck=clicommand
+
+    if not file_accessible(filetocheck,'r'):
         print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
         clicommand=None
         sys.exit()
