@@ -891,7 +891,10 @@ def getclicommand():
     clicommand=os.path.join(clidir,cliexe)
 
     # for windows add the .exe before checking the file
-    if platform.system() == 'Windows': filetocheck=clicommand+'.exe'
+    if platform.system() == 'Windows':
+         if  clicommand.endswith('.exe'):
+             filetocheck=clicommand
+         else: filetocheck=clicommand+'.exe'
     else: filetocheck=clicommand
 
     if not file_accessible(filetocheck,'r'):
