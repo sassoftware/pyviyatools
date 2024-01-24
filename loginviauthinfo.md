@@ -26,7 +26,7 @@ Second line specifies a machine and the userid and password for that machine.
 ```bash
 
 default user sasadm1 password mypass
-machine sasviya01.race.sas.com user sasadm2 password mpass2
+machine sasviya01.gelcorp.com user sasadm2 password mpass2
 
 ```
 
