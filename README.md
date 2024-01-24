@@ -228,7 +228,7 @@ If you get this error:
 
 ```log
 Raise SSLError(e, request=request)
-requests.exceptions.SSLError: HTTPSConnectionPool(host='intviya01.race.sas.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, u'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)'),))
+requests.exceptions.SSLError: HTTPSConnectionPool(host='intviya01.gelcorp.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, u'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)'),))
 ```
 
 Set the environment variable for the SSL certificate file. For example:
