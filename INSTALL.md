@@ -95,7 +95,7 @@ SAS_CLI_PROFILE environment variable set to profile gelcorp
 SSL_CERT_FILE environment variable set to profile /home/cloud-user/.certs/gelcorp_trustedcerts.pem
 REQUESTS_CA_BUNDLE environment variable set to profile /home/cloud-user/.certs/gelcorp_trustedcerts.pem
 Note your authentication token expires at: 2023-12-21T18:13:39Z
-Endpoint is: https://gelcorp.pdcesx03191.race.sas.com
+Endpoint is: https://gelcorp.pdcesx03191.com
 Logged on as id: geladm
 Logged on as name: geladm
 {u'sascli.location': u'/opt/sas/viya/home/bin/', u'sascli.executable': u'sas-viya'}
