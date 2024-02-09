@@ -37,8 +37,6 @@
 import argparse, sys, subprocess, os, json
 from sharedfunctions import callrestapi, getapplicationproperties, file_accessible, getclicommand
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that define path-based CASLIBS from directory. All json files in directory will be imported.")
@@ -49,6 +47,10 @@ args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 su=args.superuser
+
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # get python version
 version=int(str(sys.version_info[0]))

@@ -33,9 +33,6 @@ from sharedfunctions import getfolderid, callrestapi, getapplicationproperties, 
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
 tempdir=tempfile.gettempdir()
 
 # get input parameters
@@ -44,9 +41,10 @@ parser = argparse.ArgumentParser(description="Export Custom Groups to a Package"
 parser.add_argument("-f","--filename", help="Full path to file. (No extension)",default="/tmp/customgroups")
 parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
 parser.add_argument("--name", help="Subset based on name containing a string",default=None )
-
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 args= parser.parse_args()
 

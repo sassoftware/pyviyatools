@@ -41,14 +41,14 @@ import subprocess
 import sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult,getapplicationproperties, getclicommand
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
 # setup command-line arguements
 parser = argparse.ArgumentParser(description="Apply bulk auths from a CSV file to folders and contents")
 parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'folderpath,principaltype,principalid,grant_or_prohibit,perms_on_folder,perms_on_contents",required='True')
 args = parser.parse_args()
 file=args.file
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 reqtype="post"
 

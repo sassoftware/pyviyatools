@@ -44,9 +44,6 @@ from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export each geo providers to it's own unique transfer package")
@@ -56,6 +53,9 @@ parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", ac
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # prompt if directory exists because existing json files are deleted
 if os.path.exists(basedir):

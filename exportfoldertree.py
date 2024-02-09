@@ -38,9 +38,6 @@ from sharedfunctions import getfolderid, callrestapi,getapplicationproperties,ge
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
 # get input parameters
 parser = argparse.ArgumentParser(description="Export the complete Viya folder tree or the members of a folder to a set of Viya Packages.")
 parser.add_argument("-d","--directory", help="Directory to store Export Packages",required='True')
@@ -56,6 +53,8 @@ quietmode=args.quiet
 autotranferremove=args.tranferremove
 nonincrament=args.nonincrament
 
+# get cli location from properties, check that cli is available if not ERROR and stop processing
+clicommand=getclicommand()
 
 # prompt if directory exists because existing json files are deleted
 if os.path.exists(basedir):

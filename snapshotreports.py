@@ -49,10 +49,6 @@ from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationpro
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
-
 # get input parameters
 parser = argparse.ArgumentParser(description="Export Viya Reports each to its own unique transfer package")
 parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
@@ -74,6 +70,10 @@ changeddays=args.changeddays
 modby=args.modifiedby
 nameval=args.name
 folderpath=args.folderpath
+
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # calculate time period for files
 # now=dt.today()-td(days=int(changeddays))

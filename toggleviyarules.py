@@ -57,10 +57,6 @@ import subprocess
 import sys
 from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties,getclicommand
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
-
 ## Setup command-line arguements
 parser = argparse.ArgumentParser(description="Enables or Disables Viya rules in bulk.")
 parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'objecturi,principal",required='True')
@@ -68,6 +64,9 @@ parser.add_argument("-o","--operator", help="Option to enable, disable or replac
 parser.add_argument("--skipfirstrow", help="Skip first row/header of the input csv file", action='store_true')
 parser.add_argument("-p","--princ", help="Requires operator option \'replace\'. Sets the principal (account/group) name to be used for the replacement copies of the rules being applied.")
 parser.add_argument("-ptype","--princtype", help="Requires operator option \'replace\'. Sets the principal TYPE to be used for the replacement copies of the rules being created and applied.", choices=['group','user','guest','authenticated-users','everyone'])
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 
 args = parser.parse_args()

@@ -37,8 +37,6 @@ from sharedfunctions import callrestapi, getfolderid, file_accessible, getidsand
 
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
 
 if version==2:
     from io import open
@@ -57,6 +55,10 @@ file=args.file
 skipfirstrow=args.skipfirstrow
 debug=args.debug
 encoding=args.encoding
+
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 reqtype="post"
 

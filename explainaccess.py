@@ -66,8 +66,6 @@ from sharedfunctions import getfolderid,callrestapi,getapplicationproperties, ge
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
 
 debug=False
 direct_only=False
@@ -108,6 +106,10 @@ direct_only=args.direct_only
 permissions=args.permissions_list
 conveyparam=args.convey
 debug=args.debug
+
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 if path_to_folder and objecturi:
   raise Exception('You must specify either -f and a Viya folder path, or -u and an object URI, but not both.')

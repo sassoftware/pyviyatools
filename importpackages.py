@@ -26,8 +26,7 @@
 import argparse, sys, subprocess, os, json
 from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
+
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
@@ -45,6 +44,9 @@ mapping=args.mapping
 # get python version
 version=int(str(sys.version_info[0]))
 
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # if the quiet mode flag is not passed then prompt to continue
 if not quietmode:

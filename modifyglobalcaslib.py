@@ -51,9 +51,6 @@
 import argparse, sys, subprocess, os
 from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that update Viya configuration. All json files in directory will be imported.")
 parser.add_argument("-o","--operator", help="Option to list, grant or revoke access to special CASLIBs", choices=['list','grant','revoke'], required='True')
@@ -67,6 +64,9 @@ id=args.id
 idtype=args.idtype
 casserver=args.cas
 scope=args.scope
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # sets CAS server as env var
 os.environ['SAS_CLI_DEFAULT_CAS_SERVER']=casserver
