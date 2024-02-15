@@ -39,14 +39,6 @@ from sharedfunctions import getfolderid,callrestapi,getapplicationproperties
 # get python version
 version=int(str(sys.version_info[0]))
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
-
 debug=False
 
 # Define exception handler so that we only output trace info from errors when in debug mode

@@ -43,20 +43,11 @@
 import re
 import argparse, sys, subprocess, uuid, time, os, glob
 from datetime import datetime as dt, timedelta as td
-from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand
 
 
 # get python version
 version=int(str(sys.version_info[0]))
-
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
-
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export Viya Reports each to its own unique transfer package")
@@ -79,6 +70,10 @@ changeddays=args.changeddays
 modby=args.modifiedby
 nameval=args.name
 folderpath=args.folderpath
+
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # calculate time period for files
 # now=dt.today()-td(days=int(changeddays))

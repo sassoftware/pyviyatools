@@ -38,19 +38,11 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, os, glob
-from sharedfunctions import callrestapi, getapplicationproperties
+from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
 
 # get python version
 version=int(str(sys.version_info[0]))
-
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
 
 
 # get input parameters
@@ -61,6 +53,9 @@ parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", ac
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # prompt if directory exists because existing json files are deleted
 if os.path.exists(basedir):

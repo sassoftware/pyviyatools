@@ -28,18 +28,10 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob, json, tempfile
 
-from sharedfunctions import getfolderid, callrestapi, getapplicationproperties, printresult
+from sharedfunctions import getfolderid, callrestapi, getapplicationproperties, printresult, getclicommand
 
 # get python version
 version=int(str(sys.version_info[0]))
-
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
 
 tempdir=tempfile.gettempdir()
 
@@ -49,9 +41,10 @@ parser = argparse.ArgumentParser(description="Export Custom Groups to a Package"
 parser.add_argument("-f","--filename", help="Full path to file. (No extension)",default="/tmp/customgroups")
 parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
 parser.add_argument("--name", help="Subset based on name containing a string",default=None )
-
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 args= parser.parse_args()
 

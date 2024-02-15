@@ -30,7 +30,7 @@ import sys
 import requests
 import os
 
-from sharedfunctions import getprofileinfo, getapplicationproperties
+from sharedfunctions import getprofileinfo, getapplicationproperties, getclicommand
 
 # software versions
 print("Python Version is: "+str(sys.version_info[0])+'.'+str(sys.version_info[1]))
@@ -64,12 +64,6 @@ else:
 
 getprofileinfo(cur_profile)
 
+clicommand=getclicommand()
 
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
-print(propertylist)
+if clicommand: print("THE CLI was found at: "+ clicommand)

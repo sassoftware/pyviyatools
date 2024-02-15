@@ -67,6 +67,7 @@ import os
 import collections
 import inspect
 import re
+import platform
 from datetime import datetime as dt, timedelta as td
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -881,3 +882,24 @@ def createdatefilter(days=0,datevar='creationTimeStamp',olderoryounger='older'):
        datefilter="ge("+datevar+","+subset_date+")"
 
     return datefilter
+
+def getclicommand():
+
+    propertylist=getapplicationproperties()
+    clidir=propertylist["sascli.location"]
+    cliexe=propertylist["sascli.executable"]
+    clicommand=os.path.join(clidir,cliexe)
+
+    # for windows add the .exe before checking the file
+    if platform.system() == 'Windows':
+         if  clicommand.endswith('.exe'):
+             filetocheck=clicommand
+         else: filetocheck=clicommand+'.exe'
+    else: filetocheck=clicommand
+
+    if not file_accessible(filetocheck,'r'):
+        print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
+        clicommand=None
+        sys.exit()
+   
+    return clicommand

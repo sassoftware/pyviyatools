@@ -4,4 +4,5 @@ numpy
 pandas
 requests
 swat
+urllib3
 

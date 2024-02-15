@@ -33,18 +33,10 @@
 # Import Python modules
 import argparse, sys, subprocess, uuid, time, os, glob, json
 
-from sharedfunctions import getfolderid, callrestapi,getapplicationproperties
+from sharedfunctions import getfolderid, callrestapi,getapplicationproperties,getclicommand
 
 # get python version
 version=int(str(sys.version_info[0]))
-
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Export the complete Viya folder tree or the members of a folder to a set of Viya Packages.")
@@ -61,6 +53,8 @@ quietmode=args.quiet
 autotranferremove=args.tranferremove
 nonincrament=args.nonincrament
 
+# get cli location from properties, check that cli is available if not ERROR and stop processing
+clicommand=getclicommand()
 
 # prompt if directory exists because existing json files are deleted
 if os.path.exists(basedir):

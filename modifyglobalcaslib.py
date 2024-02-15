@@ -49,15 +49,7 @@
 #
 # Import Python modules
 import argparse, sys, subprocess, os
-from sharedfunctions import callrestapi, getapplicationproperties
-
-# get cli location from properties
-propertylist=getapplicationproperties()
-
-clidir=propertylist["sascli.location"]
-cliexe=propertylist["sascli.executable"]
-
-clicommand=os.path.join(clidir,cliexe)
+from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that update Viya configuration. All json files in directory will be imported.")
@@ -72,6 +64,9 @@ id=args.id
 idtype=args.idtype
 casserver=args.cas
 scope=args.scope
+
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 # sets CAS server as env var
 os.environ['SAS_CLI_DEFAULT_CAS_SERVER']=casserver
