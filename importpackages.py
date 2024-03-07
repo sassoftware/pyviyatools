@@ -127,6 +127,8 @@ if areyousure.upper() =='Y':
 				print("NOTE: Viya content imported from json files in "+basedir)
 
 				if noauth:	os.remove("/tmp/_mapping_json.json")
+					
+				os.remove("/tmp/packageid.json")
 
 	else: print("ERROR: Directory does not exist")
 else:
