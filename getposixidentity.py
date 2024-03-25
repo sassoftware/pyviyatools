@@ -61,7 +61,7 @@ if user=='all':
             # get gid
             user["gid"]=posixinfo_result_json["gid"]
 
-            if posixinfo_result_json.has_key("secondaryGids"):
+            if "secondaryGids" in posixinfo_result_json:
                user["secgid"]=posixinfo_result_json["secondaryGids"]
             else:
                user["secgid"]=[""]
