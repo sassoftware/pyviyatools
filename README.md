@@ -178,7 +178,7 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **createbinarybackup.py** creates a binary backup job
 * **createdomain.py** creates an authentication domain
 * **createpublishdest.py** creates CAS, Teradata or Hadoop publishing destinations
-* **detetepublishdest.py** deletes publishing destinations
+* **deletepublishdest.py** deletes publishing destinations
 * **listrules.py** list authorization rules subset on a principal and/or a uri
 * **loginviauthinfo.py** use an authinfo file to authenticate to the CLI
 * **updateprefences.py** update preferences for a user or group of users
