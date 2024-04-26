@@ -21,6 +21,7 @@
 # change log
 # renamed to importpackages.py to be more descriptive of actual usage
 # DEC202023 added the ability to use a mapping file
+# APR2024 remove hardcoding of /tmp
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json, tempfile
