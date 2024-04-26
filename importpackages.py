@@ -23,7 +23,7 @@
 # DEC202023 added the ability to use a mapping file
 #
 # Import Python modules
-import argparse, sys, subprocess, os, json
+import argparse, sys, subprocess, os, json, tempfile
 from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
 
 
@@ -44,6 +44,10 @@ mapping=args.mapping
 # get python version
 version=int(str(sys.version_info[0]))
 
+tempfilepath=tempfile.gettempdir()
+#build tempfile names
+tmppackageidfile=os.path.join(tempfilepath,"packageid.json")
+tmpmappingfile=os.path.join(tempfilepath,"mapping_json.json")
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -70,7 +74,7 @@ if areyousure.upper() =='Y':
 			if filename.lower().endswith('.json'):
 
 				#upload the json package
-				command=clicommand+' --output fulljson transfer upload --file "'+os.path.join(basedir,filename)+'" > /tmp/packageid.json'
+				command=clicommand+' --output fulljson transfer upload --file "'+os.path.join(basedir,filename)+'" > '+tmppackageidfile
 				print(command)
 				subprocess.call(command, shell=True)
 
@@ -85,9 +89,9 @@ if areyousure.upper() =='Y':
 					#create no authorization mapping file 
 					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
 					json_object = json.dumps(mappingdict, indent=4)
-					with open ("/tmp/_mapping_json.json",'w') as outfile:
+					with open (mapping_file,'w') as outfile:
 						outfile.write(json_object)				
-					mapping_options=" --mapping /tmp/_mapping_json.json"
+					mapping_options=" --mapping "+tmpmappingfile
 
 				# need to merge mapping file and noauth	
 				elif noauth and mapping:
@@ -103,16 +107,16 @@ if areyousure.upper() =='Y':
 					print(newmap)
 
 					json_map = json.dumps(newmap, indent=4)					
-					with open ("/tmp/_mapping_json.json",'w') as outfile:
+					with open (mapping_file,'w') as outfile:
 						outfile.write(json_map)
-					mapping_options=" --mapping /tmp/_mapping_json.json"
+					mapping_options=" --mapping "+tmpmappingfile
 				
 				elif mapping and not noauth:
 					mapping_options=" --mapping "+mapping
 				
 							
 				#print the json from the upload
-				with open('/tmp/packageid.json') as json_file:
+				with open(tmppackageidfile) as json_file:
 					package_data = json.load(json_file)
 
 				print(json.dumps(package_data,indent=2))
@@ -126,9 +130,9 @@ if areyousure.upper() =='Y':
 				subprocess.call(command, shell=True)
 				print("NOTE: Viya content imported from json files in "+basedir)
 
-				if noauth:	os.remove("/tmp/_mapping_json.json")
+				if noauth:	os.remove(tmpmappingfile)
 					
-				os.remove("/tmp/packageid.json")
+				os.remove(tmppackageidfile)
 
 	else: print("ERROR: Directory does not exist")
 else:
