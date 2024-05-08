@@ -93,7 +93,7 @@ elif target == 'user' :
 
     reqtype="put"
     reqval="/preferences/preferences/"+ userID +"/" + preferenceID
-    result=callrestapi(reqval,reqtype,data=json)
+    result=callrestapi(reqval,reqtype,data=json,stoponerror=0)
     print("Updating Preference "+reqval+" = "+preferenceValue)
 
 
