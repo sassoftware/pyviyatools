@@ -16,6 +16,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+# Format of CSV
+#name,libref,path,description
+#"test 2",test2,"/tmp","my second test"
+#"test 3",test3,"/tmp","my 3 test"
+#"test 4",test4,"/tmp","my 4 test"
 
 import base64, argparse, sys, csv, json
 

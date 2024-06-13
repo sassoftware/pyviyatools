@@ -1,0 +1,16 @@
+{
+  "name": "ORAFW",
+  "providerId": "Compute",
+  "description": "A description for source definition",
+  "dataSourceId": "SAS Studio compute context",
+  "defaultLibref": "ORAFW",
+  "attributes": {
+    "engineName": "sase7",
+    "options": {
+      "ENABLEDIRECTIO": "NO",
+      "NOSETPERM": "NO",
+      "USEDIRECTIO": "NO"
+    },
+    "physicalName": "/dmtesting/custom_steps/Loqate/sample_data"
+  }
+}

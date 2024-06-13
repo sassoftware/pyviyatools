@@ -94,6 +94,7 @@ if check:
    with open(file, 'rt',encoding=encoding, errors="ignore") as f:
 
         filecontents = csv.reader(f)
+        print(filecontents)
 
         if skipfirstrow: next(filecontents,None)
 
