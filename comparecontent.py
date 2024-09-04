@@ -37,12 +37,16 @@ args = parser.parse_args()
 file1=args.file1
 file2=args.file2
 
-file1 = '/tmp/before.csv'
-file2 = '/tmp/after.csv'
-
 with open(file1, 'r') as f1, open(file2, 'r') as f2:
     lines1 = f1.readlines()
     lines2 = f2.readlines()
+
+# check that there is a header line and it matches
+
+if not lines1[0] == lines2[0]:
+    print("ERROR: Files must have a matching header line in the first line.")
+    sys.exit()  
+
 
 # Find lines that are in file1 but not in file2
 diff1 = difflib.ndiff(lines1, lines2)
@@ -57,17 +61,20 @@ print("NOTE: SUMMARY")
 if only_in_file1: print("NOTE: there is nothing in file1 that is not in file2.")
 if only_in_file2: print("NOTE: there is nothing in file2 that is not in file1.")
 if only_in_file1 or only_in_file2: print("NOTE: DETAILS")
+else: print("NOTE: Files ar the same")
 
 if only_in_file1:
     
     print("NOTE: Content in file1 but not in file2:")
     print(lines1[0])
     for line in only_in_file1:
-        print(line, end='')
+        print(line)
 
 
 
 if only_in_file2:
     print("NOTE: Content in file2 but not in file1:")
+    print(lines2[0])
     for line in only_in_file2:
-        print(line, end='')
+        print(line)
+
