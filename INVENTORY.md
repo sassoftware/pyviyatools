@@ -22,6 +22,7 @@
 | Inventory | listreports.py | query and list Visual Analytics Reports | |
 | Inventory | listrules.py | query and list authorization rules | |
 | Inventory | listtransferpackages.py | query and list transfer packages stored in infastructure data server | |
+| Inventory | comparecontent.py | Can be used to compare two inventory files|Added 09/05/2024 |
 | Migration | importcaslibs.py | import JSON files with CASLIB definitions from a directory | |
 | Migration | importconfiguration.py | import JSON files with viya configuration definitions from a directory | |
 | Migration | importconfiguration.py | import Viya transfer packages from a directory | |
@@ -55,7 +56,7 @@
 | Configuration | getposixidentity.py | Returns the posix attributes of a user similar to the Linux "id" command | |
 | Configuration | setposixattributes.py | Set POSIX attributes for User and Group (uid and gid) from a csv file | |
 | Configuration | getcomputecontextattributes.py |get attributes of a  compute context. | |
-| Configuration | setcomputecontextattributes.py |uAdd attributes to an existing compute context. | |
+| Configuration | setcomputecontextattributes.py |Add attributes to an existing compute context. | |
 | Utility |loginvauthinfo.py | Authenticate to Viya using an .authinfo file | |
 | Utility |showsetup.py | output some system settings to help with debugging issues | |
 | Utility |setup.py | provide location of Viya CLI | |
