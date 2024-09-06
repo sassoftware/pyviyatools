@@ -50,6 +50,9 @@ tempfilepath=tempfile.gettempdir()
 tmppackageidfile=os.path.join(tempfilepath,"packageid.json")
 tmpmappingfile=os.path.join(tempfilepath,"mapping_json.json")
 
+if mapping: mapping_file=mapping
+else: mapping_file=tmpmappingfile
+
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
 
