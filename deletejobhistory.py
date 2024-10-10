@@ -49,7 +49,7 @@ if empty:
         filter = 'isNull(expirationTimeStamp)'
     else:
         # If the filter is defined and empty is set, add isNull(expirationTimeStamp) to the defined filter.
-        filter = f'and({filter},isNull(expirationTimeStamp))'
+        filter = 'and(%s,isNull(expirationTimeStamp))' % (filter)
 
 # Set the request type
 reqtype='get'

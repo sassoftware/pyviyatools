@@ -45,7 +45,7 @@ if filter is None:
     filter = 'not(isNull(parentUri))'
 else:
     # If the filter is defined, add not(isNull(parentUri)) to the defined filter.
-    filter = f'and({filter},not(isNull(parentUri)))'
+    filter = 'and(%s,not(isNull(parentUri)))' % (filter)
 
 # Set the request type
 reqtype='get'

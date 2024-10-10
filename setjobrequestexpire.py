@@ -51,10 +51,10 @@ if filter is None:
         filter = 'isNull(expiresAfter)'
     else:
         # If neither filter or empty are defined, only filter on the duration not matching.
-        filter = f'not(eq(expiresAfter,{duration}))'
+        filter = 'not(eq(expiresAfter,%s))' % (duration)
 else:
     # If a filter is set, add it to the duration filter.
-    filter = f'and({filter},not(eq(expiresAfter,{duration})))'
+    filter = 'and(%s,not(eq(expiresAfter,%s)))' % (filter,duration)
 
 # Set the request type
 reqtype='get'
