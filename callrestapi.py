@@ -46,7 +46,7 @@ from sharedfunctions import callrestapi,getinputjson,printresult
 
 parser = argparse.ArgumentParser(description="Call the Viya REST API")
 parser.add_argument("-e","--endpoint", help="Enter the REST endpoint e.g. /folders/folders ",required='True')
-parser.add_argument("-m","--method", help="Enter the REST method.",default="get",required='True',choices=['get','put','post','delete','patch'])
+parser.add_argument("-m","--method", help="Enter the REST method.",default="get",required='True',choices=['get','put','post','delete','patch','head'])
 parser.add_argument("-i","--inputfile",help="Enter the full path to an input json file",default=None)
 parser.add_argument("-a","--accepttype",help="Enter REST Content Type you want returned e.g application/vnd.sas.identity.basic+json",default="application/json")
 parser.add_argument("-c","--contenttype",help="Enter REST Content Type for POST e.g application/vnd.sas.identity.basic+json",default="application/json")
@@ -80,6 +80,9 @@ elif reqfile != None:
 elif headfile != None:
     headerdata=getinputjson(headfile)
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent,header=headerdata)
+elif reqtype == 'head':
+    result,httpcode=callrestapi(reqval,reqtype,reqaccept,reqcontent)
+    print('Response Code:',httpcode)
 else:
     result=callrestapi(reqval,reqtype,reqaccept,reqcontent)
 
