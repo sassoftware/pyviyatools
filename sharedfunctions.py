@@ -147,6 +147,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
         ret = requests.put(baseurl+reqval,headers=head,data=json_data)
     elif reqtype=="patch":
         ret = requests.patch(baseurl+reqval,headers=head,data=json_data)
+    elif reqtype=="head":
+        ret = requests.head(baseurl+reqval,headers=head,data=json_data)
     else:
         result=None
         print("NOTE: Invalid method")
@@ -154,7 +156,8 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 
 
     # response error if status code between these numbers
-    if (400 <= ret.status_code <=599):
+    # for head request, tolerate this 4xx+ responses
+    if (400 <= ret.status_code <=599) and reqtype!="head":
 
        if not noprint: print("http response code: "+ str(ret.status_code))
        if not noprint: print("ret.text: "+ret.text)
@@ -162,6 +165,9 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
        if stoponerror: sys.exit()
 
     # return the result
+    elif reqtype=="head":
+        # If doing a HEAD request, return the headers as the result.
+        result=ret.headers
     else:
          # is it json
          try:
@@ -180,8 +186,13 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
         etagOut=ret.headers['etag']
 
     # ONLY if the caller specifically asked for an etag to be returned, return one
-    if returnEtag:
+    # If using the HEAD method, return the status code as a separate result.
+    if returnEtag and reqtype!="head":
         return result,etagOut;
+    elif returnEtag and reqtype=="head":
+        return result,etagOut,ret.status_code;
+    elif reqtype=="head":
+        return result,ret.status_code;
     else:
         # Otherwise, return only the result as normal.
         # This avoids breaking anything that does not expect an etag to be returned
