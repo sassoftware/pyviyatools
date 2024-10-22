@@ -83,7 +83,7 @@ pip install -r requirements.txt
 ./callrestapi.py -e /folders/folders -m get*
 ```
 
-2. To see the current setup, including python and package versions, environment variable settings, profile information and current user. Run
+3. To see the current setup, including python and package versions, environment variable settings, profile information and current user. Run
 
 ```sh
 ./showsetup.py
