@@ -36,7 +36,7 @@ version=int(str(sys.version_info[0]))
 parser = argparse.ArgumentParser(description="List Viya Reports and their folder path.")
 parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
-parser.add_argument("-c","--changeddays", help="Reports changed in the how many days (defaults to 5 years)?",default='1825')
+parser.add_argument("-c","--changeddays", help="Reports changed in the how many days (defaults to 15 years)?",default='5475')
 parser.add_argument("-m","--modifiedby", help="Last modified id equals?",default=None)
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple'],default='csv')
 
