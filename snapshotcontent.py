@@ -25,7 +25,7 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, uuid, time, os, glob, json
-from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand
+from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand, getpath
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -34,6 +34,7 @@ version=int(str(sys.version_info[0]))
 parser = argparse.ArgumentParser(description="Export Viya content each to its own unique transfer package")
 parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
+#parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
 parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
 
@@ -42,6 +43,7 @@ basedir=args.directory
 quietmode=args.quiet
 autotranferremove=args.tranferremove
 folderpath=args.folderpath
+#includesubfolder=args.includesubfolder
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -70,7 +72,7 @@ if areyousure.upper() =='Y':
 	if folderresult[0] is not None:
 		folderid=folderresult[0]
 		folderuri=folderresult[1]
-		print(folderid)
+
 	else:
 		print("ERROR: could not locate folder")
 		sys.exit()
@@ -84,11 +86,12 @@ if areyousure.upper() =='Y':
 
 	# retrieve all content under the folder
 	reqtype='get'
-	reqval='/folders/folders/'+folderid+'/members'
+	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true'
+	#print (reqval)
 
 	resultdata=callrestapi(reqval,reqtype)
 
-	#print(json.dumps(resultdata,indent=2))
+	print(json.dumps(resultdata,indent=2))
 
 	# loop content
 	if 'items' in resultdata:
@@ -107,42 +110,46 @@ if areyousure.upper() =='Y':
 
 				id=resultdata['items'][i]["id"]
 				uri=resultdata['items'][i]["uri"]
+				contenttype=resultdata['items'][i]["contentType"]
+				itempath=getpath(uri)
+				startoffile=itempath.replace("/","_")
 
-				package_name=str(uuid.uuid1())
+				if contenttype != "folder":
 
-				json_name=get_valid_filename(folderpath+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
+					content_exported=content_exported+1
 
-				command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
+					json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
+					package_name=str(uuid.uuid1())
+					command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
 
-				content_exported=content_exported+1
+					try:
+						print(command)
+					except UnicodeEncodeError:
+						print(command.encode('ascii','replace'))
 
-				try:
-					print(command)
-				except UnicodeEncodeError:
-					print(command.encode('ascii','replace'))
+					subprocess.call(command, shell=True)
 
-				subprocess.call(command, shell=True)
+					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
+					package_info=callrestapi(reqval,reqtype)
 
-				reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
-				package_info=callrestapi(reqval,reqtype)
+					package_id=package_info['items'][0]['id']
 
-				package_id=package_info['items'][0]['id']
+					completefile=os.path.join(path,json_name+'.json')
+					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 
-				completefile=os.path.join(path,json_name+'.json')
-				command=clicommand+' transfer download --file '+completefile+' --id '+package_id
+					try:
+						print(command)
+					except UnicodeEncodeError:
+						print(command.encode('ascii','replace'))
 
-				try:
-					print(command)
-				except UnicodeEncodeError:
-					print(command.encode('ascii','replace'))
+					subprocess.call(command, shell=True)
 
-				subprocess.call(command, shell=True)
-				#time.sleep(1)
-				if autotranferremove:
-					print(clicommand+' transfer delete --id '+package_id+"\n")
-					remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-					remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
-					remTransferObject.wait()
+					#time.sleep(1)
+					if autotranferremove:
+						print(clicommand+' transfer delete --id '+package_id+"\n")
+						remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+						remTransferObject.wait()
 
 
 			print("NOTE: "+str(total_items)+" total content items found, "+str(content_exported)+" content items exported to json files in "+path)
