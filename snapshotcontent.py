@@ -44,7 +44,7 @@ parser.add_argument("-l","--limit", type=int,help="Specify the number of records
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
-autotranferremove=args.tranfserremove
+autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
 #includesubfolder=args.includesubfolder
