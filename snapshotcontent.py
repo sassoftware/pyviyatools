@@ -4,8 +4,10 @@
 # snapshotcontent.py
 # Nov 2024
 #
-# this tool will export all the content a specified folder to
+# this tool will export all the content in a specified folder to
 # individual json file in a directory.
+#
+# Folders themselves are not exported but content in sub-folders is exported.
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -36,13 +38,15 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-t","--transferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
-autotranferremove=args.tranferremove
+autotranferremove=args.tranfserremove
 folderpath=args.folderpath
+limit=args.limit
 #includesubfolder=args.includesubfolder
 
 # get cli location from properties, check that cli is there if not ERROR and stop
@@ -86,9 +90,8 @@ if areyousure.upper() =='Y':
 
 	# retrieve all content under the folder
 	reqtype='get'
-	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true'
-	#print (reqval)
-
+	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)
+	
 	resultdata=callrestapi(reqval,reqtype)
 
 	print(json.dumps(resultdata,indent=2))
@@ -152,7 +155,7 @@ if areyousure.upper() =='Y':
 						remTransferObject.wait()
 
 
-			print("NOTE: "+str(total_items)+" total content items found, "+str(content_exported)+" content items exported to json files in "+path)
+			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
 
 else:
 	 print("NOTE: Operation cancelled")
