@@ -20,7 +20,7 @@
 #
 # Import Python modules
 import argparse, sys, json
-from sharedfunctions import callrestapi,getinputjson
+from sharedfunctions import callrestapi,getinputjson,file_accessible
 
 debug=False
 
@@ -52,14 +52,14 @@ resultdata=callrestapi(reqval,reqtype)
 #json_formatted_str = json.dumps(resultdata, indent=2)
 #print(json_formatted_str)
 
-# This tool is intended to update an existing context, so check it does exist and get its id
+# This tool is intended to update an existing context, so check it exists and get its id
 id=None
 if 'items' in resultdata:
     #print(resultdata['items'])
     if resultdata['items']==[]:
         raise Exception("Compute context '"+contextname+"' not found.")
     elif len(resultdata['items'])>1:
-        raise Exception("More than one matching compute context named '"+contextname+"'.!")
+        raise Exception("More than one matching compute context named '"+contextname+"'")
     # If we make it this far, we found exactly one compute context
     for i in resultdata['items']:
         id=i['id']
@@ -70,24 +70,25 @@ else:
 
 # Check the file passed in contains valid JSON for the same compute context
 # Load the fine into a python dictionary
-inputcontextdict=getinputjson(contextdefinitionfilename)
+check=file_accessible(contextdefinitionfilename,'r')
+if check:
+    inputcontextdict=getinputjson(contextdefinitionfilename)
+else:
+    raise Exception("Cannot open input file '"+contextdefinitionfilename+"'")
 
 if 'name' in inputcontextdict:
     #print(inputcontextdict['name'])
     if inputcontextdict['name']==contextname:
-        print("Found '"+contextname+"' in input file.")
+        print("Found '"+contextname+"' in input file '"+contextdefinitionfilename+"'")
         if inputcontextdict['id']==id:
             print("The compute context id '"+id+"' in the input file matches the one in the SAS Viya deployment.")
         else:
             raise Exception("Input JSON file does define a context named '"+contextname+"', but the context ID does not match.")
     else:
-        raise Exception("Input JSON file does not appear to define context named '"+contextname+"'")
+        raise Exception("Input JSON file does not appear to define context named '"+contextname+"'. It defines a context named '"+inputcontextdict['name']+"'.")
 else:
     # Handle the error! Compute context not found...
     raise Exception('Compute context name not found in input file - check it contains a JSON definition of a compute context.')
-
-# Todo
-# Probably get rid of boolUpdateRequired - not sure they are necessary for this tool
 
 if id!=None:
 
@@ -114,16 +115,13 @@ if id!=None:
     # response header of any endpoint that produces
     # application/vnd.sas.compute.context.
     ##########################################################################
-    #print("Update required")
     reqtype="put"
     reqval="/compute/contexts/"+id
     reqaccept="application/vnd.sas.compute.context+json"
     reccontent="application/vnd.sas.compute.context+json"
     resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=inputcontextdict,stoponerror=False,etagIn=etag)
     json_formatted_str = json.dumps(resultdata_after_update, indent=2)
-    print(json_formatted_str)
-#else:
-    #print("Update not required")
-
+    #print(json_formatted_str)
+    print("Context updated.")
 
 sys.exit()
