@@ -121,6 +121,7 @@ if id!=None:
     reccontent="application/vnd.sas.compute.context+json"
     resultdata_after_update=callrestapi(reqval,reqtype,reqaccept,reccontent,data=inputcontextdict,stoponerror=False,etagIn=etag)
     json_formatted_str = json.dumps(resultdata_after_update, indent=2)
+    # Uncomment this to see the final resulting context JSON after it is updated
     #print(json_formatted_str)
     print("Context updated.")
 
