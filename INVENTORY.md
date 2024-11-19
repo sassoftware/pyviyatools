@@ -57,6 +57,7 @@
 | Configuration | setposixattributes.py | Set POSIX attributes for User and Group (uid and gid) from a csv file | |
 | Configuration | getcomputecontextattributes.py |get attributes of a  compute context. | |
 | Configuration | setcomputecontextattributes.py |Add attributes to an existing compute context. | |
+| Configuration | updatecomputecontext.py | Update an existing compute context from a JSON file. | |
 | Utility |loginvauthinfo.py | Authenticate to Viya using an .authinfo file | |
 | Utility |showsetup.py | output some system settings to help with debugging issues | |
 | Utility |setup.py | provide location of Viya CLI | |
