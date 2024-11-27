@@ -755,7 +755,35 @@ def getpath(objecturi):
 
     return path
 
+def getpathandname(objecturi):
 
+    # get the name of the current object
+    reqtype='get'
+    reqval=objecturi
+    result=callrestapi(reqval,reqtype)
+    objname=result["name"]
+
+    # build the request parameters
+    reqval='/folders/ancestors?childUri='+objecturi
+    accept='application/vnd.sas.content.folder.ancestor+json'
+
+    ancestors_result_json=callrestapi(reqval,reqtype,accept)
+    
+    if not 'ancestors' in ancestors_result_json:
+        print("NOTE: Could not get ancestor folders of ObjectURI '"+objecturi+"'.")
+        path=None
+    else:
+        ancestors = ancestors_result_json['ancestors']
+
+        path=''
+
+        #For each principle's section in the explanations section of the data returned from the REST API call...
+        for ancestor in ancestors:
+            path=ancestor['name']+'/'+path
+        path='/'+path
+        path=path+objname
+
+    return path
 
 # getobjectdetails
 # Viya objectURI is input, assorted fields are returned
