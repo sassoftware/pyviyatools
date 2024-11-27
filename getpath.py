@@ -35,7 +35,7 @@
 import argparse
 import sys
 import os
-from sharedfunctions import getpath, getapplicationproperties
+from sharedfunctions import getpath, getapplicationproperties, getpathandname
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -52,12 +52,17 @@ sys.excepthook = exception_handler
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-u","--objecturi", help="Object URI of folder or other object that can be contained within a folder.", required=True)
+parser.add_argument("--includename", help="Include object name in path.", action='store_false' )
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 args = parser.parse_args()
 objecturi=args.objecturi
+includename=args.includename
+
 debug=args.debug
 
-path=getpath(objecturi)
+if includename:
+    path=getpath(objecturi)
+else: path=getpathandname(objecturi)
 
 if path is not None:
     print (path)
