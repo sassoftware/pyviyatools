@@ -10,6 +10,7 @@
 #
 # Change History
 # 29NOV2024 Initial release
+# 02DEC2024 Restructure of Stage 2 and 3 to plug scenario gaps
 #
 #
 # Copyright © 2024, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -32,6 +33,7 @@ green='\033[1;32;40m'
 white='\033[1;37;40m'
 red='\033[1;31;40m'
 cyan='\033[1;36;40m'
+yellow='\033[1;33;40m'
 
 ## Import Python modules
 import argparse, sys, json, os
@@ -168,7 +170,7 @@ print(cyan,"\nDELETED object(s):\n",white,objArr.size,"x \'transferObject(s)\' a
 ##########################
 ######  Begin STAGE 2 ####
 ##########################
-## Loops and scans 'transferObject' objects that have a 'parentFolder' value and makes updates.
+## Loops and scan the remaining 'transferObject' object that has a 'folder' value and makes updates.
 ##
 ## Updates 'name' to variable 'ftargetname'
 ## Updates 'id' to variable 'ftargetid'
@@ -179,42 +181,43 @@ setitr()
 for count in data['transferDetails']:
     try:
         if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
-            if data['transferDetails'][itr]['transferObject']['summary']['name'] != ftargetname or data['transferDetails'][itr]['transferObject']['summary']['id'] != ftargetid:
-                origname = data['transferDetails'][itr]['transferObject']['summary']['name']
-                origid1 = data['transferDetails'][itr]['transferObject']['summary']['id']
-                origid2 = origid1
-                if data['transferDetails'][itr]['transferObject']['summary']['name'] != ftargetname and data['transferDetails'][itr]['transferObject']['summary']['id'] != ftargetid:
-                    data['transferDetails'][itr]['transferObject']['summary']['name'] = ftargetname
-                    data['transferDetails'][itr]['transferObject']['summary']['id'] = ftargetid
-                    print(cyan,"\nCHANGED \"name\" value(s):\n"+white+origname+ " --> " + ftargetname)
-                    print(cyan,"\nCHANGED \"id\" value(s):\n"+white+origid1+ " --> " + ftargetid)
-                elif data['transferDetails'][itr]['transferObject']['summary']['name'] != ftargetname and data['transferDetails'][itr]['transferObject']['summary']['id'] == ftargetid:
-                    data['transferDetails'][itr]['transferObject']['summary']['name'] = ftargetname
-                    print(cyan,"\nCHANGED \"name\" value(s):\n"+white+origname+ " --> " + ftargetname)
+            origname = data['transferDetails'][itr]['transferObject']['summary']['name']
+            origid1 = data['transferDetails'][itr]['transferObject']['summary']['id']
+            changedname=(cyan+"\nCHANGED 'transferObject' --> 'summary' --> 'name' object: \n"+white+origname+ " --> "+ftargetname+"\n")
+            changedid=(cyan+"\nCHANGED 'transferObject' --> 'summary' --> 'id' object: \n"+white+origid1+ " --> "+ftargetid)
+            nochangedname=(yellow+"\nNO CHANGE required to 'transferObject' --> 'summary' --> 'name' ("+origname+")\n")
+            nochangedid=(yellow+"\nNO CHANGE required to 'transferObject' --> 'summary' --> 'id' ("+origid1+")\n")
+            if origname != ftargetname or origid1 != ftargetid:
+                if origname != ftargetname and origid1 != ftargetid:
+                    origid2 = origid1
+                    origname = ftargetname
+                    origid1 = ftargetid
+                    print(changedname, changedid)
+                    itr += 1
+                elif origname != ftargetname and origid1 == ftargetid:
+                    origid2 = origid1
+                    origname = ftargetname
+                    print(changedname, nochangedid)
+                    itr += 1
+                elif origname == ftargetname and origid1 != ftargetid:
+                    origid2 = origid1
+                    origid1 = ftargetid
+                    print(nochangedname, changedid)
+                    itr += 1
                 else:
-                    data['transferDetails'][itr]['transferObject']['summary']['id'] = ftargetid
-                    print(cyan,"\nCHANGED \"id\" value(s):\n"+white+origid1+ " --> " + ftargetid)
-                itr += 1
+                    origid2 = origid1
+                    print(nochangedname, nochangedid)                    
+                    itr += 1
             else:
-                print(cyan,"No change to 'name' or 'id' required."+white)
-                itr += 1
-
-        if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
-            if data['transferDetails'][itr]['transferObject']['summary']['id'] != ftargetid:
-                origid1 = data['transferDetails'][itr]['transferObject']['summary']['id']
-                ##Creates a copy of origid1 for use in Stage 3 ##
                 origid2 = origid1
-                ##
-                data['transferDetails'][itr]['transferObject']['summary']['id'] = ftargetid
-                print(cyan,"\nCHANGED \"id\" value(s):\n"+white+origid1+ " --> " + ftargetid)
-            else:
-                print(cyan,"No change to 'id' required."+white)
+                print(nochangedname,'\n', nochangedid)
+                itr += 1
         else:
-            itr += 1
-            
+            itr += 1  
+
     except IndexError:
         itr += 1
-        pass
+        pass            
 ##########################
 ######  End STAGE 2 ######
 ##########################
@@ -229,71 +232,60 @@ for count in data['transferDetails']:
 ## makes updates to nested objects within this object.
 ####
 
-##########################
-####    Begin Part A  ####
 ## Finds and replaces of the object's references to 'origid2', within the nested 'href' object, to 'ftargetid'
-####
 objectcount()
 setitr()
 
-print(cyan,"\nCHANGED \"href\" value(s):",white)
-for count in data['transferDetails']:
-    try:
-        doesexist=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]
-    except IndexError:
-        pass
-
-    if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
+if origid2 == ftargetid:
+    print(yellow+"\nNO CHANGE required to 'connectors' --> 'links' --> 'href' objects"+white+"\n")
+    print(yellow+"\nNO CHANGE required to 'connectors' --> 'links' --> 'uri' objects"+white+"\n")
+else:  
+    print(cyan,"\nCHANGED \"href\" value(s):",white)
+    for count in data['transferDetails']:
         try:
-            if origid2 in data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']:
-                orighref=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']
-                data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href'].replace(origid2,ftargetid)
-                print(orighref,"-->",data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href'])
-                hrefobj += 1
-            else:
-                hrefobj = 0
-                itr += 1
+            doesexist=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]
         except IndexError:
             pass
-    else:
-        itr += 1
-##########################
-####    End Part A    ####
-##########################
 
-        
-##########################
-####    Begin Part B  ####
-##########################        
+        if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder" and origid2 != ftargetid:
+            try:
+                if origid2 in data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']:
+                    orighref=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']
+                    data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href']=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href'].replace(origid2,ftargetid)
+                    print(orighref,"-->",data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]['href'])
+                    hrefobj += 1
+                else:
+                    hrefobj = 0
+                    itr += 1
+            except IndexError:
+                pass
+        else:
+            itr += 1
+
 ## Finds and replaces of the object's references to 'origid2', within the nested 'uri' object, to 'ftargetid'
-####
-setitr() 
+    setitr() 
 
-print(cyan,"\nCHANGED \"uri\" value(s):",white)
-for count in data['transferDetails']:
-    try:
-        doesexist=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]
-    except IndexError:
-        pass
-    
-    if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
+    print(cyan,"\nCHANGED \"uri\" value(s):",white)
+    for count in data['transferDetails']:
         try:
-            if origid2 in data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']:
-                origuri=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']
-                data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri'].replace(origid2,ftargetid)            
-                print(origuri,"-->",data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri'])
-                uriobj += 1
-            else:
-                uriobj = 0
-                itr += 1
+            doesexist=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]
         except IndexError:
             pass
-    else:
-        itr += 1
-##########################
-####    End Part B    ####
-##########################
         
+        if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
+            try:
+                if origid2 in data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']:
+                    origuri=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']
+                    data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri']=data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri'].replace(origid2,ftargetid)            
+                    print(origuri,"-->",data['transferDetails'][itr]['transferObject']['summary']['links'][uriobj]['uri'])
+                    uriobj += 1
+                else:
+                    uriobj = 0
+                    itr += 1
+            except IndexError:
+                pass
+        else:
+            itr += 1        
 ##########################        
 ######  End STAGE 3 ######
 ##########################
