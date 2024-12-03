@@ -11,8 +11,11 @@
 # Change History
 # 29NOV2024 Initial release
 # 02DEC2024 Restructure of Stage 2 and 3 to plug scenario gaps
-# 03DEC2024 Noted that the 'case_sensitive' argument from the 'Path' package was only released in Python 3.12+.
-#           Have added in a version check if statement/toggle to ensure this script's backwards capability.
+# 03DEC2024 > Noted that the 'case_sensitive' argument from the 'Path' package was only released in Python 3.12+.
+#             Have added in a version check if statement/toggle to ensure this script's backwards capability.
+#           > Added 'Colour set and SAS check' section
+#           > Made the use of input arguments be overridden by SAS macros automatically when run from SAS Studio
+#           > Tidied up console messaging output
 #
 #
 # Copyright © 2024, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -29,14 +32,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
-## Defines colours
-green='\033[1;32;40m'
-white='\033[1;37;40m'
-red='\033[1;31;40m'
-cyan='\033[1;36;40m'
-yellow='\033[1;33;40m'
-
 ## Import Python modules
 import argparse, sys, json, os
 import pip
@@ -68,15 +63,49 @@ objCount=0 #used in Stage 1
 hrefobj=0 #used in Stage 3
 uriobj=0 #used in Stage 3
 
+## Colour set and SAS check:
+## If script is being run in SAS Studio, blank colour vars are set,
+## else colour vars are defined for aesthetic purposes.
+try:
+    SAS.submit("proc print data=_null_; run;")
+    print("Running script in SAS Studio...\n"+
+          "Ensure that the SAS macro variables \"source\" and \"outdir\" are set and are unquoted.\n")
+    ## Defines empty colour vars
+    green=''
+    white=''
+    red=''
+    cyan=''
+    yellow=''
+    ## Retrieves input from SAS macros
+    source=SAS.symget('source')
+    outdir=SAS.symget('outdir')
+    print("SAS macro "+source+" read in.\n"+
+          "SAS macro "+outdir+" read in.")
+    ## DEBUG (SAS --> python var check)
+    #print("SAS macro 'source' as received by python = "+(SAS.symget('source')))
+    #print("SAS macro 'outdir' as received by python = "+(SAS.symget('outdir')))
+    
+except NameError:
+    ## Defines colours as vars
+    green="\033[1;32;40m"
+    white="\033[1;37;40m"
+    red="\033[1;31;40m"
+    cyan="\033[1;36;40m"
+    yellow="\033[1;33;40m"
+    ## Presents input options/arguments    
+    parser = argparse.ArgumentParser(description="Modifies exported VA report json file to having /Public as it's source location")
+    parser.add_argument("-f","--file", help="Enter the path to the source file.",required='True')
+    parser.add_argument("-o","--outputdir", help="Enter the destination path for file/s output.",default=cwd)
+    args = parser.parse_args()
 
-## Presents input options/arguments    
-parser = argparse.ArgumentParser(description="Modifies exported VA report json file to having /Public as it's source location")
-parser.add_argument("-f","--file", help="Enter the path to the source file.",required='True')
-parser.add_argument("-o","--outputdir", help="Enter the destination path for file/s output.",default=cwd)
-args = parser.parse_args()
+    # Input via argument
+    source=args.file
+    outdir=args.outputdir
 
-source=args.file
-outdir=args.outputdir
+## Input via static assignment
+#source='<filename>.json'
+#outdir='<directory>'
+
 
 ## Defines Viya output location for report being transformed
 ## (could be made dynamic in the future, currently hardcoded for the values of /Public set on all Viya 4 environments)
@@ -90,7 +119,6 @@ source=Path(source)
 source=source.resolve()
 
 ## Validates that the input file has a .json file extension
-## NOTE: the 'case_sensitive' argument is only available from Python 3.12 onwards
 if versionminor > 11 and Path(source).match('*.json', case_sensitive=None) == False:
     print(red,"ERROR: A valid json file is required for this script to function. Please check your input file and try again.",white)
     exit()
@@ -164,8 +192,9 @@ for obj in objArr:
         del(data['transferDetails'][objArr[objCount]])        
     except IndexError:
         pass
-
-print(cyan,"\nDELETED object(s):\n",white,objArr.size,"x \'transferObject(s)\' and \'connector(s)\'")
+    
+#print(cyan)
+print(cyan + "\nDELETED object(s):\n"+ white + str(objArr.size) + " x \'transferObject(s)\' and \'connector(s)\'\n")
 ##########################
 ######  End STAGE 1 ######
 ##########################
@@ -189,9 +218,9 @@ for count in data['transferDetails']:
         if data['transferDetails'][itr]['transferObject']['summary']['type'] == "folder":
             origname = data['transferDetails'][itr]['transferObject']['summary']['name']
             origid1 = data['transferDetails'][itr]['transferObject']['summary']['id']
-            changedname=(cyan+"\nCHANGED 'transferObject' --> 'summary' --> 'name' object: \n"+white+origname+ " --> "+ftargetname+"\n")
-            changedid=(cyan+"\nCHANGED 'transferObject' --> 'summary' --> 'id' object: \n"+white+origid1+ " --> "+ftargetid)
-            nochangedname=(yellow+"\nNO CHANGE required to 'transferObject' --> 'summary' --> 'name' ("+origname+")\n")
+            changedname=(cyan + "CHANGED 'transferObject' --> 'summary' --> 'name' object: \n"+white+origname+ " --> "+ftargetname+"\n")
+            changedid=(cyan + "\nCHANGED 'transferObject' --> 'summary' --> 'id' object: \n"+white+origid1+ " --> "+ftargetid+"\n")
+            nochangedname=(yellow+"NO CHANGE required to 'transferObject' --> 'summary' --> 'name' ("+origname+")")
             nochangedid=(yellow+"\nNO CHANGE required to 'transferObject' --> 'summary' --> 'id' ("+origid1+")\n")
             if origname != ftargetname or origid1 != ftargetid:
                 if origname != ftargetname and origid1 != ftargetid:
@@ -243,10 +272,10 @@ objectcount()
 setitr()
 
 if origid2 == ftargetid:
-    print(yellow+"\nNO CHANGE required to 'connectors' --> 'links' --> 'href' objects"+white+"\n")
-    print(yellow+"\nNO CHANGE required to 'connectors' --> 'links' --> 'uri' objects"+white+"\n")
+    print(yellow+"NO CHANGE required to 'connectors' --> 'links' --> 'href' objects"+white+"\n")
+    print(yellow+"NO CHANGE required to 'connectors' --> 'links' --> 'uri' objects"+white+"\n")
 else:  
-    print(cyan,"\nCHANGED \"href\" value(s):",white)
+    print(cyan+"CHANGED \"href\" value(s):"+white)
     for count in data['transferDetails']:
         try:
             doesexist=data['transferDetails'][itr]['transferObject']['summary']['links'][hrefobj]
@@ -264,6 +293,7 @@ else:
                     hrefobj = 0
                     itr += 1
             except IndexError:
+                print("\n")
                 pass
         else:
             itr += 1
@@ -289,6 +319,7 @@ else:
                     uriobj = 0
                     itr += 1
             except IndexError:
+                print("\n")
                 pass
         else:
             itr += 1        
@@ -400,7 +431,7 @@ jsonout=jsonout.with_suffix('.modified.json')
 with open(jsonout, 'w') as f:
     json.dump(data, f, indent = 2, sort_keys=False)
 
-print(cyan,"\n\nJOB COMPLETE - new json file written to: \n\n",green,jsonout,white)
+print(cyan,"\n\nJOB COMPLETE - new json file written to:\n\n",green,jsonout,white)
 ##########################        
 ######  End STAGE 5 ######
 ########################## 
