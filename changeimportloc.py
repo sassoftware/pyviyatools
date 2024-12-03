@@ -11,6 +11,8 @@
 # Change History
 # 29NOV2024 Initial release
 # 02DEC2024 Restructure of Stage 2 and 3 to plug scenario gaps
+# 03DEC2024 Noted that the 'case_sensitive' argument from the 'Path' package was only released in Python 3.12+.
+#           Have added in a version check if statement/toggle to ensure this script's backwards capability.
 #
 #
 # Copyright © 2024, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -88,7 +90,11 @@ source=Path(source)
 source=source.resolve()
 
 ## Validates that the input file has a .json file extension
-if  Path(source).match('*.json', case_sensitive=None) == False:
+## NOTE: the 'case_sensitive' argument is only available from Python 3.12 onwards
+if versionminor > 11 and Path(source).match('*.json', case_sensitive=None) == False:
+    print(red,"ERROR: A valid json file is required for this script to function. Please check your input file and try again.",white)
+    exit()
+elif Path(source).match('*.json') == False:
     print(red,"ERROR: A valid json file is required for this script to function. Please check your input file and try again.",white)
     exit()
 
