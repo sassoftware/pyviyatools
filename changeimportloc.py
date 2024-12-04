@@ -225,18 +225,18 @@ for count in data['transferDetails']:
             if origname != ftargetname or origid1 != ftargetid:
                 if origname != ftargetname and origid1 != ftargetid:
                     origid2 = origid1
-                    origname = ftargetname
-                    origid1 = ftargetid
+                    data['transferDetails'][itr]['transferObject']['summary']['name'] = ftargetname
+                    data['transferDetails'][itr]['transferObject']['summary']['id'] = ftargetid
                     print(changedname, changedid)
                     itr += 1
                 elif origname != ftargetname and origid1 == ftargetid:
                     origid2 = origid1
-                    origname = ftargetname
+                    data['transferDetails'][itr]['transferObject']['summary']['name'] = ftargetname
                     print(changedname, nochangedid)
                     itr += 1
                 elif origname == ftargetname and origid1 != ftargetid:
                     origid2 = origid1
-                    origid1 = ftargetid
+                    data['transferDetails'][itr]['transferObject']['summary']['id'] = ftargetid
                     print(nochangedname, changedid)
                     itr += 1
                 else:
