@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# filedelete.py September 2024
+# deleteorphanedfiles.py September 2024
 #
 # Tool to delete orphaned job files (Files whose parentUri references an undefined object)
 #
@@ -117,6 +117,7 @@ for id in ids:
     if (httpcode == 404):
         print("Found orphaned file:",id,"with non-existent parentUri:",parenturi)
         if write:
+            print("Deleting file...")
             results = None
             reqtype = 'delete'
             results = callrestapi(reqval,reqtype)
