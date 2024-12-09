@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# jobdelete.py September 2024
+# deletejobhistory.py September 2024
 #
 # Tool to delete jobExecution jobs (execution history displayed in the "Monitoring" tab of the Jobs and Flows page in Env Mgr) 
 # without an expiration timestamp set, or that match a given filter.
