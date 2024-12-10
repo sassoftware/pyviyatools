@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# jobrequestexpiration.py September 2024
+# setjobrequestexpire.py September 2024
 #
 # Tool to add or update expirations to jobRequests
 #

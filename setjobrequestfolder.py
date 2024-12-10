@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# jobrequestfolder.py September 2024
+# setjobrequestfolder.py September 2024
 #
 # Tool to store one or more jobRequests in a given folder
 #
