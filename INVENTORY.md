@@ -51,6 +51,7 @@
 | Management | setjobrequetsfolder.py | Stores job requests in a folder | |
 | Management | getimportresults.py | Retrieves results of each import task from an import job | |
 | Management | getschedulehistory.py | Retrieves the most recent execution result from scheduled jobs | |
+| Management | deleteorphanedfoldermembers.py | Identifies and optionally deletes broken folder members | |
 | Configuration | createdomain.py | Create Viya domain | |
 | Configuration | createcryptdomain.py | Create an encryption domain | |
 | Configuration | modifydomain.py | Modify an existing  Viya domain | |
