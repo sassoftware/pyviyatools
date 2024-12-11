@@ -45,6 +45,13 @@
 | Management | deletefolder.py | Deletes a folder | |
 | Management | deletefolderandcontent.py | Deletes a folder, any sub-folders and content | |
 | Management | deletepublishdest.py |  Deletes a publishing destination| |
+| Management | deletejobhistory.py | Removes historical job execution data and logs | |
+| Management | deleterophanedfiles.py | Removes files with a parentUri that does not exist | |
+| Management | setjobrequestexpire.py | Defines the expiresAfter parameter for existing job requests | |
+| Management | setjobrequetsfolder.py | Stores job requests in a folder | |
+| Management | getimportresults.py | Retrieves results of each import task from an import job | |
+| Management | getschedulehistory.py | Retrieves the most recent execution result from scheduled jobs | |
+| Management | deleteorphanedfoldermembers.py | Identifies and optionally deletes broken folder members | |
 | Configuration | createdomain.py | Create Viya domain | |
 | Configuration | createcryptdomain.py | Create an encryption domain | |
 | Configuration | modifydomain.py | Modify an existing  Viya domain | |
