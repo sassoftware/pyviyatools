@@ -755,22 +755,30 @@ def getpath(objecturi):
 
     return path
 
+#
+# made changes, so that no error is reported for objectUri that do ot represent and actual service
+#
 def getpathandname(objecturi):
 
     # get the name of the current object
     reqtype='get'
     reqval=objecturi
-    result=callrestapi(reqval,reqtype)
+    # do not stop on error, do not print any errors
+    # when objecturi can not be called, because it is a functional uri
+    result=callrestapi(reqval,reqtype, noprint=1, stoponerror=0)
     objname=result["name"]
 
     # build the request parameters
     reqval='/folders/ancestors?childUri='+objecturi
     accept='application/vnd.sas.content.folder.ancestor+json'
 
-    ancestors_result_json=callrestapi(reqval,reqtype,accept)
+    # do not stop on error, do not print any errors
+    # when objecturi can not be called, because it is a functional uri
+    ancestors_result_json=callrestapi(reqval,reqtype,accept, noprint=1, stoponerror=0)
     
     if not 'ancestors' in ancestors_result_json:
-        print("NOTE: Could not get ancestor folders of ObjectURI '"+objecturi+"'.")
+        # no message
+        # print("NOTE: Could not get ancestor folders of ObjectURI '"+objecturi+"'.")
         path=None
     else:
         ancestors = ancestors_result_json['ancestors']
