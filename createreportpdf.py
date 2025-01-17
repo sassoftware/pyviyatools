@@ -8,11 +8,11 @@
 # this tool will generate a pdf of a visual analytics report and save it to 
 # the requested viya content folder
 #
-# The purpose of the tools is to be able programatically archive a report in pdf format
+# The purpose of the tool is to be able programatically archive a report in pdf format
 #
 # example
 #
-# export the visual analytcs report cbf97b0a-457d-4b4f-8913-547e0cdf390c to myfolder as
+# export the visual analytcs report 12345678-1234-1234-1234-123456789abc to the users "My Folder" as
 # vaReportArchive.pdf
 #
 # createreportpdf.py -r 12345678-1234-1234-1234-123456789abc -n vaReportArchive
