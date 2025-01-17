@@ -66,9 +66,9 @@ waitseconds=args.wait
 if not quietmode and nameConflictChoice == 'replace':
 
 	if version  > 2:
-		areyousure=input("If the file: " +outputfilename+ ".pdf exists in the requested viya folder, will be overwritten. Continue? (Y)")
+		areyousure=input("If the file: " +outputfilename+ ".pdf exists in the requested viya folder, it will be overwritten. Continue? (Y)")
 	else:
-		areyousure=raw_input("If the file: " +outputfilename+ ".pdf exists in the requested viya folder, will be overwritten. Continue? (Y)")
+		areyousure=raw_input("If the file: " +outputfilename+ ".pdf exists in the requested viya folder, it will be overwritten. Continue? (Y)")
 else:
 	areyousure="Y"
 
