@@ -512,7 +512,8 @@ if(output_style == "report" or output_style == "report-full"):
         verbosePrint("NOTE: Report created at " + htmlFileName, verbose)
 
     except:
-        print("ERROR: Problem creating report")
+        htmlFile=None
+        print("ERROR: Problem creating report at " + htmlFileName)
     finally:
         #Save html file
         if htmlFile is not None:
