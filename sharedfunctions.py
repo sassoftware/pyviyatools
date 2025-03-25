@@ -40,6 +40,7 @@
 #  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
 #  12OCT2022 Build date filter function
 #  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
+#  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items. 
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -490,15 +491,14 @@ def simpleresults(resultdata):
 #   19dece2018 print  csv in column orderwith only common columns
 
 def csvresults(resultdata,columns=[],header=1):
-
-
+    import collections
+    
     if 'items' in resultdata:
 
-        total_items=resultdata['count']
-
         returned_items=len(resultdata['items'])
+        total_items=resultdata.get('count',0)
 
-        if total_items == 0: print("Note: No items returned.")
+        if returned_items==0: print("Note: No items returned.")
 
         for i in range(0,returned_items):
 
