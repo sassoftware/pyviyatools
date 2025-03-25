@@ -40,7 +40,7 @@
 #  08Sep2022 Catch Unicode error in get_valid_filename and remove string function if it happens
 #  12OCT2022 Build date filter function
 #  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
-#  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items. 
+#  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
