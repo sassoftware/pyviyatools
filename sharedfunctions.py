@@ -491,7 +491,6 @@ def simpleresults(resultdata):
 #   19dece2018 print  csv in column orderwith only common columns
 
 def csvresults(resultdata,columns=[],header=1):
-    import collections
     
     if 'items' in resultdata:
 
