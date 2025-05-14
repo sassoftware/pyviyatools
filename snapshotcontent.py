@@ -96,7 +96,7 @@ if areyousure.upper() =='Y':
 
 	# retrieve all content under the folder
 	reqtype='get'
-	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)
+	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)+"?filter="+datefilter
 	
 	resultdata=callrestapi(reqval,reqtype)
 
