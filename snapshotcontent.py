@@ -149,7 +149,7 @@ if areyousure.upper() =='Y':
 
 				if contenttype != "folder":
 
-					if (modifiedafter_dt is None or modified_dt > modifiedafter_dt):
+					if (modifiedafter_dt is None or modified_dt >= modifiedafter_dt):
 				
 						content_exported=content_exported+1
 
