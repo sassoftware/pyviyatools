@@ -27,6 +27,7 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, uuid, time, os, glob, json
+from datetime import datetime
 from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand, getpath
 
 # get python version
@@ -38,7 +39,7 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-m","--modifiedinlast", help="Content modified in the last of this number of days.",default='3000')
+parser.add_argument("-m","--modifiedafter", help="Content modified after this date.",default='2021-04-02')
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
@@ -48,12 +49,8 @@ quietmode=args.quiet
 autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
-days=args.modifiedinlast
+modifiedafter=args.modifiedafter
 #includesubfolder=args.includesubfolder
-
-# filtering
-datefilter=createdatefilter(olderoryounger="younger",datevar='modifiedTimeStamp',days=days)
-print(datefilter)
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -96,7 +93,7 @@ if areyousure.upper() =='Y':
 
 	# retrieve all content under the folder
 	reqtype='get'
-	reqval='/folders/folders/'+folderid+'/members?&filter='+datefilter+'&recursive=true&followReferences=true&limit='+str(limit)
+	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)
 	
 	resultdata=callrestapi(reqval,reqtype)
 
@@ -120,11 +117,38 @@ if areyousure.upper() =='Y':
 				id=resultdata['items'][i]["id"]
 				uri=resultdata['items'][i]["uri"]
 				contenttype=resultdata['items'][i]["contentType"]
+				modified=resultdata['items'][i]["modifiedTimeStamp"]
+				created=resultdata['items'][i]["creationTimeStamp"]
+
 				itempath=getpath(uri)
 				startoffile=itempath.replace("/","_")
+				# Parse ISO 8601 dates for comparison
+				try:
+					# If modified only has the date part, treat it as the start of that day
+					if len(modified) == 10:  # format: YYYY-MM-DD
+						modified_dt = datetime.strptime(modified, "%Y-%m-%d")
+					else:
+						modified_dt = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%fZ")
+				except ValueError:
+					try:
+						modified_dt = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%SZ")
+					except ValueError:
+						modified_dt = None
 
-				if contenttype != "folder":
+				try:
+					if len(modifiedafter) == 10:  # format: YYYY-MM-DD
+						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%d")
+					else:
+						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%dT%H:%M:%S.%fZ")
+				except ValueError:
+					try:
+						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%dT%H:%M:%SZ")
+					except ValueError:
+						# fallback: if modifiedafter is not in ISO format, skip comparison
+						modifiedafter_dt = None
 
+				if contenttype != "folder" and (modifiedafter_dt is None or modifiedafter_dt > modified_dt):
+				
 					content_exported=content_exported+1
 
 					json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
