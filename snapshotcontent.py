@@ -147,7 +147,7 @@ if areyousure.upper() =='Y':
 						# fallback: if modifiedafter is not in ISO format, skip comparison
 						modifiedafter_dt = None
 
-				if contenttype != "folder" and (modifiedafter_dt is None or modified_dt > modifiedafter_dt):
+				if contenttype != "folder" or (modifiedafter_dt is None or modified_dt > modifiedafter_dt):
 				
 					content_exported=content_exported+1
 
@@ -184,9 +184,7 @@ if areyousure.upper() =='Y':
 						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
 						remTransferObject.wait()
 				else:
-					if contenttype == "folder":
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" is a folder, not exported")
-					else:
+					if contenttype != "folder":
 						print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified before "+modifiedafter+", not exported")
 
 
