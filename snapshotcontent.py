@@ -39,7 +39,7 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-m","--modifiedafter", help="Content modified after this date.",default='2021-04-02')
+parser.add_argument("-m","--modifiedafter", help="Content modified after this date.",default='1990-01-01')
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
