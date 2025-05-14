@@ -48,7 +48,7 @@ quietmode=args.quiet
 autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
-days=args.days
+days=args.modifiedinlast
 #includesubfolder=args.includesubfolder
 
 # filtering
