@@ -97,7 +97,7 @@ if areyousure.upper() =='Y':
 	
 	resultdata=callrestapi(reqval,reqtype)
 
-	print(json.dumps(resultdata,indent=2))
+	#print(json.dumps(resultdata,indent=2))
 
 	# loop content
 	if 'items' in resultdata:
