@@ -56,7 +56,7 @@ desc=args.desc
 type=args.type
 store=args.store
 
-if domain_name.isalnum()==False:
+if domain_name.isidentifier()==False:
   print("ERROR: Domain name must be alpha-numeric.")
   quit()
 
