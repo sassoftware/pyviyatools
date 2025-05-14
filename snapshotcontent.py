@@ -38,7 +38,8 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-t","--transferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-d","--days", help="List files older or younger than this number of days",default='-1')
+parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
@@ -47,7 +48,12 @@ quietmode=args.quiet
 autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
+days=args.days
 #includesubfolder=args.includesubfolder
+
+# filtering
+datefilter=createdatefilter(olderoryounger="younger",datevar='modifiedTimeStamp',days=days)
+print(datefilter)
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
