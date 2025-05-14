@@ -38,7 +38,7 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-m","--modifiedinlast", help="Content modified in the last of this number of days.",default='-1')
+parser.add_argument("-m","--modifiedinlast", help="Content modified in the last of this number of days.",default='3000')
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
@@ -96,7 +96,7 @@ if areyousure.upper() =='Y':
 
 	# retrieve all content under the folder
 	reqtype='get'
-	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)+"?filter="+datefilter
+	reqval='/folders/folders/'+folderid+'/members?recursive=true&followReferences=true&limit='+str(limit)+"filter="+datefilter
 	
 	resultdata=callrestapi(reqval,reqtype)
 
