@@ -147,45 +147,49 @@ if areyousure.upper() =='Y':
 						# fallback: if modifiedafter is not in ISO format, skip comparison
 						modifiedafter_dt = None
 
-				if contenttype != "folder" or (modifiedafter_dt is None or modified_dt > modifiedafter_dt):
+				if contenttype != "folder":
+
+					if (modifiedafter_dt is None or modified_dt > modifiedafter_dt):
 				
-					content_exported=content_exported+1
+						content_exported=content_exported+1
 
-					json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
-					package_name=str(uuid.uuid1())
-					command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
+						json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
+						package_name=str(uuid.uuid1())
+						command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
 
-					try:
-						print(command)
-					except UnicodeEncodeError:
-						print(command.encode('ascii','replace'))
+						try:
+							print(command)
+						except UnicodeEncodeError:
+							print(command.encode('ascii','replace'))
 
-					subprocess.call(command, shell=True)
+						subprocess.call(command, shell=True)
 
-					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
-					package_info=callrestapi(reqval,reqtype)
+						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
+						package_info=callrestapi(reqval,reqtype)
 
-					package_id=package_info['items'][0]['id']
+						package_id=package_info['items'][0]['id']
 
-					completefile=os.path.join(path,json_name+'.json')
-					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
+						completefile=os.path.join(path,json_name+'.json')
+						command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 
-					try:
-						print(command)
-					except UnicodeEncodeError:
-						print(command.encode('ascii','replace'))
+						try:
+							print(command)
+						except UnicodeEncodeError:
+							print(command.encode('ascii','replace'))
 
-					subprocess.call(command, shell=True)
+						subprocess.call(command, shell=True)
 
-					#time.sleep(1)
-					if autotranferremove:
-						print(clicommand+' transfer delete --id '+package_id+"\n")
-						remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
-						remTransferObject.wait()
-				else:
-					if contenttype != "folder":
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified before "+modifiedafter+", not exported")
+						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile)
+
+						#time.sleep(1)
+						if autotranferremove:
+							print(clicommand+' transfer delete --id '+package_id+"\n")
+							remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+							remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+							remTransferObject.wait()
+					else:
+						if contenttype != "folder":
+							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified before "+modifiedafter+", not exported")
 
 
 			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
