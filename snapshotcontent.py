@@ -34,14 +34,14 @@ from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationpro
 version=int(str(sys.version_info[0]))
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Export Viya content each to its own unique transfer package")
-parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
+parser = argparse.ArgumentParser(description="Export Viya content each piece of content to its own unique transfer package.")
+parser.add_argument("-d","--directory", help="Directory to store report packages.",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
-parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-m","--modifiedafter", help="Content modified after this date (YYYY-MM-DD)",default='1990-01-01')
+parser.add_argument("-f","--folderpath", help="Folder Path starts with.",required='True')
+parser.add_argument("-m","--modifiedafter", help="Content modified after and including this date (YYYY-MM-DD).",default='1990-01-01')
 #parser.add_argument("-c","--type", help="Content Type in.",default=None)
-parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
+parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download.", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
