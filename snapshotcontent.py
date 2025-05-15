@@ -39,7 +39,7 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with.",required='True')
-parser.add_argument("-m","--modifiedafter", help="Content modified after and including this date (YYYY-MM-DD).",default='1990-01-01')
+parser.add_argument("-m","--modifiedafter", help="Content modified after this date (YYYY-MM-DD).",default='1990-01-01')
 #parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download.", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
@@ -126,9 +126,10 @@ if areyousure.upper() =='Y':
 				startoffile=itempath.replace("/","_")
 				# Parse ISO 8601 dates for comparison
 				try:
-					# If modified only has the date part, treat it as the start of that day
+					# If modified only has the date part, treat it as the end of that day (23:59:59.999999)
 					if len(modified) == 10:  # format: YYYY-MM-DD
 						modified_dt = datetime.strptime(modified, "%Y-%m-%d")
+						modified_dt = modified_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
 					else:
 						modified_dt = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%fZ")
 				except ValueError:
@@ -164,7 +165,7 @@ if areyousure.upper() =='Y':
 						except UnicodeEncodeError:
 							print(command.encode('ascii','replace'))
 
-						subprocess.call(command, shell=True)
+						#subprocess.call(command, shell=True)
 
 						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 						package_info=callrestapi(reqval,reqtype)
