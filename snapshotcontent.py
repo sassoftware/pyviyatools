@@ -182,7 +182,7 @@ if areyousure.upper() =='Y':
 
 						subprocess.call(command, shell=True)
 
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
+						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter_dt)+")")
 						time.sleep(1)
 						if autotranferremove:
 							print(clicommand+' transfer delete --id '+package_id+"\n")
