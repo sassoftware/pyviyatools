@@ -182,14 +182,14 @@ if areyousure.upper() =='Y':
 
 						# subprocess.call(command, shell=True)
 
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
+						#print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
 
 						#time.sleep(1)
-						if autotranferremove:
-							print(clicommand+' transfer delete --id '+package_id+"\n")
-							remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-							remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
-							remTransferObject.wait()
+						# if autotranferremove:
+						# 	print(clicommand+' transfer delete --id '+package_id+"\n")
+						# 	remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+						# 	remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+						# 	remTransferObject.wait()
 					else:
 						if contenttype != "folder":
 							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modifiedafter)+", content not exported.")
