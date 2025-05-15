@@ -39,7 +39,8 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-m","--modifiedafter", help="Content modified after this date.",default='1990-01-01')
+parser.add_argument("-m","--modifiedafter", help="Content modified after this date (YYYY-MM-DD)",default='1990-01-01')
+#parser.add_argument("-c","--type", help="Content Type in.",default=None)
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download?", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
@@ -50,6 +51,7 @@ autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
 modifiedafter=args.modifiedafter
+#type=args.type
 #includesubfolder=args.includesubfolder
 
 # get cli location from properties, check that cli is there if not ERROR and stop
