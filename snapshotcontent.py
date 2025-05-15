@@ -192,7 +192,7 @@ if areyousure.upper() =='Y':
 						# 	remTransferObject.wait()
 					else:
 						if contenttype != "folder":
-							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modifiedafter)+", content not exported.")
+							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modified_dt)+", content not exported.")
 
 
 			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
