@@ -165,22 +165,22 @@ if areyousure.upper() =='Y':
 						except UnicodeEncodeError:
 							print(command.encode('ascii','replace'))
 
-						#subprocess.call(command, shell=True)
+						# subprocess.call(command, shell=True)
 
-						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
-						package_info=callrestapi(reqval,reqtype)
+						# reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
+						# package_info=callrestapi(reqval,reqtype)
 
-						package_id=package_info['items'][0]['id']
+						# package_id=package_info['items'][0]['id']
 
-						completefile=os.path.join(path,json_name+'.json')
-						command=clicommand+' transfer download --file '+completefile+' --id '+package_id
+						# completefile=os.path.join(path,json_name+'.json')
+						# command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 
-						try:
-							print(command)
-						except UnicodeEncodeError:
-							print(command.encode('ascii','replace'))
+						# try:
+						# 	print(command)
+						# except UnicodeEncodeError:
+						# 	print(command.encode('ascii','replace'))
 
-						subprocess.call(command, shell=True)
+						# subprocess.call(command, shell=True)
 
 						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
 
