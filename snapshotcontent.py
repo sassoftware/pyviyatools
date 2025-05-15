@@ -183,7 +183,7 @@ if areyousure.upper() =='Y':
 						# subprocess.call(command, shell=True)
 
 						#print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported (modified: "+str(modified)+", after: "+str(modifiedafter)+")")
+						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported (modified: "+str(modified)+", after: "+str(modifiedafter_dt)+")")
 						#time.sleep(1)
 						# if autotranferremove:
 						# 	print(clicommand+' transfer delete --id '+package_id+"\n")
@@ -192,7 +192,7 @@ if areyousure.upper() =='Y':
 						# 	remTransferObject.wait()
 					else:
 						if contenttype != "folder":
-							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modified_dt)+", content not exported.")
+							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modifiedafter_dt)+", content not exported.")
 
 
 			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
