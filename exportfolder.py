@@ -103,7 +103,7 @@ if areyousure.upper() =='Y':
         
         
         completefile=os.path.join(path,json_name+'.json')
-        c)
+        completefile = completefile.replace(" ", "-")
         command=clicommand+' transfer download --file '+completefile+' --id '+package_id
         print(command)
         subprocess.call(command, shell=True)
