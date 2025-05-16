@@ -101,7 +101,9 @@ if areyousure.upper() =='Y':
         package_info=callrestapi(reqval,reqtype)
         package_id=package_info['items'][0]['id']
         
+        
         completefile=os.path.join(path,json_name+'.json')
+        c)
         command=clicommand+' transfer download --file '+completefile+' --id '+package_id
         print(command)
         subprocess.call(command, shell=True)
