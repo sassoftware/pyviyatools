@@ -42,7 +42,7 @@ parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", ac
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with.",required='True')
 parser.add_argument("-c","--changeddays", help="Content changed in the how many days (defaults to 1 day)?",default='1')
-parser.add_argument("--types", help="Content Type in.",default=None)
+#parser.add_argument("--types", help="Content Type in.",default=None)
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download.", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
@@ -56,6 +56,11 @@ days_delta=args.changeddays
 #type=args.type
 #includesubfolder=args.includesubfolder
 
+try:
+    days_delta = int(days_delta)
+except ValueError:
+    print("ERROR: changeddays must be an integer.")
+    sys.exit(1)
 
 today = datetime.now().date()
 modifiedafter_dt = datetime.combine(today - timedelta(days=days_delta), datetime.min.time())
@@ -127,6 +132,7 @@ if areyousure.upper() =='Y':
 				contenttype=resultdata['items'][i]["contentType"]
 				modified=resultdata['items'][i]["modifiedTimeStamp"]
 				created=resultdata['items'][i]["creationTimeStamp"]
+				name=resultdata['items'][i]["name"]
 
 				itempath=getpath(uri)
 				startoffile=itempath.replace("/","_")
@@ -176,7 +182,7 @@ if areyousure.upper() =='Y':
 
 						subprocess.call(command, shell=True)
 
-						print("NOTE: "+str(resultdata['items'][i]["name"])+" was exported to "+completefile+" (modified: "+str(modified)+", after: "+str(modifiedafter_dt)+")")
+						print("NOTE: "+contenttype+" '"+ name + "' was exported to " + completefile + " (modified: " + str(modified) + ", after: " + str(modifiedafter_dt) + ")")
 						time.sleep(1)
 						if autotranferremove:
 							print(clicommand+' transfer delete --id '+package_id+"\n")
@@ -185,7 +191,7 @@ if areyousure.upper() =='Y':
 							remTransferObject.wait()
 					else:
 						if contenttype != "folder":
-							print("NOTE: "+str(resultdata['items'][i]["name"])+" was modified on "+str(modified)+", which is before "+str(modifiedafter_dt)+", content not exported.")
+							print("NOTE: " +contenttype+" '"+ name + "' was modified on "+str(modified)+", which is before "+str(modifiedafter_dt)+", content not exported.")
 
 
 			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
