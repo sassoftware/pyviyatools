@@ -4,6 +4,8 @@
 # snapshotcontent.py
 # Nov 2024
 #
+# MAy 2025 added support for modified after date  
+#
 # this tool will export all the content in a specified folder to
 # individual json file in a directory.
 #
@@ -27,7 +29,7 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, uuid, time, os, glob, json
-from datetime import datetime
+from datetime import datetime, timedelta
 from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand, getpath
 
 # get python version
@@ -39,8 +41,8 @@ parser.add_argument("-d","--directory", help="Directory to store report packages
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
 parser.add_argument("-f","--folderpath", help="Folder Path starts with.",required='True')
-parser.add_argument("-m","--modifiedafter", help="Content modified after this date (YYYY-MM-DD).",default='1990-01-01')
-#parser.add_argument("-c","--type", help="Content Type in.",default=None)
+parser.add_argument("-c","--changeddays", help="Content changed in the how many days (defaults to 1 day)?",default='1')
+parser.add_argument("--types", help="Content Type in.",default=None)
 parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download.", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
@@ -50,9 +52,13 @@ quietmode=args.quiet
 autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
-modifiedafter=args.modifiedafter
+days_delta=args.changeddays
 #type=args.type
 #includesubfolder=args.includesubfolder
+
+
+today = datetime.now().date()
+modifiedafter_dt = datetime.combine(today - timedelta(days=days_delta), datetime.min.time())
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -138,21 +144,9 @@ if areyousure.upper() =='Y':
 					except ValueError:
 						modified_dt = None
 
-				try:
-					if len(modifiedafter) == 10:  # format: YYYY-MM-DD
-						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%d")
-					else:
-						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%dT%H:%M:%S.%fZ")
-				except ValueError:
-					try:
-						modifiedafter_dt = datetime.strptime(modifiedafter, "%Y-%m-%dT%H:%M:%SZ")
-					except ValueError:
-						# fallback: if modifiedafter is not in ISO format, skip comparison
-						modifiedafter_dt = None
-
 				if contenttype != "folder":
 
-					if (modifiedafter_dt is None or modified_dt >= modifiedafter_dt):
+					if (modified_dt >= modifiedafter_dt):
 				
 						content_exported=content_exported+1
 
