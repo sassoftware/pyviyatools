@@ -146,6 +146,7 @@ if areyousure.upper() =='Y':
                 
                 # download exported package
                 completefile=os.path.join(path,json_name+'.json')
+                completefile = completefile.replace(" ", "-")
                 command=clicommand+' transfer download --file '+completefile+' --id '+package_id
                 print(command)
                 subprocess.call(command, shell=True)

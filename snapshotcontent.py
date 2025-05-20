@@ -4,6 +4,11 @@
 # snapshotcontent.py
 # Nov 2024
 #
+# MAy 2025 added changedays, consistent with snapshotreport.py
+# IMPORTANT: this is a breaking change, the default is now 1 day
+# returning content modified in the last 1 day 
+# to get original beavhours behaviour use -c 25000
+#
 # this tool will export all the content in a specified folder to
 # individual json file in a directory.
 #
@@ -27,27 +32,43 @@
 # Import Python modules
 import re
 import argparse, sys, subprocess, uuid, time, os, glob, json
+from datetime import datetime, timedelta
 from sharedfunctions import getfolderid, callrestapi, getpath, getapplicationproperties, get_valid_filename, createdatefilter,getclicommand, getpath
 
 # get python version
 version=int(str(sys.version_info[0]))
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Export Viya content each to its own unique transfer package")
-parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
+parser = argparse.ArgumentParser(description="Export Viya content each piece of content to its own unique transfer package.")
+parser.add_argument("-d","--directory", help="Directory to store report packages.",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 #parser.add_argument("-isf","--includesubfolder", help="Include Sub-folders of the main folder.", action='store_false')
-parser.add_argument("-f","--folderpath", help="Folder Path starts with?",required='True')
-parser.add_argument("-t","--transferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-f","--folderpath", help="Folder Path starts with.",required='True')
+parser.add_argument("-c","--changeddays", help="Content changed in the how many days (defaults to 1 day)?",default='1')
+#parser.add_argument("--types", help="Content Type in.",default=None)
+parser.add_argument("-t","--transferremove", help="Remove transfer file from Infrastructure Data Server after download.", action='store_true')
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
+
+
 basedir=args.directory
 quietmode=args.quiet
 autotranferremove=args.transferremove
 folderpath=args.folderpath
 limit=args.limit
+days_delta=args.changeddays
+#type=args.type
 #includesubfolder=args.includesubfolder
+
+try:
+    days_delta = int(days_delta)
+except ValueError:
+    print("ERROR: changeddays must be an integer.")
+    sys.exit(1)
+
+today = datetime.now().date()
+modifiedafter_dt = datetime.combine(today - timedelta(days=days_delta), datetime.min.time())
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -94,7 +115,7 @@ if areyousure.upper() =='Y':
 	
 	resultdata=callrestapi(reqval,reqtype)
 
-	print(json.dumps(resultdata,indent=2))
+	#print(json.dumps(resultdata,indent=2))
 
 	# loop content
 	if 'items' in resultdata:
@@ -114,45 +135,68 @@ if areyousure.upper() =='Y':
 				id=resultdata['items'][i]["id"]
 				uri=resultdata['items'][i]["uri"]
 				contenttype=resultdata['items'][i]["contentType"]
+				modified=resultdata['items'][i]["modifiedTimeStamp"]
+				created=resultdata['items'][i]["creationTimeStamp"]
+				name=resultdata['items'][i]["name"]
+
 				itempath=getpath(uri)
 				startoffile=itempath.replace("/","_")
+				# Parse ISO 8601 dates for comparison
+				try:
+					# If modified only has the date part, treat it as the end of that day (23:59:59.999999)
+					if len(modified) == 10:  # format: YYYY-MM-DD
+						modified_dt = datetime.strptime(modified, "%Y-%m-%d")
+						modified_dt = modified_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+					else:
+						modified_dt = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%fZ")
+				except ValueError:
+					try:
+						modified_dt = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%SZ")
+					except ValueError:
+						modified_dt = None
 
 				if contenttype != "folder":
 
-					content_exported=content_exported+1
+					if (modified_dt >= modifiedafter_dt):
+				
+						content_exported=content_exported+1
 
-					json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
-					package_name=str(uuid.uuid1())
-					command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
+						json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
+						package_name=str(uuid.uuid1())
+						command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
 
-					try:
-						print(command)
-					except UnicodeEncodeError:
-						print(command.encode('ascii','replace'))
+						try:
+							print(command)
+						except UnicodeEncodeError:
+							print(command.encode('ascii','replace'))
 
-					subprocess.call(command, shell=True)
+						subprocess.call(command, shell=True)
 
-					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
-					package_info=callrestapi(reqval,reqtype)
+						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
+						package_info=callrestapi(reqval,reqtype)
 
-					package_id=package_info['items'][0]['id']
+						package_id=package_info['items'][0]['id']
 
-					completefile=os.path.join(path,json_name+'.json')
-					command=clicommand+' transfer download --file '+completefile+' --id '+package_id
+						completefile=os.path.join(path,json_name+'.json')
+						command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 
-					try:
-						print(command)
-					except UnicodeEncodeError:
-						print(command.encode('ascii','replace'))
+						try:
+							print(command)
+						except UnicodeEncodeError:
+							print(command.encode('ascii','replace'))
 
-					subprocess.call(command, shell=True)
+						subprocess.call(command, shell=True)
 
-					#time.sleep(1)
-					if autotranferremove:
-						print(clicommand+' transfer delete --id '+package_id+"\n")
-						remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-						remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
-						remTransferObject.wait()
+						print("NOTE: "+contenttype+" '"+ name + "' was exported to " + completefile + " (modified: " + str(modified) + ", after: " + str(modifiedafter_dt) + ")")
+						time.sleep(1)
+						if autotranferremove:
+							print(clicommand+' transfer delete --id '+package_id+"\n")
+							remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+							remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+							remTransferObject.wait()
+					else:
+						if contenttype != "folder":
+							print("NOTE: " +contenttype+" '"+ name + "' was modified on "+str(modified)+", which is before "+str(modifiedafter_dt)+", content not exported.")
 
 
 			print("NOTE: "+str(content_exported)+" content items exported to json files in "+path)
