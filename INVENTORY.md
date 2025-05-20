@@ -33,7 +33,9 @@
 | Migration | exportfolder.py | export an individual folder and its content to a package | |
 | Migration | exportfoldertree.py | export the complete viya folder tree to a set of packages | |
 | Migration | exportstudioflowcode.py | create SAS code from SAS Studio flows | |
-| Migration | exportgeoproviders.py |  export feographic data providers to json files in a directory | |
+| Migration | exportgeoproviders.py |  export geographic data providers to json files in a directory | |
+| Migration | snapshotreports.py |  export individual reports to a viya package | |
+| Migration | snapshotcontent.py |  export individual content to a viya package | |
 | Management | archivefiles.py |Archive and optionally delete files stored in the Viya infrastructure data server. | |
 | Management | validateviya.py |Validate that a Viya environment is working. | |
 | Management | validateviya.py |Validate that a Viya environment is working. | |

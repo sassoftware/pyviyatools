@@ -4,7 +4,10 @@
 # snapshotcontent.py
 # Nov 2024
 #
-# MAy 2025 added support for modified after date  
+# MAy 2025 added changedays, consistent with snapshotreport.py
+# IMPORTANT: this is a breaking change, the default is now 1 day
+# returning content modified in the last 1 day 
+# to get original beavhours behaviour use -c 25000
 #
 # this tool will export all the content in a specified folder to
 # individual json file in a directory.
@@ -47,6 +50,8 @@ parser.add_argument("-t","--transferremove", help="Remove transfer file from Inf
 parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
+
+
 basedir=args.directory
 quietmode=args.quiet
 autotranferremove=args.transferremove
