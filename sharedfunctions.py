@@ -41,6 +41,7 @@
 #  12OCT2022 Build date filter function
 #  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
 #  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
+#  18JUL2025 if the clilocation path contains a tilde expand it
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -897,6 +898,12 @@ def getclicommand():
 
     propertylist=getapplicationproperties()
     clidir=propertylist["sascli.location"]
+
+    # if the path contains a tilde expand it
+    # this is useful for the user home directory
+    if '~' in clidir:
+        clidir = os.path.expanduser(clidir)
+
     cliexe=propertylist["sascli.executable"]
     clicommand=os.path.join(clidir,cliexe)
 
