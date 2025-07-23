@@ -36,17 +36,17 @@ version=int(str(sys.version_info[0]))
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Compare two content lists.")
-parser.add_argument("--file1", help="Enter the full path to the first content file.",required='True')
-parser.add_argument("--file2", help="Enter the full path to the second content file.", required='True')
-parser.add_argument("--label1", help="Optional label for the first file being compared.", default="First file.")
-parser.add_argument("--label2", help="Optional label for the second file being compared.", default="Second file.")
+parser.add_argument("-f1","--file1", help="Enter the full path to the first content file.",required='True')
+parser.add_argument("-f2","--file2", help="Enter the full path to the second content file.", required='True')
+parser.add_argument("-f1l","--file1label", help="Optional label for the first file being compared.", default="First file.")
+parser.add_argument("--fl2","--file2label", help="Optional label for the second file being compared.", default="Second file.")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
 file1=args.file1
 file2=args.file2
-label1=args.label1
-label2=args.label2
+label1=args.file1label
+label2=args.file2label
 
 with open(file1, 'r') as f1, open(file2, 'r') as f2:
     lines1 = f1.readlines()
