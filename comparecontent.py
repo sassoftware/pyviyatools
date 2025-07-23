@@ -4,6 +4,13 @@
 # comparecontent.py
 # Sep 2024
 #
+# This script compares two content files and reports the differences.
+# It checks for a matching header line and lists content that is unique to each file.
+# It is designed to be run from the command line with two file arguments.
+# you can use it to compare the content of two runs of listcontent.py or liscaslib.py.
+# Typically, you would run this script after making changes to content files to see what has changed.
+# It uses the difflib module to find differences between the two files.
+# usage: python comparecontent.py --file1 <path_to_file1> --file2 <path_to_file2> [--label1 <label1>] [--label2 <label2>] [-d|--debug]
 #
 # Change History
 #
@@ -29,13 +36,17 @@ version=int(str(sys.version_info[0]))
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Compare two content lists.")
-parser.add_argument("--file1", help="Enter the first content file.",required='True')
-parser.add_argument("--file2", help="Enter the second content file.",required='True')
+parser.add_argument("--file1", help="Enter the full path to the first content file.",required='True')
+parser.add_argument("--file2", help="Enter the full path to the second content file.", required='True')
+parser.add_argument("--label1", help="Optional label for the first file being compared.", default="First file.")
+parser.add_argument("--label2", help="Optional label for the second file being compared.", default="Second file.")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
 file1=args.file1
 file2=args.file2
+label1=args.label1
+label2=args.label2
 
 with open(file1, 'r') as f1, open(file2, 'r') as f2:
     lines1 = f1.readlines()
@@ -47,33 +58,32 @@ if not lines1[0] == lines2[0]:
     print("ERROR: Files must have a matching header line in the first line.")
     sys.exit()  
 
-
-# Find lines that are in file1 but not in file2
-diff1 = difflib.ndiff(lines1, lines2)
-only_in_file1 = [line[2:] for line in diff1 if line.startswith('- ')]
-
-# Find lines that are in file2 but not in file1
-diff2 = difflib.ndiff(lines1, lines2)
-only_in_file2 = [line[2:] for line in diff2 if line.startswith('+ ')]
+    # Find lines that are in file1 but not in file2, and vice versa
+    diff = difflib.ndiff(lines1, lines2)
+    #
+    only_in_file1 = [line[2:] for line in diff if line.startswith('- ')]
+    # Find lines that are in file2 but not in file1
+    only_in_file2 = [line[2:] for line in diff if line.startswith('+ ')]
 
 print("NOTE: Compare the content of file1="+file1+" and file2="+file2)
 print("NOTE: SUMMARY")
 if only_in_file1: print("NOTE: there is nothing in file1 that is not in file2.")
 if only_in_file2: print("NOTE: there is nothing in file2 that is not in file1.")
 if only_in_file1 or only_in_file2: print("NOTE: DETAILS")
-else: print("NOTE: Files ar the same")
+else: print("NOTE: Files are the same.")
 
 if only_in_file1:
     
-    print("NOTE: The content listed below is in file1 but not in file2:")
+    print("NOTE: The content listed below is in file1 (" + label1 + ") but not in file2 (" + label2 + "):")
     print(lines1[0])
     for line in only_in_file1:
         print(line)
 
-
-
 if only_in_file2:
-    print("NOTE: The content listed below is in file2 but not in file1:")
+    print("NOTE: The content listed below is in file2 (" + label2 + ") but not in file1 (" + label1 + "):")
+    print(lines2[0])
+    for line in only_in_file2:
+        print(line)
     print(lines2[0])
     for line in only_in_file2:
         print(line)
