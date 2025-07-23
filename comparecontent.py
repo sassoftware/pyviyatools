@@ -89,8 +89,6 @@ if only_in_file2:
     print(lines2[0])
     for line in only_in_file2:
         print(line)
-    print(lines2[0])
-    for line in only_in_file2:
-        print(line)
+    
 
 
