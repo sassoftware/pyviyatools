@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description="Compare two content lists.")
 parser.add_argument("-f1","--file1", help="Enter the full path to the first content file.",required='True')
 parser.add_argument("-f2","--file2", help="Enter the full path to the second content file.", required='True')
 parser.add_argument("-f1l","--file1label", help="Optional label for the first file being compared.", default="First file.")
-parser.add_argument("--fl2","--file2label", help="Optional label for the second file being compared.", default="Second file.")
+parser.add_argument("-fl2","--file2label", help="Optional label for the second file being compared.", default="Second file.")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 args = parser.parse_args()
