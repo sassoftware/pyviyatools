@@ -58,12 +58,12 @@ if not lines1[0] == lines2[0]:
     print("ERROR: Files must have a matching header line in the first line.")
     sys.exit()  
 
-    # Find lines that are in file1 but not in file2, and vice versa
-    diff = difflib.ndiff(lines1, lines2)
-    #
-    only_in_file1 = [line[2:] for line in diff if line.startswith('- ')]
-    # Find lines that are in file2 but not in file1
-    only_in_file2 = [line[2:] for line in diff if line.startswith('+ ')]
+# Find lines that are in file1 but not in file2, and vice versa
+diff = difflib.ndiff(lines1, lines2)
+#
+only_in_file1 = [line[2:] for line in diff if line.startswith('- ')]
+# Find lines that are in file2 but not in file1
+only_in_file2 = [line[2:] for line in diff if line.startswith('+ ')]
 
 print("NOTE: Compare the content of file1="+file1+" and file2="+file2)
 print("NOTE: SUMMARY")
