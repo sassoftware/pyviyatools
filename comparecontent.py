@@ -64,13 +64,20 @@ diff = difflib.ndiff(lines1, lines2)
 only_in_file1 = [line[2:] for line in diff if line.startswith('- ')]
 # Find lines that are in file2 but not in file1
 only_in_file2 = [line[2:] for line in diff if line.startswith('+ ')]
-
-print("NOTE: Compare the content of file1="+file1+" and file2="+file2)
+print("NOTE: Compare the content of file1 (" + label1 + ") and file2 (" + label2 + ")")
 print("NOTE: SUMMARY")
-if only_in_file1: print("NOTE: there is nothing in file1 that is not in file2.")
-if only_in_file2: print("NOTE: there is nothing in file2 that is not in file1.")
-if only_in_file1 or only_in_file2: print("NOTE: DETAILS")
-else: print("NOTE: Files are the same.")
+if only_in_file1:
+    print("NOTE: There is content in file1 (" + label1 + ") that is not in file2 (" + label2 + ").")
+else:
+    print("NOTE: There is nothing in file1 (" + label1 + ") that is not in file2 (" + label2 + ").")
+if only_in_file2:
+    print("NOTE: There is content in file2 (" + label2 + ") that is not in file1 (" + label1 + ").")
+else:
+    print("NOTE: There is nothing in file2 (" + label2 + ") that is not in file1 (" + label1 + ").")
+if only_in_file1 or only_in_file2:
+    print("NOTE: DETAILS")
+else:
+    print("NOTE: Files are the same.")
 
 if only_in_file1:
     
