@@ -173,7 +173,7 @@ if areyousure.upper() =='Y':
 
 					# if the export command fails then skip to the next item
 					if rc != 0:
-						print("ERROR: There was a problem exporting content "+ resultdata['items'][i]["name"] + ", command returned code "+str(rc))
+						print("ERROR: There was a problem exporting content '"+ resultdata['items'][i]["name"] + "', command returned code "+str(rc))
 						continue
 
 					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
