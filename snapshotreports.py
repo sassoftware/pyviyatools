@@ -164,17 +164,17 @@ if areyousure.upper() =='Y':
 					else:
 						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
 
-					# if the export command fails then skip to the next item
-					if rc != 0:
-						print("ERROR: There was a problem exporting content "+ name + ", command returned code "+str(rc))
-						continue
-
 					try:
 						print(command)
 					except UnicodeEncodeError:
 						print(command.encode('ascii','replace'))
 					
-					subprocess.call(command, shell=True)
+					rc=subprocess.call(command, shell=True)
+
+					# if the export command fails then skip to the next item
+					if rc != 0:
+						print("ERROR: There was a problem exporting content "+ name + ", command returned code "+str(rc))
+						continue
 
 					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 					package_info=callrestapi(reqval,reqtype)
