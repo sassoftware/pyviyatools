@@ -59,12 +59,14 @@ parser.add_argument("-n","--name", help="Name contains?",default=None)
 parser.add_argument("-f","--folderpath", help="Folder Path starts with?",default="/")
 parser.add_argument("-t","--tranferremove", help="Remove transfer file after download?", action='store_true')
 parser.add_argument("-i","--includeDependencies", help="Specifies if dependencies want to be included for each of the reports being exported.", action='store_true')
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 autotranferremove=args.tranferremove
 autoIncludeDep=args.includeDependencies
+limit=args.limit
 
 changeddays=args.changeddays
 modby=args.modifiedby
@@ -124,7 +126,7 @@ if areyousure.upper() =='Y':
 
 	# retrieve all reports in the system
 	reqtype='get'
-	reqval='/reports/reports?filter='+completefilter+'&limit=10000'
+	reqval='/reports/reports?filter='+completefilter+'&limit='+str(limit)
 
 	resultdata=callrestapi(reqval,reqtype)
 
@@ -161,6 +163,11 @@ if areyousure.upper() =='Y':
 						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'" -d'
 					else:
 						command=clicommand+' transfer export -u /reports/reports/'+id+' --name "'+package_name+'"'
+
+					# if the export command fails then skip to the next item
+					if rc != 0:
+						print("ERROR: There was a problem exporting content "+ name + ", command returned code "+str(rc))
+						continue
 
 					try:
 						print(command)
