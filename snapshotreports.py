@@ -151,8 +151,6 @@ if areyousure.upper() =='Y':
 
 				if path_to_report.startswith(folderpath):
 
-					reports_exported=reports_exported+1
-
 					path_to_report=path_to_report.replace("/","_")
 
 					package_name=str(uuid.uuid1())
@@ -175,7 +173,8 @@ if areyousure.upper() =='Y':
 					if rc != 0:
 						print("ERROR: There was a problem exporting content '"+ resultdata['items'][i]["name"] + "', command returned code "+str(rc))
 						continue
-
+					
+					reports_exported=reports_exported+1
 					reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 					package_info=callrestapi(reqval,reqtype)
 

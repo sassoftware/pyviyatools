@@ -159,8 +159,6 @@ if areyousure.upper() =='Y':
 
 					if (modified_dt >= modifiedafter_dt):
 				
-						content_exported=content_exported+1
-
 						json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
 						package_name=str(uuid.uuid1())
 						command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
@@ -177,6 +175,7 @@ if areyousure.upper() =='Y':
 							print("ERROR: There was a problem exporting content '"+ name + "', command returned code "+str(rc))
 							continue
 
+						content_exported=content_exported+1	
 						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 						package_info=callrestapi(reqval,reqtype)
 
