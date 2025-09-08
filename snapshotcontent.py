@@ -159,8 +159,6 @@ if areyousure.upper() =='Y':
 
 					if (modified_dt >= modifiedafter_dt):
 				
-						content_exported=content_exported+1
-
 						json_name=get_valid_filename(startoffile+"_"+resultdata['items'][i]["name"].replace(" ","")+'_'+str(i))
 						package_name=str(uuid.uuid1())
 						command=clicommand+' transfer export -u '+uri+' --name "'+package_name+'"'
@@ -170,8 +168,14 @@ if areyousure.upper() =='Y':
 						except UnicodeEncodeError:
 							print(command.encode('ascii','replace'))
 
-						subprocess.call(command, shell=True)
+						rc=subprocess.call(command, shell=True)
+						
+						# if the export command fails then skip to the next item
+						if rc != 0:
+							print("ERROR: There was a problem exporting content '"+ name + "', command returned code "+str(rc))
+							continue
 
+						content_exported=content_exported+1	
 						reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 						package_info=callrestapi(reqval,reqtype)
 
