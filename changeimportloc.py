@@ -36,6 +36,7 @@
 import argparse, sys, json, os
 import pip
 from pathlib import Path
+from sharedfunctions import callrestapi, getfolderid 
 
 
 ### Pre-req checks
@@ -96,6 +97,8 @@ except NameError:
     parser = argparse.ArgumentParser(description="Modifies exported VA report json file to having /Public as it's source location")
     parser.add_argument("-f","--file", help="Enter the path to the source file.",required='True')
     parser.add_argument("-o","--outputdir", help="Enter the destination path for file/s output.",default=cwd)
+    parser.add_argument("-tf","--targetfolder", help="Enter the target folder for the content",default="/Public")
+    
     args = parser.parse_args()
 
     # Input via argument
@@ -109,10 +112,18 @@ except NameError:
 
 ## Defines Viya output location for report being transformed
 ## (could be made dynamic in the future, currently hardcoded for the values of /Public set on all Viya 4 environments)
-ftarget=('/Public')
-ftargeturi=('/folders/folders/751063da-3eea-4b1c-be09-dd55fd3c15c9')
-ftargetid=('751063da-3eea-4b1c-be09-dd55fd3c15c9')
-ftargetname=('Public')
+#ftarget=('/Public')
+#ftargeturi=('/folders/folders/751063da-3eea-4b1c-be09-dd55fd3c15c9')
+#ftargetid=('751063da-3eea-4b1c-be09-dd55fd3c15c9')
+#ftargetname=('Public')
+
+# dynamically get the folder id and uri
+ftarget=args.targetfolder
+folder_details=getfolderid(ftarget)
+ftargetid=folder_details[0]
+ftargeturi=folder_details[2]
+ftargetname=folder_details[1]
+
 
 ## Formats the input json's file and resolves collapsed dirs
 source=Path(source)
