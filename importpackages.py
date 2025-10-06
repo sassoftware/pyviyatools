@@ -22,6 +22,7 @@
 # renamed to importpackages.py to be more descriptive of actual usage
 # DEC202023 added the ability to use a mapping file
 # APR2024 remove hardcoding of /tmp
+# SEP2025 add support for .egp and .spk files
 #
 # Import Python modules
 import argparse, sys, subprocess, os, json, tempfile
@@ -74,8 +75,8 @@ if areyousure.upper() =='Y':
 		# loop files in the directory
 		for filename in os.listdir( basedir ):
 
-			# only process json files
-			if filename.lower().endswith('.json'):
+			# only process json, egp or spk files
+			if filename.lower().endswith(('.json', '.spk', '.egp')):
 
 				#upload the json package
 				command=clicommand+' --output fulljson transfer upload --file "'+os.path.join(basedir,filename)+'" > '+tmppackageidfile
