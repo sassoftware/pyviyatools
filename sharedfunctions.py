@@ -920,3 +920,23 @@ def getclicommand():
         sys.exit()
    
     return clicommand
+
+# getconfigurationproperty
+# Functionlaity moved from standalone getconfigurationproperties.py and moved to a shared function
+# Change history
+#   18Nov2025 - Initial deployment
+
+def getconfigurationproperty(configurationdef):
+
+    # built the request parameters
+    reqval="/configuration/configurations?definitionName="+configurationdef
+    reqtype='get'
+
+    result=callrestapi(reqval,'get')
+
+    if result==None:
+        print("Note: configuration '"+configurationdef+"' was NOT found.")
+    else:
+        print("Note: configuration '"+configurationdef+"' was found.")
+
+    return result
