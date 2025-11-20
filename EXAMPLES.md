@@ -75,6 +75,24 @@ getruleid.py -u /SASVisualAnalytics/** -p "authenticatedUsers"
 ./getconfigurationproperties.py -c sas.identities.providers.ldap.user -o simple
 ```
 
+**importconfiguration.py**
+
+```bash
+# Import configuration properties found in /tmp/configs
+./importconfiguration.py -d /tmp/configs
+```
+
+**setconfigurationproperties.py**
+
+```bash
+# Set a configuration property
+./setconfigurationproperties.py --file /tmp/configs/ldap_user.json
+
+# Dry-run for setting a configuration property
+./setconfigurationproperties.py --file /tmp/configs/ldap_user.json --dryrun
+```
+
+
 **createdomain.py and updatedomain.py**
 
 ```bash

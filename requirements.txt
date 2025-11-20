@@ -5,4 +5,4 @@ pandas
 requests
 swat
 urllib3
-
+deepdiff

@@ -70,6 +70,7 @@ import collections
 import inspect
 import re
 import platform
+import subprocess
 from datetime import datetime as dt, timedelta as td
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -934,9 +935,15 @@ def getconfigurationproperty(configurationdef):
 
     result=callrestapi(reqval,'get')
 
-    if result==None:
-        print("Note: configuration '"+configurationdef+"' was NOT found.")
-    else:
-        print("Note: configuration '"+configurationdef+"' was found.")
+    #if result==None:
+    #    print("Note: configuration '"+configurationdef+"' was NOT found.")
+    #else:
+    #    print("Note: configuration '"+configurationdef+"' was found.")
 
     return result
+
+def updateconfigurationproperty(command):
+
+    print(command)
+    subprocess.call(command, shell=True)
+
