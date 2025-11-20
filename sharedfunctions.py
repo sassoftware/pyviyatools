@@ -923,7 +923,7 @@ def getclicommand():
     return clicommand
 
 # getconfigurationproperty
-# Functionlaity moved from standalone getconfigurationproperties.py and moved to a shared function
+# Functionality moved from standalone getconfigurationproperties.py and moved to a shared function
 # Change history
 #   18Nov2025 - Initial deployment
 
@@ -941,6 +941,11 @@ def getconfigurationproperty(configurationdef):
     #    print("Note: configuration '"+configurationdef+"' was found.")
 
     return result
+
+# updateconfigurationproperty
+# Functionality moved from standalone importconfiguration.py and moved to a shared function
+# Change history
+#   18Nov2025 - Initial deployment
 
 def updateconfigurationproperty(command):
 
