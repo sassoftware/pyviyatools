@@ -139,7 +139,5 @@ def main():
             apply_changes(filtered_target)
 
 
-
-
 if __name__ == "__main__":
     main()
