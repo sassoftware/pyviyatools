@@ -9,9 +9,11 @@ from sharedfunctions import (
     getinputjson,
     getconfigurationproperty,
     updateconfigurationproperty,
-    getclicommand,
+    getclicommand
 )
 
+# get cli location from properties, check that cli is there if not ERROR and stop
+clicommand=getclicommand()
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -20,7 +22,7 @@ def parse_args():
     parser.add_argument("-o", "--output", choices=["csv", "json", "simple", "simplejson"], default="json")
     parser.add_argument("-f", "--file", help="The JSON configuration definition to import")
     parser.add_argument("--ignore-items-keys", nargs="*", default=["id", "links"])
-    parser.add_argument("--ignore-metadata-keys", nargs="*", default=["creationTimeStamp", "modifiedTimeStamp"])
+    parser.add_argument("--ignore-metadata-keys", nargs="*", default=["createdBy","creationTimeStamp", "modifiedBy", "modifiedTimeStamp"])
     parser.add_argument("--include-keys", nargs="*", default=["version", "accept", "name", "items"])
     parser.add_argument("--dryrun", action="store_true", help="Simulate the operation without applying changes")
     return parser.parse_args()
@@ -58,8 +60,7 @@ def filter_json(data, include_keys, ignore_items_keys=None, ignore_metadata_keys
 # validate_changes
 # Function to compare current to target json and validate the changes before processing
 
-def validate_changes(current, target, current_data, target_data):
-    diff = DeepDiff(current, target, ignore_order=True).to_dict()
+def validate_changes(diff):
     unexpected = [k for k in diff if k != "values_changed"]
 
     if unexpected:
@@ -73,28 +74,33 @@ def validate_changes(current, target, current_data, target_data):
             print("❌ mediaType has changed!")
             print(f"Old: {change['old_value']}")
             print(f"New: {change['new_value']}")
-            raise SystemExit("Failing because mediaType change requires updating the target file.")
+            raise SystemExit("❌ mediaType' cannot be modified. Please update the target JSON file with the correct mediaType before retrying.")
 
         print(f"{path}: {change['old_value']} → {change['new_value']}")
 
         if "root['version']" in path:
-            current_version = current_data.get("version")
-            if current_version is None:
-                raise SystemExit("❌ Current JSON missing 'version' field.")
-            target_data["version"] = current_version + 1
-            print(f"🔄 Version updated: {change['old_value']} → {target_data['version']}")
-    else:
-        print("✅ No changes detected. Exiting cleanly.")
-        raise SystemExit(0)
+            old_version = change['old_value']
+            new_version = change['new_value']
+            if new_version <= old_version:
+                raise SystemExit("❌: Attempted to set version to {new_version}, but current version is {old_version}. The new version must be greater.")
 
 
 def apply_changes(filtered_data):
-    clicommand = getclicommand()
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = os.path.join(tmpdir, "filtered_target.json")
+        # write the JSON file
         with open(filepath, "w") as f:
             json.dump(filtered_data, f, indent=4)
-        updateconfigurationproperty(tmpdir, "filtered_target.json")
+
+        # build the command string
+        command = clicommand + ' configuration configurations update --file ' + filepath
+
+        # now open the tmp file you just wrote and print its contents
+        with open(filepath, "r") as f:
+            print(f.read())
+
+        # run the update
+        updateconfigurationproperty(command)
 
 
 def main():
@@ -119,12 +125,20 @@ def main():
     filtered_target = filter_json(target_data, args.include_keys, args.ignore_items_keys, args.ignore_metadata_keys)
     filtered_current = filter_json(current_data, args.include_keys, args.ignore_items_keys, args.ignore_metadata_keys)
 
-    validate_changes(filtered_current, filtered_target, current_data, target_data)
+    diff = DeepDiff(filtered_current, filtered_target, ignore_order=True)
 
-    if args.dryrun:
-        logging.info("Dryrun detected")
+    if not diff:
+        logging.info("✅ No changes detected.")
     else:
-        apply_changes(filtered_target)
+        diff = diff.to_dict()  # convert only when differences exist
+        validate_changes(diff)
+
+        if args.dryrun:
+            logging.info("✅ Dryrun detected, no changes will be applied")
+        else:
+            apply_changes(filtered_target)
+
+
 
 
 if __name__ == "__main__":
