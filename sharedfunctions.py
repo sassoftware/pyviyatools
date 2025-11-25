@@ -330,7 +330,7 @@ def getauthtoken(baseurl):
         head.update({"Authorization" : oaval})
 
         # test a connection to rest api if it fails try using the refresh token to re-authenticate
-        r = requests.get(baseurl,headers=head)
+        r = requests.get(baseurl, headers=head, timeout=10)
 
         if (400 <= r.status_code <=599):
 
@@ -405,6 +405,20 @@ def getauthtoken(baseurl):
         # tell user to re-authenticate with the sas-viya CLI
 
         r = requests.get(baseurl,headers=head)
+
+        try:
+            r = requests.get(baseurl, headers=head)
+        
+        except SSLError as e:
+            print("SSL Error occurred!")
+            print(f"Error details: {e}")
+            print(f"REQUESTS_CA_BUNDLE: {os.getenv('REQUESTS_CA_BUNDLE')}")
+            print("Tip: Check if the CA bundle path is correct or use certifi.")
+            sys.exit()
+        except RequestException as e:
+            print("General Request Error occurred!")
+            sys.exit()
+        
         if (400 <= r.status_code <=599):
 
             oaval=None
