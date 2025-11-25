@@ -1,3 +1,16 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# setconfigurationproperties.py
+# November 2025
+#
+# Provide a JSON configuration file; the script validates it before applying updates.
+# Requires the admin CLI and ensures JSON files match valid Viya configuration definitions.
+#
+# Change History
+#
+# 25NOV2025 Initial version
+
 import argparse
 import json
 import logging
