@@ -72,6 +72,7 @@ import re
 import platform
 import subprocess
 from datetime import datetime as dt, timedelta as td
+from requests.exceptions import SSLError, RequestException
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -330,7 +331,22 @@ def getauthtoken(baseurl):
         head.update({"Authorization" : oaval})
 
         # test a connection to rest api if it fails try using the refresh token to re-authenticate
-        r = requests.get(baseurl,headers=head)
+        # this code runs on each rest call so we trap errors here
+
+        try:
+            r = requests.get(baseurl, headers=head, timeout=10)
+        except (SSLError, OSError) as e:
+            print("ERROR: SSL or CA Bundle Error occurred.")
+            print(f"Error details: {e}")
+            print(f"REQUESTS_CA_BUNDLE file path is: {os.getenv('REQUESTS_CA_BUNDLE')}")
+            print("Tip: Check if the path is correct.")
+            sys.exit(1)
+
+        except RequestException as e:
+            print("General Request Error occurred!")
+            print(f"Error details: {e}")
+            sys.exit(1)
+
 
         if (400 <= r.status_code <=599):
 
@@ -404,7 +420,8 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl,headers=head)
+        r = requests.get(baseurl, headers=head)
+        
         if (400 <= r.status_code <=599):
 
             oaval=None
