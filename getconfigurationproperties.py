@@ -9,6 +9,7 @@
 # Change History
 #
 # 27JAN2017 Comments added
+# 18NOV2025 Moved functinality into sharedfunctions.py and added the import to getconfigurationproperty
 #
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
@@ -33,9 +34,9 @@ import argparse
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-from sharedfunctions import callrestapi, printresult
+from sharedfunctions import callrestapi, printresult, getconfigurationproperty
 
-    
+# setup command-line arguements      
 parser = argparse.ArgumentParser(description="Return a set of configuration properties")
 parser.add_argument("-c","--configuration", help="Enter the configuration definition.",required='True')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
@@ -44,9 +45,7 @@ args = parser.parse_args()
 configurationdef=args.configuration
 output_style=args.output
 
-reqval="/configuration/configurations?definitionName="+configurationdef
-
-configvalues=callrestapi(reqval,'get')
+configvalues=getconfigurationproperty(configurationdef)
 
 printresult(configvalues,output_style)
    

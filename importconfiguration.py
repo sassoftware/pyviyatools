@@ -20,8 +20,8 @@
 #
 #
 # Import Python modules
-import argparse, sys, subprocess, os, json
-from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
+import argparse, sys, os, json
+from sharedfunctions import callrestapi, getapplicationproperties,getclicommand,updateconfigurationproperty
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -58,9 +58,8 @@ if areyousure.upper() =='Y':
             # only process json files
             if filename.lower().endswith('.json'):
                 command=clicommand+'  configuration configurations update --file '+os.path.join(basedir,filename)
-                print(command)
-                subprocess.call(command, shell=True)
 
+                updateconfigurationproperty(command)
                 print("NOTE: Configuration import attempted from json file "+filename+" in  directory "+basedir  )
 
     else: print("ERROR: Directory does not exist")
