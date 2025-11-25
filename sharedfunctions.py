@@ -336,10 +336,10 @@ def getauthtoken(baseurl):
         try:
             r = requests.get(baseurl, headers=head, timeout=10)
         except (SSLError, OSError) as e:
-            print("ERROR: SSL or CA Bundle Error occurred!")
+            print("ERROR: SSL or CA Bundle Error occurred.")
             print(f"Error details: {e}")
-            print(f"REQUESTS_CA_BUNDLE: {os.getenv('REQUESTS_CA_BUNDLE')}")
-            print("Tip: Check if the CA bundle path is correct or use certifi.")
+            print(f"REQUESTS_CA_BUNDLE file path is: {os.getenv('REQUESTS_CA_BUNDLE')}")
+            print("Tip: Check if the path is correct.")
             sys.exit(1)
 
         except RequestException as e:
