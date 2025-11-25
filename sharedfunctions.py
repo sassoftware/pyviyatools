@@ -72,6 +72,7 @@ import re
 import platform
 import subprocess
 from datetime import datetime as dt, timedelta as td
+from requests.exceptions import SSLError, RequestException
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -332,16 +333,18 @@ def getauthtoken(baseurl):
         # test a connection to rest api if it fails try using the refresh token to re-authenticate
         try:
             r = requests.get(baseurl, headers=head, timeout=10)
-        
-        except SSLError as e:
-            print("SSL Error occurred!")
+        except (SSLError, OSError) as e:
+            print("SSL or CA Bundle Error occurred!")
             print(f"Error details: {e}")
             print(f"REQUESTS_CA_BUNDLE: {os.getenv('REQUESTS_CA_BUNDLE')}")
             print("Tip: Check if the CA bundle path is correct or use certifi.")
-            sys.exit()
+            sys.exit(1)
+
         except RequestException as e:
             print("General Request Error occurred!")
-            sys.exit()
+            print(f"Error details: {e}")
+            sys.exit(1)
+
 
         if (400 <= r.status_code <=599):
 
