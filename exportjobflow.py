@@ -26,7 +26,7 @@ args= parser.parse_args()
 
 filename=args.flowname
 flowname=args.flowname
-debug=True
+debug=False
 #filename=args.filename
 
 # create a dictionary that will ultimately create the transfer requests file
@@ -69,6 +69,10 @@ for job in jobs:
     jobactresult=callrestapi(job,"get",acceptType="application/vnd.sas.schedule.job+json")
     jobrequestURI=jobactresult["jobRequestUri"]
     data["items"].append(jobrequestURI)
+
+    jobrequestdetails=callrestapi(jobrequestURI,"get",acceptType="application/vnd.sas.job.execution.job.request+json")
+    jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
+    data["items"].append(jobDefinitionUri)
 
 
 print(json.dumps(data, indent=4))
