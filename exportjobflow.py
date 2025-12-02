@@ -20,15 +20,17 @@ parser = argparse.ArgumentParser(description="Export a Viya Folder and its sub-f
 
 parser.add_argument("-fn","--flowname", help="Folder path to export",default='HRAnalysysProject_Job_Flow_001')
 parser.add_argument("--filename", help="Full path to package file. Optional, default name is in temp with the same name as the flow",default="XNOFILENAMEX")
-parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
+parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug")
 
+# parse the arguments
 args= parser.parse_args()
 
-filename=args.flowname
+filename=args.filename
 flowname=args.flowname
 debug=args.debug
 filename=args.filename
+autotranferremove=args.tranferremove
 
 # create a dictionary that will ultimately create the transfer requests file
 data = {}
@@ -60,8 +62,10 @@ data["items"].append(reqval)
 # A job action is created when you add a job request to a flow. Job actions are only visible within flows. 
 #The job action references the job request and includes other information related to priority etc.
 
+# get jobs in the flow
 jobs=flowdetails["jobs"]
 
+# for each job in the flow get the job action details
 for job in jobs:
     data["items"].append(job)
 
@@ -78,7 +82,7 @@ for job in jobs:
 # with debug print the requests file content
 if debug: print(json.dumps(data, indent=4))
 
-
+# create a temp file to hold the requests file that we build
 package_name=flow_actual_name+flowid
 request_file_name=package_name+".json"
 temp_dir = tempfile.gettempdir() 
@@ -88,11 +92,11 @@ requests_full_path = os.path.join(temp_dir, request_file_name)
 with open(requests_full_path, "w") as f:
     json.dump(data, f, indent=4)
 
-
+# build the export command
 command=clicommand+' transfer export --request @/'+requests_full_path+' --name "'+package_name+'"'
 print(command)
 
-# Run the command and capture output
+# Run the command and capture output 
 result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
 # Get the stdout
@@ -105,23 +109,25 @@ if match:
     package_id = match.group(1)
     print("Captured ID:", package_id)
 
-# if filename does not include .json extension add it
 
+# if no filename specified create one in the temp directory with the flow name
 if filename =="XNOFILENAMEX" : completefile=os.path.join(temp_dir, package_name)
 else: completefile=filename
 
+# if filename does not include .json extension add it
 if not completefile.lower().endswith(".json"):
     completefile += ".json"
 
+# download the package to a file
 command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 print(command)
 subprocess.call(command, shell=True)
 print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
 
-""" if autotranferremove:
-        print(clicommand+' transfer delete --id '+package_id+"\n")
-        remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
-        remTransferObject.wait()
- """
+if autotranferremove:
+    print(clicommand+' transfer delete --id '+package_id+"\n")
+    remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+    remTransferObject.wait()
+
 
