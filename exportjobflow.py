@@ -40,6 +40,17 @@ data = {}
 reqval="/jobFlowScheduling/flows?filter=eq(name,'"+flowname+"')"
 flowresult=callrestapi(reqval,'get')
 
+#check how many flows returned and print the names  
+# if debug: print("Number of flows found with name "+flowname+" is "+str(flowresult['count']))
+if flowresult['count'] == 0:
+    print("ERROR: No job flow found with name "+flowname)
+    sys.exit()
+elif flowresult['count'] > 1:
+    print("ERROR: More than one job flow found with name "+flowname+", please make the name is unique")
+    for item in flowresult['items']:
+        print("  ID: "+item['id']+"  Name: "+item['name'])
+    sys.exit()  
+
 #if debug: print(json.dumps(flowresult, indent=4))
 
 flowid = flowresult['items'][0]['id']
