@@ -16,7 +16,7 @@ version=int(str(sys.version_info[0]))
 clicommand=getclicommand()
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Export a Viya Folder and its sub-folders")
+parser = argparse.ArgumentParser(description="Export a Viya Job Flow to a package file")
 
 parser.add_argument("-fn","--flowname", help="Folder path to export",default='HRAnalysysProject_Job_Flow_001')
 parser.add_argument("--filename", help="Full path to package file. Optional, default name is in temp with the same name as the flow",default="XNOFILENAMEX")
@@ -43,7 +43,7 @@ flowresult=callrestapi(reqval,'get')
 #check how many flows returned and print the names  
 # if debug: print("Number of flows found with name "+flowname+" is "+str(flowresult['count']))
 if flowresult['count'] == 0:
-    print("ERROR: No job flow found with name "+flowname)
+    print("ERROR: No job flow found with name "+flowname+'. Please check the name and try again.')
     sys.exit()
 elif flowresult['count'] > 1:
     print("ERROR: More than one job flow found with name "+flowname+", please make the name is unique")
