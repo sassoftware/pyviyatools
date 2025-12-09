@@ -130,7 +130,7 @@ def exportflow(flowname):
 
     # Get the stdout
     output = result.stdout.strip()
-    print("Command output:", output)
+    #print("Command output:", output)
 
     # Extract the ID using regex
     match = re.search(r'ID\s([a-f0-9\-]+)', output)
