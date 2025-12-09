@@ -7,7 +7,7 @@
 
 import argparse, sys, subprocess, uuid, time, os, glob, json, tempfile, re
 
-from sharedfunctions import getidsanduris, callrestapi, getapplicationproperties, printresult, getclicommand
+from sharedfunctions import getidsanduris, callrestapi, getapplicationproperties, printresult, getclicommand, file_accessible
 
 # get python version
 version=int(str(sys.version_info[0]))
@@ -40,7 +40,13 @@ flowname=args.flowname
 flowfile=args.flowfile
 directory=args.directory
 debug=args.debug
-autotranferremove=args.tranferremove
+autotranferremove=args.tranferremov
+
+if flowfile is not None: 
+    check=file_accessible(file,'r')
+    if not check:
+        print("ERROR: Flow definition file "+flowfile+" is not accessible for reading. Please check the path and try again.")
+        sys.exit()
 
 # create directory if it doesn't exist
 if not os.path.exists(directory) and directory != "TEMP" : os.makedirs(directory)
@@ -164,7 +170,7 @@ if flowfile is not None:
      print("Reading flow definition file "+flowfile)
 else:
     # read the flow definition file and get the flow name and export 
-    with open(file_path, "r") as f:
+    with open(flowfile, "r") as f:
         data = json.load(f)
     
     for item in data["items"]:
