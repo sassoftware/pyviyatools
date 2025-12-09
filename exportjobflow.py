@@ -101,6 +101,7 @@ def exportflow(flowname):
 
     # get jobs in the flow
     jobs=flowdetails["jobs"]
+    print(jobs)
 
     # for each job in the flow get the job action details
     for job in jobs:
