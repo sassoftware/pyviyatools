@@ -76,7 +76,7 @@ def exportflow(flowname):
             print("  ID: "+item['id']+"  Name: "+item['name'])
         sys.exit()  
 
-    #if debug: print(json.dumps(flowresult, indent=4))
+    if debug: print(json.dumps(flowresult, indent=4))
 
     flowid = flowresult['items'][0]['id']
 
