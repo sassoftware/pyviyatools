@@ -3,7 +3,9 @@
 #
 # exportjobflow.py
 # DEC 2025
-# pass in a job flow name and export the flow  
+# pass in a job flow name or a JSON file with a list of flows and export the flow(s)
+# to create a flow file for imput: sas-viya --output json job flows list > /tmp/flowlist.json
+# file format 
 
 import argparse, sys, subprocess, uuid, time, os, glob, json, tempfile, re
 
@@ -30,7 +32,7 @@ group.add_argument(
 )
 
 parser.add_argument("-d","--directory", help="Directory to store Export Packages",required='True',default="TEMP")
-parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
+parser.add_argument("-t","--transferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug: shows the requests file created")
 
 # parse the arguments
@@ -40,7 +42,7 @@ flowname=args.flowname
 flowfile=args.flowfile
 directory=args.directory
 debug=args.debug
-autotranferremove=args.tranferremov
+autotransferremove=args.transferremove
 
 if flowfile is not None: 
     check=file_accessible(file,'r')
@@ -151,7 +153,7 @@ def exportflow(flowname):
     rc=subprocess.call(command, shell=True)
 
     # if autotranferremove is set remove the transfer package from Viya infrastructure data server
-    if autotranferremove:
+    if autotransferremove:
         print(clicommand+' transfer delete --id '+package_id+"\n")
         remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
