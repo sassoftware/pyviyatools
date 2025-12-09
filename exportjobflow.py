@@ -84,7 +84,7 @@ def exportflow(flowname):
     reqval="/jobFlowScheduling/flows/"+flowid
     flowdetails=callrestapi(reqval,'get',acceptType="application/vnd.sas.schedule.flow+json")
     
-    if debug: print(json.dumps(flowdetails, indent=4))
+    
 
     flow_actual_name=flowdetails["name"]
 
@@ -111,11 +111,12 @@ def exportflow(flowname):
             continue
 
         data["items"].append(job)
-
-        print(data)
-
-        # for each job action get the job request
+    
+        # for each job action get the job request 
         jobactresult=callrestapi(job,"get",acceptType="application/vnd.sas.schedule.job+json")
+
+        if debug: print(json.dumps(jobactresult, indent=4))
+
         jobrequestURI=jobactresult["jobRequestUri"]
         data["items"].append(jobrequestURI)
 
