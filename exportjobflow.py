@@ -16,20 +16,20 @@ version=int(str(sys.version_info[0]))
 clicommand=getclicommand()
 
 # get input parameters
-parser = argparse.ArgumentParser(description="Export a Viya Job Flow to a package file")
+parser = argparse.ArgumentParser(description="Export a Viya Job Flow or Flows to packages.")
 
 # Mutually exclusive: exactly one must be provided
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument(
     "-fn", "--flowname",
-    help="Flow name to export (Viya Job Flow object name)"
+    help="Flow name to export (Viya Job Flow object name). Choose this or pass a flowfile."
 )
 group.add_argument(
     "-ff", "--flowfile",
-    help="Path to an existing flow definition file to export"
+    help="Path to an existing flow definition file to export. Choose this or pass a flowname."
 )
 
-parser.add_argument("--filename", help="Full path to package file. Optional, default name is in the temp directory with the same name as the flow.",default="XNOFILENAMEX")
+parser.add_argument("-d","--directory", help="Directory to store Export Packages",required='True',default="TEMP")
 parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug: shows the requests file created")
 
@@ -38,11 +38,12 @@ args= parser.parse_args()
 
 flowname=args.flowname
 flowfile=args.flowfile
-
-filename=args.filename
+directory=args.directory
 debug=args.debug
-filename=args.filename
 autotranferremove=args.tranferremove
+
+# create directory if it doesn't exist
+if not os.path.exists(directory) and directory != "TEMP" : os.makedirs(directory)
 
 def exportflow(flowname):
     # create a dictionary that will ultimately create the transfer requests file
@@ -130,9 +131,9 @@ def exportflow(flowname):
         print("Captured ID:", package_id)
 
 
-    # if no filename specified create one in the temp directory with the flow name
-    if filename =="XNOFILENAMEX" : completefile=os.path.join(temp_dir, package_name)
-    else: completefile=filename
+    # if no directory specified create one in the temp directory with the flow name
+    if directory =="TEMP" : completefile=os.path.join(temp_dir, package_name)
+    else: completefile=os.path.join(directory, package_name)
 
     # if filename does not include .json extension add it
     if not completefile.lower().endswith(".json"):
