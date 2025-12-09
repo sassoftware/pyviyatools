@@ -130,7 +130,7 @@ if not completefile.lower().endswith(".json"):
 # download the package to a file
 command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 print(command)
-subprocess.call(command, shell=True)
+rc=subprocess.call(command, shell=True)
 
 # if autotranferremove is set remove the transfer package from Viya infrastructure data server
 if autotranferremove:
@@ -142,5 +142,9 @@ if autotranferremove:
 # with debug print the requests file content
 if debug: print(json.dumps(data, indent=4))
 
-print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
+if rc == 0:
+    print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
+else:
+    print("WARNING: there may be a problem exporting Viya Job Flow "+flow_actual_name+ " to json file "+completefile)
+
 
