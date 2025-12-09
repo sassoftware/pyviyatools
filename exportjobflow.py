@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description="Export a Viya Job Flow to a packag
 parser.add_argument("-fn","--flowname", help="Folder path to export",default='HRAnalysysProject_Job_Flow_001')
 parser.add_argument("--filename", help="Full path to package file. Optional, default name is in temp with the same name as the flow",default="XNOFILENAMEX")
 parser.add_argument("-t","--tranferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
-parser.add_argument("--debug", action='store_true', help="Debug")
+parser.add_argument("--debug", action='store_true', help="Debug: shows the requests file created")
 
 # parse the arguments
 args= parser.parse_args()
@@ -58,7 +58,6 @@ flowid = flowresult['items'][0]['id']
 #get details of job flow
 reqval="/jobFlowScheduling/flows/"+flowid
 flowdetails=callrestapi(reqval,'get',acceptType="application/vnd.sas.schedule.flow+json")
-if debug: print(json.dumps(flowdetails, indent=4))
 
 flow_actual_name=flowdetails["name"]
 
@@ -90,8 +89,7 @@ for job in jobs:
     jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
     data["items"].append(jobDefinitionUri)
 
-# with debug print the requests file content
-if debug: print(json.dumps(data, indent=4))
+
 
 # create a temp file to hold the requests file that we build
 package_name=flow_actual_name+flowid
@@ -133,12 +131,16 @@ if not completefile.lower().endswith(".json"):
 command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 print(command)
 subprocess.call(command, shell=True)
-print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
 
+# if autotranferremove is set remove the transfer package from Viya infrastructure data server
 if autotranferremove:
     print(clicommand+' transfer delete --id '+package_id+"\n")
     remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
     remTransferObject.wait()
 
+# with debug print the requests file content
+if debug: print(json.dumps(data, indent=4))
+
+print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
 
