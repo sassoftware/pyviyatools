@@ -45,7 +45,7 @@ debug=args.debug
 autotransferremove=args.transferremove
 
 if flowfile is not None: 
-    check=file_accessible(file,'r')
+    check=file_accessible(flowfile,'r')
     if not check:
         print("ERROR: Flow definition file "+flowfile+" is not accessible for reading. Please check the path and try again.")
         sys.exit()
