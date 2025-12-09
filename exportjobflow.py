@@ -105,7 +105,7 @@ def exportflow(flowname):
     # for each job in the flow get the job action details
     for job in jobs:
         
-        if "flows" in job:
+        if "/flows/" in job:
         # if the job is a flow skip for now
             print("WARNING: Nested flows are not currently supported. Skipping nested flow "+job)
             continue
