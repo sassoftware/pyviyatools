@@ -47,7 +47,7 @@ autotransferremove=args.transferremove
 if flowfile is not None: 
     check=file_accessible(flowfile,'r')
     if not check:
-        print("ERROR: Flow definition file "+flowfile+" is not accessible for reading. Please check the path and try again.")
+        print("ERROR: Flow definition file "+flowfile+" does not exist or not accessible. Please check the path and try again.")
         sys.exit()
 
 # create directory if it doesn't exist
@@ -169,11 +169,11 @@ def exportflow(flowname):
 
 if flowfile is not None:
     # read the flow definition file and get the flow name
-     print("Reading flow definition file "+flowfile)
-else:
-    # read the flow definition file and get the flow name and export 
+    print("NOTE: Reading flow list file "+flowfile)
     with open(flowfile, "r") as f:
         data = json.load(f)
     
     for item in data["items"]:
         exportflow(item)
+else:
+    exportflow
