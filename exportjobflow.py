@@ -117,12 +117,14 @@ def exportflow(flowname):
 
         if debug: print(json.dumps(jobactresult, indent=4))
 
-        jobrequestURI=jobactresult["jobRequestUri"]
-        data["items"].append(jobrequestURI)
+        # get job request URI and add to requests file if present
+        if "jobRequestUri" in jobactresult:
+            jobrequestURI=jobactresult["jobRequestUri"]
+            data["items"].append(jobrequestURI)
 
-        jobrequestdetails=callrestapi(jobrequestURI,"get",acceptType="application/vnd.sas.job.execution.job.request+json")
-        jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
-        data["items"].append(jobDefinitionUri)
+            jobrequestdetails=callrestapi(jobrequestURI,"get",acceptType="application/vnd.sas.job.execution.job.request+json")
+            jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
+            data["items"].append(jobDefinitionUri)
 
     # create a temp file to hold the requests file that we build
     package_name=flow_actual_name+flowid
