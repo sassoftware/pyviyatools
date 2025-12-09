@@ -4,8 +4,11 @@
 # exportjobflow.py
 # DEC 2025
 # pass in a job flow name or a JSON file with a list of flows and export the flow(s)
-# to create a flow file for imput: sas-viya --output json job flows list > /tmp/flowlist.json
-# file format 
+# to create a flow file for input use the sas-viya CLI
+# sas-viya --output json job flows list > /tmp/flowlist.json
+# Example usage:
+# python exportjobflow.py -fn "My Job Flow Name" -d /my/export/directory
+# python exportjobflow.py -ff /tmp/flowlist.json -d /my/export/directory --transferremove
 
 import argparse, sys, subprocess, uuid, time, os, glob, json, tempfile, re
 
@@ -53,7 +56,9 @@ if flowfile is not None:
 # create directory if it doesn't exist
 if not os.path.exists(directory) and directory != "TEMP" : os.makedirs(directory)
 
+
 def exportflow(flowname):
+
     # create a dictionary that will ultimately create the transfer requests file
     data = {}
     # get URI of job flow
@@ -109,8 +114,6 @@ def exportflow(flowname):
         jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
         data["items"].append(jobDefinitionUri)
 
-
-
     # create a temp file to hold the requests file that we build
     package_name=flow_actual_name+flowid
     request_file_name=package_name+".json"
@@ -138,10 +141,9 @@ def exportflow(flowname):
         package_id = match.group(1)
         print("Captured ID:", package_id)
 
-
     # if no directory specified create one in the temp directory with the flow name
-    if directory =="TEMP" : completefile=os.path.join(temp_dir, package_name)
-    else: completefile=os.path.join(directory, package_name)
+    if directory =="TEMP" : completefile=os.path.join(temp_dir, flowname)
+    else: completefile=os.path.join(directory, flowname)
 
     # if filename does not include .json extension add it
     if not completefile.lower().endswith(".json"):
@@ -163,7 +165,7 @@ def exportflow(flowname):
     if debug: print(json.dumps(data, indent=4))
 
     if rc == 0:
-        print("NOTE: Viya Job Flow and dependent objects "+flow_actual_name+ "  exported to json file "+completefile)
+        print("NOTE: Viya Job Flow "+flow_actual_name+ " and dependent objects exported to json file "+completefile)
     else:
         print("WARNING: there may be a problem exporting Viya Job Flow "+flow_actual_name+ " to json file "+completefile)
 
