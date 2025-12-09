@@ -101,8 +101,7 @@ def exportflow(flowname):
 
     # get jobs in the flow
     jobs=flowdetails["jobs"]
-    print(jobs)
-
+   
     # for each job in the flow get the job action details
     for job in jobs:
         
@@ -112,6 +111,8 @@ def exportflow(flowname):
             continue
 
         data["items"].append(job)
+
+        print(data)
 
         # for each job action get the job request
         jobactresult=callrestapi(job,"get",acceptType="application/vnd.sas.schedule.job+json")
