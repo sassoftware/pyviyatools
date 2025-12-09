@@ -104,10 +104,15 @@ def exportflow(flowname):
 
     # for each job in the flow get the job action details
     for job in jobs:
+        
+        if "flows" in job:
+        # if the job is a flow skip for now
+            print("WARNING: Nested flows are not currently supported. Skipping nested flow "+job)
+            continue
+
         data["items"].append(job)
 
         # for each job action get the job request
-
         jobactresult=callrestapi(job,"get",acceptType="application/vnd.sas.schedule.job+json")
         jobrequestURI=jobactresult["jobRequestUri"]
         data["items"].append(jobrequestURI)
