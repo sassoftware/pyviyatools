@@ -83,6 +83,8 @@ def exportflow(flowname):
     #get details of job flow
     reqval="/jobFlowScheduling/flows/"+flowid
     flowdetails=callrestapi(reqval,'get',acceptType="application/vnd.sas.schedule.flow+json")
+    
+    if debug: print(flowdetails, indent=4)
 
     flow_actual_name=flowdetails["name"]
 
