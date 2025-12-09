@@ -174,6 +174,8 @@ if flowfile is not None:
         data = json.load(f)
     
     for item in data["items"]:
-        exportflow(item)
+        flowname=item["name"]
+        exportflow(flowname)
 else:
-    exportflow
+    print("NOTE: Export a singleflow  "+flowname)
+    exportflow(flowname)
