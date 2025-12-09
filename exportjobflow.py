@@ -163,4 +163,9 @@ if flowfile is not None:
     # read the flow definition file and get the flow name
      print("Reading flow definition file "+flowfile)
 else:
-    exportflow(flowname)
+    # read the flow definition file and get the flow name and export 
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    
+    for item in data["items"]:
+        exportflow(item)
