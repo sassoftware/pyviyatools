@@ -84,8 +84,6 @@ def exportflow(flowname):
     reqval="/jobFlowScheduling/flows/"+flowid
     flowdetails=callrestapi(reqval,'get',acceptType="application/vnd.sas.schedule.flow+json")
     
-    
-
     flow_actual_name=flowdetails["name"]
 
     # add top level details
@@ -123,8 +121,12 @@ def exportflow(flowname):
             data["items"].append(jobrequestURI)
 
             jobrequestdetails=callrestapi(jobrequestURI,"get",acceptType="application/vnd.sas.job.execution.job.request+json")
-            jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
-            data["items"].append(jobDefinitionUri)
+            
+            # get job definition URI and add to requests file if present
+            if "jobDefinitionUri" in jobactresult:
+               
+                jobDefinitionUri=jobrequestdetails["jobDefinitionUri"]
+                data["items"].append(jobDefinitionUri)
 
     # create a temp file to hold the requests file that we build
     package_name=flow_actual_name+flowid
