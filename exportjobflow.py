@@ -9,6 +9,20 @@
 # Example usage:
 # python exportjobflow.py -fn "My Job Flow Name" -d /my/export/directory
 # python exportjobflow.py -ff /tmp/flowlist.json -d /my/export/directory --transferremove
+# Copyright © 2025, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the License);
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 
 import argparse, sys, subprocess, uuid, time, os, glob, json, tempfile, re
 
@@ -19,8 +33,6 @@ from sharedfunctions import getidsanduris, callrestapi, getapplicationproperties
 def append_unique(items, uri):
     if uri and uri not in items:
         items.append(uri)
-
-
 
 def addflowdependencies(flowdetails, data, visited_flows=None):
     if visited_flows is None:
@@ -101,7 +113,7 @@ def exportflow(flowname):
     addflowdependencies(flowdetails,data)
     
     # create a temp file to hold the requests file that we build
-    package_name=flow_actual_name+flowid
+    package_name=flow_actual_name+"Requests_"+flowid
     request_file_name=package_name+".json"
     temp_dir = tempfile.gettempdir() 
     requests_full_path = os.path.join(temp_dir, request_file_name)
@@ -199,8 +211,6 @@ if flowfile is not None:
 
 # create directory if it doesn't exist
 if not os.path.exists(directory) and directory != "TEMP" : os.makedirs(directory)
-
-
 
 if flowfile is not None:
     # read the flow definition file and get the flow name
