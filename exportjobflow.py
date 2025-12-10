@@ -139,7 +139,7 @@ def exportflow(flowname):
         json.dump(data, f, indent=4)
 
     # build the export command
-    command=clicommand+' transfer export --request @/'+requests_full_path+' --name "'+package_name+'"'
+    command=clicommand+' transfer export --request @"'+requests_full_path+'" --name "'+package_name+'"'
     print(command)
 
     # Run the command and capture output 
