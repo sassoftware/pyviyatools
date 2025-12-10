@@ -164,7 +164,7 @@ def exportflow(flowname):
         completefile += ".json"
 
     # download the package to a file
-    command=clicommand+' transfer download --file '+completefile+' --id '+package_id
+    command=clicommand+' transfer download --file "'+completefile+'" --id '+package_id
     print(command)
     rc=subprocess.call(command, shell=True)
 
