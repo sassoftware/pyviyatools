@@ -100,7 +100,7 @@ def exportflow(flowname):
     # get jobs in the flow
     jobs=flowdetails["jobs"]
    
-    # for each job in the flow get the job action details
+    # for each job action in the flow get the job action details
     for job in jobs:
         
         if "/flows/" in job:
@@ -158,6 +158,8 @@ def exportflow(flowname):
     # if no directory specified create one in the temp directory with the flow name
     if directory =="TEMP" : completefile=os.path.join(temp_dir, flowname)
     else: completefile=os.path.join(directory, flowname)
+
+    completefile = completefile.replace(" ", "-")
 
     # if filename does not include .json extension add it
     if not completefile.lower().endswith(".json"):
