@@ -25,8 +25,8 @@
 | Inventory | comparecontent.py | Can be used to compare two inventory files|Added 09/05/2024 |
 | Migration | importcaslibs.py | import JSON files with CASLIB definitions from a directory | |
 | Migration | importconfiguration.py | import JSON files with viya configuration definitions from a directory | |
-| Migration | importconfiguration.py | import Viya transfer packages from a directory | |
 | Migration | importtemplates.py | import Viya templates from a directory | |
+| Migration | importpackages.py | import Viya packages from a directory | |
 | Migration | gettransfermapping.py | download a JSON mapping file from a mapping set | |
 | Migration | exportcaslibs.py | export caslibs and authorization to a directory | |
 | Migration | exportcustomgroups.py | export custom groups to a package | |
@@ -34,8 +34,9 @@
 | Migration | exportfoldertree.py | export the complete viya folder tree to a set of packages | |
 | Migration | exportstudioflowcode.py | create SAS code from SAS Studio flows | |
 | Migration | exportgeoproviders.py |  export geographic data providers to json files in a directory | |
-| Migration | snapshotreports.py |  export individual reports to a viya package | |
-| Migration | snapshotcontent.py |  export individual content to a viya package | |
+| Migration | exportjobflow.py |  export one or many job flows and all dependent objects | |
+| Migration | snapshotreports.py | export individual reports to a viya package per report | |
+| Migration | snapshotcontent.py | export individual content to a viya package per content item | |
 | Management | archivefiles.py |Archive and optionally delete files stored in the Viya infrastructure data server. | |
 | Management | validateviya.py |Validate that a Viya environment is working. | |
 | Management | validateviya.py |Validate that a Viya environment is working. | |
