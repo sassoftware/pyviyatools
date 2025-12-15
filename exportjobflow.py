@@ -58,8 +58,8 @@ def addflowdependencies(flowdetails, data, visited_flows=None):
         append_unique(data["items"], job)
 
         jobactresult = callrestapi(job, "get", acceptType="application/vnd.sas.schedule.job+json")
-        if debug:
-            print(json.dumps(jobactresult, indent=4))
+        #if debug:
+        #    print(json.dumps(jobactresult, indent=4))
 
         jobrequestURI = jobactresult.get("jobRequestUri")
         if jobrequestURI:
@@ -218,9 +218,15 @@ if flowfile is not None:
     with open(flowfile, "r") as f:
         data = json.load(f)
     
-    for item in data["items"]:
-        flowname=item["name"]
+    
+    items = data.get("items", [])
+    for item in items:
+        flowname = item.get("name")
         exportflow(flowname)
+    
+    print(f"NOTE : total processed flows = {len(items)}")
+
+
 else:
     print("NOTE: Export a singleflow  "+flowname)
     exportflow(flowname)
