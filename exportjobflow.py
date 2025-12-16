@@ -218,9 +218,14 @@ if flowfile is not None:
     with open(flowfile, "r") as f:
         data = json.load(f)
     
-    for item in data["items"]:
-        flowname=item["name"]
+    items = data.get("items", [])
+    for item in items:
+        flowname = item.get("name")
         exportflow(flowname)
+    
+    print(f"NOTE : total processed flows = {len(items)}")
+
+        
 else:
     print("NOTE: Export a singleflow  "+flowname)
     exportflow(flowname)
