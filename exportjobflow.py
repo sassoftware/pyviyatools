@@ -190,6 +190,8 @@ group.add_argument(
     help="Path to an existing flow definition file to export. Choose this or pass a flowname."
 )
 
+### MAIN CODE ###   
+
 parser.add_argument("-d","--directory", help="Directory to store Export Packages",required='True',default="TEMP")
 parser.add_argument("-t","--transferremove", help="Remove transfer package from SAS Viya after download to JSON file", action='store_true')
 parser.add_argument("--debug", action='store_true', help="Debug: shows the requests file created")
@@ -213,14 +215,19 @@ if flowfile is not None:
 if not os.path.exists(directory) and directory != "TEMP" : os.makedirs(directory)
 
 if flowfile is not None:
-    # read the flow definition file and get the flow name
+    # read the flow definition file and get the flow name export each flow
     print("NOTE: Reading flow list file "+flowfile)
     with open(flowfile, "r") as f:
         data = json.load(f)
     
-    for item in data["items"]:
-        flowname=item["name"]
+    items = data.get("items", [])
+    for item in items:
+        flowname = item.get("name")
         exportflow(flowname)
+    
+    print(f"NOTE : total processed flows = {len(items)}")
+
+        
 else:
     print("NOTE: Export a singleflow  "+flowname)
     exportflow(flowname)
