@@ -106,7 +106,9 @@ def main():
     parser.add_argument("--ignore-dates", action="store_true",
                         help="Ignore creationTimeStamp and modifiedTimeStamp columns when comparing")
     parser.add_argument("--ignore-ownership", action="store_true",
-                        help="Ignore createdByand modifiedBy columns when comparing")                    
+                        help="Ignore createdByand modifiedBy columns when comparing")
+    parser.add_argument("--ignore-id", action="store_true",
+                        help="Ignore id columns when comparing, some content gets a new id on import") 
 
     args = parser.parse_args()
 
@@ -138,11 +140,15 @@ def main():
     drop_cols = []
     if args.ignore_dates:
 
-        date_cols = {"creationTimeStamp", "modifiedTimeStamp"}
+        ignore_fields = {"creationTimeStamp", "modifiedTimeStamp"}
+        
+        if args.ignore_ownership:
+            ignore_fields.update({"createdBy", "modifiedBy"})
+        
+        if args.ignore_id:
+            ignore_fields.add("id")
 
-        if args.ignore_ownership: date_cols = {"creationTimeStamp", "modifiedTimeStamp","createdBy","modifiedby"}
-
-        drop_cols = [i for i, name in enumerate(header1) if name in date_cols]
+        drop_cols = [i for i, name in enumerate(header1) if name in ignore_fields]
 
         # Validate header equality AFTER dropping date columns
         h1_dropped = [c for i, c in enumerate(header1) if i not in drop_cols]
