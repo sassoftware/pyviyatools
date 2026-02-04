@@ -105,6 +105,8 @@ def main():
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("--ignore-dates", action="store_true",
                         help="Ignore creationTimeStamp and modifiedTimeStamp columns when comparing")
+    parser.add_argument("--ignore-ownership", action="store_true",
+                        help="Ignore createdByand modifiedBy columns when comparing")                    
 
     args = parser.parse_args()
 
@@ -135,7 +137,11 @@ def main():
     # Decide which columns to drop (by name)
     drop_cols = []
     if args.ignore_dates:
+
         date_cols = {"creationTimeStamp", "modifiedTimeStamp"}
+
+        if args.ignore_ownership: date_cols = {"creationTimeStamp", "modifiedTimeStamp","createdBy","modifiedby"}
+
         drop_cols = [i for i, name in enumerate(header1) if name in date_cols]
 
         # Validate header equality AFTER dropping date columns
