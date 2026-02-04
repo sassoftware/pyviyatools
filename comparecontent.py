@@ -10,7 +10,7 @@
 # - Compares order-insensitive (so different row ordering does not count as a difference).
 #
 # usage:
-#   python comparecontent.py --file1 <path> --file2 <path> [--file1label <label>] [--file2label <label>] [-d|--debug] [--ignore-dates]
+#   python comparecontent.py --file1 <path> --file2 <path> [--file1label <label>] [--file2label <label>] [-d|--debug] [--ignore-dates] [--ignore-ownership] [--ignore-id]
 #
 
 import argparse
