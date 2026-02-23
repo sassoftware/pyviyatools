@@ -301,16 +301,9 @@ if(len(computationTests) == 1):
         input_data = {
             "description": "Test input for compute context.",
             "attributes": {
-            "serverLaunchTimeout": 60
+            "serverLaunchTimeout": 120
             }
         }
-
-        # temp_dir = tempfile.gettempdir()
-        # temp_file_path = os.path.join(temp_dir, "compute_input.json")
-        
-        # with open(temp_file_path, 'w') as f:
-        #     json.dump(input_data, f)
-
         verbosePrint("Trying to start a compute session ", verbose)
         newSession = callrestapi(createSessionReq, "post", data=input_data)
         
