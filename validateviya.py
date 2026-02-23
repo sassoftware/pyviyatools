@@ -32,6 +32,7 @@ import sys
 import datetime
 
 from jobmodule import jobmodule
+import tempfile
 
 #Used in place of printresults in scenarios where results are not itemized, making printresults unusuable
 def specializedPrint(jsonData, outputStyle, cols):
@@ -292,12 +293,22 @@ if(len(computationTests) == 1):
         failingTests.append(test)
     else:
         contextId = computeContext_result_json['items'][0]['id']
-
         verbosePrint("Compute Context Found with id: " + contextId, verbose)
+        
         #Create a compute session for the test code:
         createSessionReq="/compute/contexts/" + contextId + "/sessions"
-        newSession = callrestapi(createSessionReq, "post")
+        # Write input data
+        input_data = {
+            "description": "Test input for compute context.",
+            "attributes": {
+            "serverLaunchTimeout": 120
+            }
+        }
+        verbosePrint("Trying to start a compute session ", verbose)
+        newSession = callrestapi(createSessionReq, "post", data=input_data)
+        
         sessionId = newSession['id']
+        sessionState = newSession['state']
 
         verbosePrint("Compute Session Created with id: " + sessionId, verbose)
 
