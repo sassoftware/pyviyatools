@@ -305,12 +305,14 @@ if(len(computationTests) == 1):
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(input_data, f)
-            temp_file_path = f.name
+        # temp_dir = tempfile.gettempdir()
+        # temp_file_path = os.path.join(temp_dir, "compute_input.json")
+        
+        # with open(temp_file_path, 'w') as f:
+        #     json.dump(input_data, f)
 
-        verbosePrint("Trying to start a compute session ",verbose)
-        newSession = callrestapi(createSessionReq, "post",i=temp_file_path)
+        verbosePrint("Trying to start a compute session ", verbose)
+        newSession = callrestapi(createSessionReq, "post", data=input_data)
         
         sessionId = newSession['id']
         sessionState = newSession['state']
