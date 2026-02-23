@@ -297,8 +297,6 @@ if(len(computationTests) == 1):
         
         #Create a compute session for the test code:
         createSessionReq="/compute/contexts/" + contextId + "/sessions"
-        newSession = callrestapi(createSessionReq, "post")
-
         # Write input data
         input_data = {
             "description": "Test input for compute context.",
