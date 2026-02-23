@@ -309,9 +309,11 @@ if(len(computationTests) == 1):
             json.dump(input_data, f)
             temp_file_path = f.name
 
-        verbosePrint("Trying to start a compute session ")
-        newSession = callrestapi(createSessionReq, "post",i='/tmp/myinput.json')
+        verbosePrint("Trying to start a compute session ",verbose)
+        newSession = callrestapi(createSessionReq, "post",i=temp_file_path)
+        
         sessionId = newSession['id']
+        sessionState = newSession['state']
 
         verbosePrint("Compute Session Created with id: " + sessionId, verbose)
 
