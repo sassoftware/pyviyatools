@@ -124,4 +124,4 @@ for id in ids:
     elif (httpcode == 200):
         print("Job:",id,"has existing requestUri:",requestUri)
     else:
-        print("Job:",id,"requestUri:",requestUri,"returned unexpected return code:",httpcode)   
+        print("Job:",id,"requestUri:",requestUri,"returned unexpected return code:",httpcode)
