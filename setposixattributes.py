@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# setposixattributesbulk.py
+# setposixattributes.py
 # March 2025
 #
 # Change History
