@@ -67,7 +67,6 @@
 | Configuration | getposixgroups.py | Returns the posix attributes of a group or all groups | |
 | Configuration | getposixidentity.py | Returns the posix attributes of a user similar to the Linux "id" command | |
 | Configuration | setposixattributes.py | Set POSIX attributes for User and Group (uid and gid) from a csv file | |
-| Configuration | setposixattributesbulk.py | Uses bulkload function to update user and group POSIX attributes | |
 | Configuration | getcomputecontextattributes.py |get attributes of a  compute context. | |
 | Configuration | setcomputecontextattributes.py |Add attributes to an existing compute context. | |
 | Configuration | updatecomputecontext.py | Update an existing compute context from a JSON file. | |
