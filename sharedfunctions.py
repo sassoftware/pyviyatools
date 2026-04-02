@@ -422,7 +422,7 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl = "/identities/users/@currentUser", headers=head)
+        r = requests.get(baseurl + "/identities/users/@currentUser", headers=head)
         
         if (400 <= r.status_code <=599):
 
