@@ -334,7 +334,7 @@ def getauthtoken(baseurl):
         # this code runs on each rest call so we trap errors here
 
         try:
-            r = requests.get(baseurl, headers=head, timeout=10)
+            r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, timeout=10)
         except (SSLError, OSError) as e:
             print("ERROR: SSL or CA Bundle Error occurred.")
             print(f"Error details: {e}")
@@ -420,7 +420,7 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl, headers=head)
+        r = requests.get(baseurl = "/identities/users/@currentUser", headers=head)
         
         if (400 <= r.status_code <=599):
 
