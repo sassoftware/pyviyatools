@@ -42,6 +42,7 @@
 #  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
 #  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
 #  18JUL2025 if the clilocation path contains a tilde expand it
+#  02APR2026 Modified connection tests to account for removal of SASDrive
 #
 # Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -104,6 +105,7 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   20Feb2022 Support patch
 #   28Feb2022 Added functionality to optionally pass in etags, and to request they be returned, for API endpoints that use them
 #   15DEC2022 Added noprint, can be used to suppress the printing of the error messages when stoponerror is disabled, defaults to print for compatibility
+
 
 def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
 
@@ -334,7 +336,7 @@ def getauthtoken(baseurl):
         # this code runs on each rest call so we trap errors here
 
         try:
-            r = requests.get(baseurl, headers=head, timeout=10)
+            r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, timeout=10)
         except (SSLError, OSError) as e:
             print("ERROR: SSL or CA Bundle Error occurred.")
             print(f"Error details: {e}")
@@ -420,7 +422,7 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl, headers=head)
+        r = requests.get(baseurl + "/identities/users/@currentUser", headers=head)
         
         if (400 <= r.status_code <=599):
 
