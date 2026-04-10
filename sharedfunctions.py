@@ -945,6 +945,9 @@ def getclicommand():
     propertylist=getapplicationproperties()
     clidir=propertylist["sascli.location"]
 
+    # read an environment variable PYVIYAINSECURE default to False even if variable does not exist
+    pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+    
     # if the path contains a tilde expand it
     # this is useful for the user home directory
     if '~' in clidir:
@@ -964,6 +967,10 @@ def getclicommand():
         print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
         clicommand=None
         sys.exit()
+    
+    # if pviya_insecure is true, add the --insecure flag to the command
+    if pyviya_insecure:
+        clicommand=clicommand+" --insecure"
    
     return clicommand
 
