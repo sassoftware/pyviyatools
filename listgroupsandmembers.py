@@ -146,7 +146,7 @@ for group in groups:
                 output=output+','
 
 
-            elif membertype=='user' and show_email:
+            if membertype=='user' and show_email:
 
                 # List the members of this group
                 endpoint='/identities/users/'+memberid+'?limit=10000'
