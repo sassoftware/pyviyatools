@@ -10,7 +10,7 @@
 # https://developer.sas.com/rest-apis/mysas/applications.
 # Optionally specify these in an input file with the format:
 # ```
-# SAS_ORDERS_API_CLIENT_ID=xxxxxxxxxxxxx
+# SAS_ORDERS_API_CLIENT_ID=xxxxxxxxxxxxxx
 # SAS_ORDERS_API_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxx # base64 (no special characters)
 # ````
 #
