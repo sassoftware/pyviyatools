@@ -4,6 +4,9 @@
 # listgroupsandmembers.py
 # January 2019
 #
+# Change History:
+# 29APR2026 - Added filters for group/user and type of group/user
+#
 # Usage:
 # listgroupsandmembers.py [--noheader] [-e] [-d]
 #
@@ -15,6 +18,12 @@
 # 2. Return list of all groups and all their members, including email
 #    address for members
 #        ./listgroupsandmembers.py -e
+#
+# 3. Return list of groups and members that are just groups (not users)
+#       ./listgroupsandmembers.py --id SASAdministrators --type group
+#
+# 4. Return list of users in a and members that have been pushed by scim
+#       ./listgroupsandmembers.py --id SASAdministrators --type user --source scim
 #
 # Copyright © 2020, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -49,26 +58,41 @@ sys.excepthook = exception_handler
 parser = argparse.ArgumentParser()
 parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
 parser.add_argument("--name", help="Subset based on name containing a string",default=None )
-
+parser.add_argument("--type", help="Subset based on type containing a string",choices=['user','group'],default=None )
+parser.add_argument("--source", help="Subset based on providerId containing a string",choices=['local','scim','ldap'],default=None )
 parser.add_argument("--noheader", action='store_true', help="Do not print the header row")
 parser.add_argument("-e","--email", action='store_true', help="Show email addresses for users")
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
+
 args = parser.parse_args()
 noheader=args.noheader
 debug=args.debug
 show_email=args.email
-
-
 idval=args.id
 nameval=args.name
+mtype=args.type
+gtype=args.source
 
-# create filter
+
+# create filter - id, name
 filtercond=[]
 if idval!=None: filtercond.append('contains(id,"'+idval+'")')
 if nameval!=None: filtercond.append('contains(name,"'+nameval+'")')
 delimiter = ','
 
 completefilter = 'and('+delimiter.join(filtercond)+')'
+
+# create filter - user, group, source
+filtercond2=[]
+if gtype!=None: filtercond2.append('eq(providerId,"'+gtype+'")')
+if mtype=='user':
+    filtercond2.append('eq(type,"user"))')
+    groupfilter =  '&filter=and('+delimiter.join(filtercond2)
+elif mtype=='group':
+    filtercond2.append('eq(type,"group"))')
+    groupfilter =  '&filter=and('+delimiter.join(filtercond2)
+else:
+    groupfilter = ""
 
 # Print header row unless noheader argument was specified
 if not noheader:
@@ -100,8 +124,8 @@ for group in groups:
 
     if groupid!="": # Skip groups with empty id (this has been seen at least once at a customer site), because we cannot fetch their members.
 
-        # List the members of this group
-        endpoint='/identities/groups/'+groupid+'/members?limit=10000'
+        # List the members of this group and apply filter if set
+        endpoint='/identities/groups/'+groupid+'/members?limit=10000'+groupfilter
         method='get'
         members_result_json=callrestapi(endpoint,method)
         if debug:
@@ -121,7 +145,8 @@ for group in groups:
             if show_email:
                 output=output+','
 
-            if membertype=='user' and show_email:
+
+            elif membertype=='user' and show_email:
 
                 # List the members of this group
                 endpoint='/identities/users/'+memberid+'?limit=10000'
