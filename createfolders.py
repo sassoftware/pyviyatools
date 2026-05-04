@@ -9,6 +9,7 @@
 #
 # 30oct2018 Initial development
 # 18sep2023 remove trailing slash from new folders
+# 03may2024 remove spaces and irregular characters from folder paths
 #
 # Format of csv file is two columns
 # Column 1 is the full path to the folder
@@ -79,8 +80,10 @@ if check:
 
                 if cols==1: row.append("Created by pyviyatools createfolders.py")
 
-                newfolder=row[0].rstrip("/")
-                description=row[1]
+                # Remove trailing slash from new folder path
+                # remove any spaces or irregular characters from the folder path
+                newfolder=row[0].strip().rstrip("/")
+                description=row[1].strip()
 
                 if newfolder[0]!='/': newfolder="/"+newfolder
 

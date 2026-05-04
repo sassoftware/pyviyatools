@@ -7,6 +7,7 @@
 # Change History
 #
 # 17Mar20 Initial development
+# 03may2024 remove spaces and irregular characters from folder paths
 #
 # Format of input csv file is 6 columns
 # Column 1 is the full path to the folder
@@ -61,7 +62,10 @@ if check:
     with open(file, 'rt') as f:
         filecontents = csv.reader(f)
         for row in filecontents:
-            folderpath=row[0]
+            
+            # strip whitespace and trailing slashes from folder path
+            folderpath=row[0].strip().rstrip("/")
+
             principaltype=row[1]
             principalname=row[2]
             accesssetting=row[3]
