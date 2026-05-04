@@ -143,22 +143,31 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
 
     # call the rest api using the parameters passed in and the requests python library
 
+    # read an environment variable PYVIYAINSECURE default to False even if variable does not exist
+    pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't') 
+
+    if pyviya_insecure:
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        verify_ssl=False
+    else:
+        verify_ssl=True
+
     if reqtype=="get":
-        ret = requests.get(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.get(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
     elif reqtype=="post":
-        ret = requests.post(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.post(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)       
     elif reqtype=="delete":
-        ret = requests.delete(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.delete(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
     elif reqtype=="put":
-        ret = requests.put(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.put(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
     elif reqtype=="patch":
-        ret = requests.patch(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.patch(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
     elif reqtype=="head":
-        ret = requests.head(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.head(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
     else:
         result=None
         print("NOTE: Invalid method")
-        sys.exit()
+        sys.exit()  
 
 
     # response error if status code between these numbers
@@ -335,8 +344,17 @@ def getauthtoken(baseurl):
         # test a connection to rest api if it fails try using the refresh token to re-authenticate
         # this code runs on each rest call so we trap errors here
 
+        # read environment variable PYVIYAINSECURE to determine if we should verify ssl certificates or not
+        pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+        if pyviya_insecure:
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            verify_ssl=False
+        else:
+            verify_ssl=True
+
+
         try:
-            r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, timeout=10)
+            r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, timeout=10,verify=verify_ssl)
         except (SSLError, OSError) as e:
             print("ERROR: SSL or CA Bundle Error occurred.")
             print(f"Error details: {e}")
@@ -371,7 +389,7 @@ def getauthtoken(baseurl):
              refresh_data["grant_type"] =  "refresh_token"
              refresh_data["refresh_token"] = refreshToken
 
-             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret))
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify_ssl=False)
 
              if (400 <= response.status_code <=599):
 
@@ -422,7 +440,15 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl + "/identities/users/@currentUser", headers=head)
+        # read environment variable PYVIYAINSECURE to determine if we should verify ssl certificates or not
+        pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+        if pyviya_insecure:
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            verify_ssl=False
+        else:
+            verify_ssl=True     
+
+        r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, verify=verify_ssl)
         
         if (400 <= r.status_code <=599):
 
@@ -919,6 +945,9 @@ def getclicommand():
     propertylist=getapplicationproperties()
     clidir=propertylist["sascli.location"]
 
+    # read an environment variable PYVIYAINSECURE default to False even if variable does not exist
+    pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+    
     # if the path contains a tilde expand it
     # this is useful for the user home directory
     if '~' in clidir:
@@ -938,6 +967,10 @@ def getclicommand():
         print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
         clicommand=None
         sys.exit()
+    
+    # if pviya_insecure is true, add the --insecure flag to the command
+    if pyviya_insecure:
+        clicommand=clicommand+" --insecure"
    
     return clicommand
 
