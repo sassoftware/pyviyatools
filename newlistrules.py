@@ -78,9 +78,6 @@ def join_and(expressions: List[str]) -> str:
         return expressions[0]
     return 'and(' + ','.join(expressions) + ')'
 
-def contains(field: str, value: str) -> str:
-    return f"contains({field},'{value}')"
-
 def cmp(field: str, value: str, operator: str = 'eq') -> str:
     op = operator.lower()
     if op not in ('eq','ne','contains'):
@@ -119,7 +116,10 @@ def build_filter(args) -> str:
         if p.lower() == 'authenticatedusers':
             p = 'authenticatedUsers'
         if p in PRINCIPAL_TYPES:
-            clauses.append(cmp('principalType', p, operator))
+            if operator in ['eq','ne']:
+                clauses.append(cmp('principalType', p, operator))
+            else:       
+                clauses.append(cmpdefault('principalType', p, operator))
         else:
             clauses.append(cmp('principal', p, operator))
 
@@ -131,10 +131,7 @@ def build_filter(args) -> str:
         else:
             clauses.append(cmpdefault('enabled', 'true' if b else 'false', operator))
 
-    # status list (alias for setting or custom)
-    if args.status:
-        clauses.append(in_list('setting', args.status, operator))
-
+    ''' YET TO BE DEVELOPED
     # permissions: ensure valid and build contains/any logic
     if args.permission:
         invalid = [p for p in args.permission if p not in VALID_PERMISSIONS]
@@ -143,6 +140,7 @@ def build_filter(args) -> str:
         # permissions are matched with contains; operator doesn't apply to contains
         perm_clauses = [contains('permissions', p) for p in args.permission]
         clauses.append(join_or(perm_clauses))
+    '''
 
     # created/modified ranges (these are range ops and unaffected by eq/ne)
     if args.created_after:
@@ -158,12 +156,15 @@ def build_filter(args) -> str:
     if args.media_type and args.media_type.lower() != 'none':
         clauses.append(cmp('mediaType', args.media_type, operator))
 
-    # condition or matchParams free text contains
+    # condition free text contains
     if args.condition:
         clauses.append(contains('condition', args.condition))
+    
+    ''' YET TO BE DEVELOPED
     if args.match_params:
         clauses.append(contains('matchParams', args.match_params))
-
+    '''
+    
     # custom raw filter (allow advanced users to pass a full filter expression)
     if args.raw_filter:
         clauses.append(args.raw_filter)
