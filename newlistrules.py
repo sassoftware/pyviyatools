@@ -44,9 +44,9 @@ def parse_bool(val: str) -> Optional[bool]:
     if val is None or val.lower() in ('none',''):
         return None
     v = val.lower()
-    if v in ('true','t','1','yes','y'):
+    if v in ('true','t','1','yes','y','enabled'):
         return True
-    if v in ('false','f','0','no','n'):
+    if v in ('false','f','0','no','n','disabled'):
         return False
     raise argparse.ArgumentTypeError(f"Invalid boolean value: {val}")
 
@@ -78,6 +78,9 @@ def join_and(expressions: List[str]) -> str:
         return expressions[0]
     return 'and(' + ','.join(expressions) + ')'
 
+def contains(field: str, value: str) -> str:
+    return f"contains({field},'{value}')"
+
 def cmp(field: str, value: str, operator: str = 'eq') -> str:
     op = operator.lower()
     if op not in ('eq','ne','contains'):
@@ -98,13 +101,13 @@ def build_filter(args) -> str:
     clauses = []
     operator = args.operator.lower() if args.operator else 'eq'
 
-    # objectUri contains
+    # objectUri (use cmp)
     if args.uri and args.uri.lower() != 'none':
-        clauses.append(contains('objectUri', args.uri))
+        clauses.append(cmp('objectUri', args.uri, operator))
 
-    # containerUri contains
+    # containerUri cmp
     if args.container and args.container.lower() != 'none':
-        clauses.append(contains('containerUri', args.container))
+        clauses.append(cmp('containerUri', args.container, operator))
 
     # description contains (CASE SENSITIVE as original)
     if args.description and args.description != 'none':
@@ -156,10 +159,11 @@ def build_filter(args) -> str:
     if args.media_type and args.media_type.lower() != 'none':
         clauses.append(cmp('mediaType', args.media_type, operator))
 
-    # condition free text contains
+    # condition free text (use contains)
     if args.condition:
         clauses.append(contains('condition', args.condition))
-    
+#        print(clauses) 
+
     ''' YET TO BE DEVELOPED
     if args.match_params:
         clauses.append(contains('matchParams', args.match_params))
@@ -174,26 +178,27 @@ def build_filter(args) -> str:
 
 
 # --- Argument parsing ---
-parser = argparse.ArgumentParser(description="List rules for a principal and/or an endpoint with flexible filters")
+parser = argparse.ArgumentParser(description="newlistrules.py functions")
 
-parser.add_argument("-u","--uri", help="String that objectUri contains", default="none")
-parser.add_argument("-c","--container", help="String that containerUri contains", default="none")
-parser.add_argument("-p","--principal", help="Identity name (id) or authenticatedUsers, everyone or guest", default='none')
-parser.add_argument("-d","--description", help="String that's included in a rule description (CASE SENSITIVE)", default='none')
-parser.add_argument("-e","--enabled", help="Status of rules to return true or false", default='none')
-parser.add_argument("--operator", help="Comparison operator to use for equality filters", choices=['eq','ne','contains'], default='eq')
-parser.add_argument("--condition", help="Filter by condition contains text")
-parser.add_argument("--media-type", dest='media_type', help="Filter by mediaType")
+parser.add_argument("-u","--uri", help="objectUri search, can be used with operator", default="none")
+parser.add_argument("-c","--container", help="containerUri search, can be used with operator", default="none")
+parser.add_argument("-p","--principal", help="Principal/Group ID, or 'authenticatedUsers', 'everyone' or 'guest'", default='none')
+parser.add_argument("-d","--description", help="description search (contains only and CASE SENSITIVE)", default='none')
+parser.add_argument("--condition", help="condition search (contains only and CASE SENSITIVE)")
+parser.add_argument("--media-type", dest='media_type', help="mediaType search, can be used with operator")
+parser.add_argument("-e","--enabled", help="Show rules enabled/true or disabled/false", default='none')
+parser.add_argument("--operator", help="Filter operator", choices=['eq','ne','contains'], default='eq')
+parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'], default='json')
+parser.add_argument("--csvheader", help="(Optional) Disables header - must be combined with '-o csv'", choices=['yes','no'], default='yes')
 #parser.add_argument("--perms", help="Sting of permissions to search for in the rules", default="none")
 #parser.add_argument("--permission", action='append', help="Filter by permission. Can be repeated", metavar='PERM')
-parser.add_argument("--created-after", dest='created_after', type=parse_date, help="Created after ISO8601 datetime")
-parser.add_argument("--created-before", dest='created_before', type=parse_date, help="Created before ISO8601 datetime")
-parser.add_argument("--modified-after", dest='modified_after', type=parse_date, help="Modified after ISO8601 datetime")
-parser.add_argument("--modified-before", dest='modified_before', type=parse_date, help="Modified before ISO8601 datetime")
+parser.add_argument("--created-after", dest='created_after', type=parse_date, help="Created after datetime, e.g. 2026-01-01T00:00:00Z")
+parser.add_argument("--created-before", dest='created_before', type=parse_date, help="Created before datetime, e.g. 2026-01-01T00:00:00Z")
+parser.add_argument("--modified-after", dest='modified_after', type=parse_date, help="Modified after datetime, e.g. 2026-01-01T00:00:00Z")
+parser.add_argument("--modified-before", dest='modified_before', type=parse_date, help="Modified before datetime, e.g. 2026-01-01T00:00:00Z")
 #parser.add_argument("--match-params", dest='match_params', help="Filter by matchParams contains text")
 parser.add_argument("--raw-filter", help="Raw filter expression to append (advanced users)")
-parser.add_argument("--csvheader", help="(Optional) Disables header - must be combined with '-o csv'", choices=['yes','no'], default='yes')
-parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'], default='json')
+
 
 args = parser.parse_args()
 
