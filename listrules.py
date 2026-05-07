@@ -28,18 +28,28 @@ import datetime
 import json
 import sys
 from typing import List, Optional
+from argparse import RawDescriptionHelpFormatter
 
 from sharedfunctions import callrestapi, printresult, getbaseurl
 
 
 # --- Configuration ---
-LIMITVAL = 10000
 DESIRED_OUTPUT_COLUMNS = ['objectUri','containerUri','principalType','principal','setting','permissions','description','reason','createdBy','creationTimeStamp','modifiedBy','modifiedTimeStamp','condition','matchParams','mediaType','enabled','version','id']
 VALID_PERMISSIONS = ['read','update','delete','secure','add','remove','create']
 PRINCIPAL_TYPES = {'guest','everyone','authenticatedUsers'}
 
-
 # --- Helpers ---
+# set results return limit
+def set_limit(args, default: int = 10000) -> int:
+    val = getattr(args, "limit", None)
+    if val is None:
+        return default
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid limit value: {val!r}; must be an integer")
+
+
 def parse_bool(val: str) -> Optional[bool]:
     if val is None or val.lower() in ('none',''):
         return None
@@ -94,6 +104,18 @@ def cmpdefault(field: str, value: str, operator: str = 'eq') -> str:
 def in_list(field: str, values: List[str], operator: str = 'eq') -> str:
     # build or(eq(field,val1),eq(field,val2),...) or or(ne(...))
     return join_or([cmp(field, v, operator) for v in values])
+
+def get_rules_count(rules_result_json):
+    """
+    Return an integer count from the JSON. Falls back to len(items) if count missing or invalid.
+    """
+    try:
+        count = rules_result_json.get("count", None)
+        if count is None:
+            return int(len(rules_result_json.get("items", [])))
+        return int(count)
+    except (TypeError, ValueError):
+        return int(len(rules_result_json.get("items", [])))
 
 
 # --- Build filter expression ---
@@ -184,28 +206,41 @@ def build_filter(args) -> str:
 
 
 # --- Argument parsing ---
-parser = argparse.ArgumentParser(description="listrules.py functions")
+parser = argparse.ArgumentParser(
+    description='''
+listrules.py\n
+\033[4;34m\033[1mUSAGE NOTE\033[0m
+All search filters use the \033[1;33m"eq"\033[0m filter unless otherwise stated.
+When using the date/time based filters the format can be either:
+\033[1;33m2026-01-01\033[0m
+or
+\033[1;33m2026-01-01T00:00:00Z\033[0m''',
+    formatter_class=RawDescriptionHelpFormatter)
 
 parser.add_argument("-u","--uri", help="objectUri search, can be used with operator", default="none")
 parser.add_argument("-c","--container", help="containerUri search, can be used with operator", default="none")
-parser.add_argument("-p","--principal", help="Principal/Group ID, or 'authenticatedUsers', 'everyone' or 'guest'", default='none')
-parser.add_argument("-d","--description", help="description search (contains only and CASE SENSITIVE)", default='none')
-parser.add_argument("--condition", help="condition search (contains only and CASE SENSITIVE)")
+parser.add_argument("-p","--principal", help="Principal/Group ID (CASE SENSITIVE), or 'authenticatedUsers', 'everyone' or 'guest'", default='none')
+parser.add_argument("-d","--description", help="description search ('contains' only and CASE SENSITIVE)", default='none')
+parser.add_argument("--condition", help="condition search ('contains' only and CASE SENSITIVE)")
 parser.add_argument("--media-type", dest='media_type', help="mediaType search, can be used with operator")
 parser.add_argument("-e","--enabled", help="Show rules enabled/true or disabled/false", default='none')
 parser.add_argument("--operator", help="Filter operator", choices=['eq','ne','contains'], default='eq')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'], default='json')
-parser.add_argument("--headeroff", action='store_true', help="(Optional) Disables header when Output Style is csv")
+parser.add_argument("--header-off", dest='headeroff', action='store_true', help="(Optional) Disables header when Output Style is csv")
+parser.add_argument("--print-filter", dest='printfilter', action='store_true', help="Returns the filter string without executing it")
 #parser.add_argument("--perms", help="Sting of permissions to search for in the rules", default="none")
 #parser.add_argument("--permission", action='append', help="Filter by permission. Can be repeated", metavar='PERM')
-parser.add_argument("--created-after", dest='created_after', type=parse_date, help="Created after datetime, e.g. 2026-01-01T00:00:00Z")
-parser.add_argument("--created-before", dest='created_before', type=parse_date, help="Created before datetime, e.g. 2026-01-01T00:00:00Z")
-parser.add_argument("--modified-after", dest='modified_after', type=parse_date, help="Modified after datetime, e.g. 2026-01-01T00:00:00Z")
-parser.add_argument("--modified-before", dest='modified_before', type=parse_date, help="Modified before datetime, e.g. 2026-01-01T00:00:00Z")
+parser.add_argument("--created-after", dest='created_after', type=parse_date, help="Created after datetime (see usage note above)")
+parser.add_argument("--created-before", dest='created_before', type=parse_date, help="Created before datetime (see usage note above)")
+parser.add_argument("--modified-after", dest='modified_after', type=parse_date, help="Modified after datetime (see usage note above)")
+parser.add_argument("--modified-before", dest='modified_before', type=parse_date, help="Modified before datetime (see usage note above)")
 parser.add_argument("--created-by", dest="created_by", help="createdBy search (exact match only)")
 parser.add_argument("--modified-by", dest="modified_by", help="modifiedBy search (exact match only)")
 #parser.add_argument("--match-params", dest='match_params', help="Filter by matchParams contains text")
-parser.add_argument("--printfilter", action='store_true', help="Returns the filter string without executing it")
+parser.add_argument("--count-only", dest='countonly', action='store_true', help="Displays the number of rules found only")
+parser.add_argument("--limit", type=int, help="(Optional) Overrides the default 10000 return limit with a custom value")
+parser.add_argument("--sort-by", help="(Optional) Sorts results (single sortBy item ONLY)")
+parser.add_argument("--sort-order", help="(Optional) Order of sorted results", choices=['ascending','descending'], default='ascending')
 parser.add_argument("--raw-filter", help="Raw filter expression to append (advanced users)")
 
 args = parser.parse_args()
@@ -220,11 +255,24 @@ except ValueError as e:
     print(str(e), file=sys.stderr)
     sys.exit(2)
 
+
+LIMITVAL = set_limit(args)
 base = "/authorization/rules"
 if filter_expr:
     reqval = f"{base}?filter={filter_expr}&limit={LIMITVAL}"
 else:
     reqval = f"{base}?limit={LIMITVAL}"
+
+if args.sort_by == None:
+    pass
+elif args.sort_by != None and args.sort_by in DESIRED_OUTPUT_COLUMNS:
+    reqval = reqval + f"&sortBy=" + args.sort_by + ":" + args.sort_order
+else:
+    print('\n\033[1;31mINVALID SORT OPTION\n\n'+
+          '\033[1;33mUpdate your sort to use one of the following options and try again.\033[0m\n\n'+
+           str(DESIRED_OUTPUT_COLUMNS) +'\n')
+    sys.exit(0)
+
 
 reqtype = 'get'
 
@@ -236,6 +284,17 @@ if args.printfilter:
 
 # make the rest call
 rules_result_json = callrestapi(reqval, reqtype)
+rulesfound = get_rules_count(rules_result_json)
+#print(rulesfound)
+
+if rulesfound == 0:
+  print('\n\033[1;31mNO RULES FOUND. Check your filter and try again.\n\n\033[1;33m'+reqval+'\033[0m\n')
+  sys.exit(0)
+elif args.countonly:
+  print('\n\033[1;32m'+str(rulesfound)+' RULES FOUND\033[0m\n')
+  sys.exit(0)
+else:
+  pass
 
 # print the result if output style is json or simple
 if args.output in ['json','simple']:
