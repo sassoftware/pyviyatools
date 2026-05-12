@@ -55,6 +55,8 @@
 | Management | getimportresults.py | Retrieves results of each import task from an import job | |
 | Management | getschedulehistory.py | Retrieves the most recent execution result from scheduled jobs | |
 | Management | deleteorphanedfoldermembers.py | Identifies and optionally deletes broken folder members | |
+| Management | deleteorphanedschedulerjobs.py | Identifies and optionally removes scheduled jobs without a valid target | |
+| Management | setobjectattribute.py | Generically sets the attribute for a givne object using a PUT update. | |
 | Configuration | createdomain.py | Create Viya domain | |
 | Configuration | createcryptdomain.py | Create an encryption domain | |
 | Configuration | modifydomain.py | Modify an existing  Viya domain | |

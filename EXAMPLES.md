@@ -373,3 +373,9 @@ For example:
 ./setcomputecontextattributes.py -n "Data Mining compute context" -a runAsUser -v sastest1
 ./setcomputecontextattributes.py -n "Data Mining compute context" -r runAsUser
 ```
+
+**setupcopilotcredentials.py**
+```bash
+./setupcopilotcredentials.py --client-id xxxxxxxxxx --client-secret xxxxxxxxxxxxxxxxx
+./setupcopilotcredentials.py --input-file /tmp/credentials.txt --force
+```

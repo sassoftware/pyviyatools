@@ -66,4 +66,4 @@ getprofileinfo(cur_profile)
 
 clicommand=getclicommand()
 
-if clicommand: print("THE CLI was found at: "+ clicommand)
+if clicommand: print("CLI command is: "+ clicommand)
