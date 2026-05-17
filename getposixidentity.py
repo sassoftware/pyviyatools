@@ -30,20 +30,32 @@ parser = argparse.ArgumentParser(description="Display POSIX attributes for User 
 
 parser.add_argument("-u","--user", help="Enter the user id or leave blank for all users.",default='all')
 parser.add_argument("-q","--query", help="Enter a valid rest query of usernames.",default="not(blank(id))")
+parser.add_argument("-c","--custom", action='store_true', help="Display local (custom) users as well")
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='json')
 
 args = parser.parse_args()
 user=args.user
-debug=args.debug
 query=args.query
+local=args.custom
+limit=args.limit
+debug=args.debug
 output_style=args.output
 
 if user=='all':
 
      reqtype='get'
-     #reqval='/identities/users'
-     reqval='/identities/users/?filter=and(ne(providerId,"local"),'+query+')&limit=10000'
+
+     if local:
+        # get all users satisfying provided filter even the local ones
+        reqval='/identities/users/?filter='+query+'&limit='+str(limit)
+     else:
+        # get all non-local users satisfying provided filter
+        reqval='/identities/users/?filter=and(ne(providerId,"local"),'+query+')&limit='+str(limit)
+
+     if debug: print(reqval)
+     
      userslist_result_json=callrestapi(reqval,reqtype)
 
      users = userslist_result_json['items']
@@ -51,6 +63,9 @@ if user=='all':
      for user in users:
          userid=user['id']
          reqval='/identities/users/'+userid+'/identifier'
+
+         if debug: print(reqval)
+
          posixinfo_result_json=callrestapi(reqval,reqtype,stoponerror=0,noprint=1)
      
          # if a dictionary is returned posix attributes are available
@@ -71,7 +86,7 @@ if user=='all':
             user["secgid"]=[""]
 
 
-     cols=['id','uid','gid','secgid','name']
+     cols=['id','uid','gid','secgid','name','state','providerId']
      printresult(userslist_result_json,output_style,cols)
 
 else:
