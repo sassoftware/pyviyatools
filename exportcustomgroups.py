@@ -40,7 +40,9 @@ parser = argparse.ArgumentParser(description="Export Custom Groups to a Package"
 
 parser.add_argument("-f","--filename", help="Full path to file. (No extension)",default="/tmp/customgroups")
 parser.add_argument("--id", help="Subset based on group id containing a string",default=None )
-parser.add_argument("--name", help="Subset based on name containing a string",default=None )
+parser.add_argument("-n","--name", help="Subset based on name containing a string",default=None )
+parser.add_argument("-t","--transferremove", help="Remove transfer file after download?", action='store_true')
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 
 # get cli location from properties, check that cli is there if not ERROR and stop
@@ -53,6 +55,8 @@ debug=args.debug
 
 idval=args.id
 nameval=args.name
+autotransferremove=args.transferremove
+limit=args.limit
 
 # create filter
 filtercond=[]
@@ -67,7 +71,7 @@ completefilter = 'and('+delimiter.join(filtercond)+')'
 
 # get all groups that are custom
 reqtype='get'
-reqval='/identities/groups/?limit=10000&filter='+completefilter
+reqval='/identities/groups/?limit='+str(limit)+'&filter='+completefilter
 groupslist_result_json=callrestapi(reqval,reqtype)
 
 groups = groupslist_result_json['items']
@@ -83,19 +87,19 @@ groups = groupslist_result_json['items']
      ]
 } """
 
-basename = os.path.basename(filename)
+package_name=str(uuid.uuid1())
 
 requests_dict={"version":1}
-requests_dict["name"]=basename
-requests_dict["description"]="Custom Groups from pyviyatools "+basename
+requests_dict["name"]=package_name
+requests_dict["description"]="Custom Groups from pyviyatools "+package_name
 
 grouplist=[]
 
 # create a dictionary that will generate the requests file
 for group in groups:
 
-    group_uri="/identities/groups/"+group['id']
-    grouplist.append(group_uri)
+	group_uri="/identities/groups/"+group['id']
+	grouplist.append(group_uri)
 
 requests_dict["items"]=grouplist
 
@@ -110,18 +114,37 @@ with open(request_file, "w") as outfile:
 
 # export the groups to a package file
 
-command=clicommand+' transfer export -r @'+request_file+' --name "'+basename+'"'
+command=clicommand+' transfer export -r @'+request_file+' --name "'+package_name+'"'
 
-print(command)
-subprocess.call(command, shell=True)
+try:
+	print(command)
+except UnicodeEncodeError:
+	print(command.encode('ascii','replace'))
+
+rc=subprocess.call(command, shell=True)
+
+# if the export command fails then skip to the next item
+if rc != 0:
+    sys.exit("ERROR: There was a problem exporting Custom Groups, command returned code "+str(rc))
 
 reqtype='get'
-reqval='/transfer/packages?filter=eq(name,"'+basename+'")'
+reqval='/transfer/packages?filter=eq(name,"'+package_name+'")'
 package_info=callrestapi(reqval,reqtype)
 package_id=package_info['items'][0]['id']
 
 completefile=os.path.join(filename+'.json')
 command=clicommand+' transfer download --file '+completefile+' --id '+package_id
 
-print(command)
+try:
+	print(command)
+except UnicodeEncodeError:
+	print(command.encode('ascii','replace'))
+
 subprocess.call(command, shell=True)
+
+# if -t set then remove transfer package from infrastructure data server after download
+if autotransferremove:
+	print(clicommand+' transfer delete --id '+package_id+"\n")
+	remTransferObject = subprocess.Popen(clicommand+' transfer delete --id '+package_id, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+	remTransferObjectOutput = remTransferObject.communicate(b'Y\n')
+	remTransferObject.wait()
