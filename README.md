@@ -1,20 +1,20 @@
-# Python Tools for SAS Viya
+# Python Tools for SAS Viya <!-- omit in toc --> 
 
 The pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. The tools are designed to be used in conjunction with the SAS Administration command line interfaces(CLI). A subset of the tools also make calls to the cli.
 
-- [Python Tools for SAS Viya](#python-tools-for-sas-viya)
-  - [Getting Started](#getting-started)
-  - [Documentation](#documentation)
-    - [Installing](#installing)
-  - [Running](#running)
-    - [Creating a Profile and Logging on](#creating-a-profile-and-logging-on)
-    - [Certificates](#certificates)
-    - [Using the tools](#using-the-tools)
-  - [Available Tools](#available-tools)
-  - [Troubleshooting](#troubleshooting)
-  - [Developing with the existing functions](#developing-with-the-existing-functions)
-  - [Contributing](#contributing)
-  - [License](#license)
+- [Getting Started](#getting-started)
+- [Documentation](#documentation)
+- [Installing](#installing)
+- [Running](#running)
+  - [Creating a Profile and Logging on](#creating-a-profile-and-logging-on)
+  - [Certificates](#certificates)
+  - [Running in insecure mode](#running-in-insecure-mode)
+  - [Using the tools](#using-the-tools)
+- [Available Tools](#available-tools)
+- [Troubleshooting](#troubleshooting)
+- [Developing with the existing functions](#developing-with-the-existing-functions)
+- [Contributing](#contributing)
+- [License](#license)
 ## Getting Started
 
 You can find an inventory of pyviyatools at [INVENTORY.md](INVENTORY.md)
@@ -31,9 +31,9 @@ Some other useful links
 * https://developer.sas.com/apis/rest/#sorting
 
 
-### Installing
+## Installing
 
-Please use the installation intructions in the file [INSTALL.md](INSTALL.md)
+Please use the installation instructions in the file [INSTALL.md](INSTALL.md)
 
 ## Running
 
@@ -49,7 +49,7 @@ This process is documented in the SAS Viya Administration guide here:
 
 ### Creating a Profile and Logging on
 
-> NOTE: on Viya 4 use sas-viya instead of sasasdm.
+> NOTE: on Viya 4 use sas-viya executable instead of sas-admin.
 
 The tool will automatically use the default profile.
 
@@ -87,6 +87,16 @@ export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramewo
 export CAS_CLIENT_SSL_CA_LIST=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/vault-ca.crt
 # else swat complains "ERROR: SSL Error: Missing CA trust list"
 ```
+
+### Running in insecure mode
+
+If you have problems using certificates pyvyatools, like the CLI, can run in insecure mode. This is not recommended for production usage. To run in insecure mode, set the environment variable PYVIYA_INSECURE.
+
+```sh
+export PYVIYA_INSECURE=True
+```
+
+Set to `False` or unset the environment variable to use certificates.
 
 ### Using the tools
 
@@ -197,6 +207,7 @@ Additional tools provide more complex functionality by combining multiple calls 
 * **applyfolderauthorization.py** apply authorization rules to folders in bulk from a source CSV file.
 * **submit_jd_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job definition id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
 * **submit_jr_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job request id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
+* **setupcopilotcredentials.py** Creates or updates the OrdersAPIAuth client credential required for setup and activation of SAS Viya Copilot. 
 
 
 Check back for additional tools and if you build a tool feel free to contribute it to the collection.
