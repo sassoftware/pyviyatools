@@ -6,6 +6,17 @@
 # When this is set incorrectly, in SAS Environment Manager's Content page, the context menu item "Open SAS Program" is not available.
 # For a single object, you could also use the "setobjectattribute.py" tool:
 # ./setobjectattribute.py -u /files/files/file-id -a typeDefName -v programFile
+#
+# Usage:
+# ./setfiletypedefname.py [OPTIONS]
+#
+# Run without any options and the script will produce a list of all files that match the built-in filter: files whose name ends in ".sas" and whose typeDefName does not equal "programFile".
+# These are the objects that would be updated if the --write option was added.
+# Use the --filter option to further limit the results, for exmaple --filter "eq(createdBy,'sasdemo')" would only return or process files that additionally were created by the sasdemo user.
+#
+#
+# Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 from sharedfunctions import callpagedrestapi, callrestapi

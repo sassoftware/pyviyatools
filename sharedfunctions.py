@@ -43,8 +43,9 @@
 #  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
 #  18JUL2025 if the clilocation path contains a tilde expand it
 #  02APR2026 Modified connection tests to account for removal of SASDrive
+#  10JUN2026 Add callpagedrestapi function
 #
-# Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
