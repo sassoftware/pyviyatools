@@ -43,8 +43,9 @@
 #  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
 #  18JUL2025 if the clilocation path contains a tilde expand it
 #  02APR2026 Modified connection tests to account for removal of SASDrive
+#  10JUN2026 Add callpagedrestapi function
 #
-# Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -1004,3 +1005,33 @@ def updateconfigurationproperty(command):
     print(command)
     subprocess.call(command, shell=True)
 
+# callpagedrestapi
+# Built in support for paging in the REST API, will loop through and get all pages of results
+# Change history
+#   10Jun2026 - Initial deployment
+
+def callpagedrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1):
+
+    # Initialize an empty list to store the items from all pages
+    all_items = []
+
+    # Call the REST API for the first page
+    response = callrestapi(reqval, reqtype, acceptType, contentType, data, header, stoponerror)
+
+    # Check for items in the response and add them to the list
+    if "items" in response:
+        all_items.extend(response["items"])
+    
+    # Check for a rel "next" link to see if there are more pages of results
+    while "links" in response and any(link.get("rel") == "next" for link in response["links"]):
+        next_link = next(link for link in response["links"] if link.get("rel") == "next")
+        next_url = next_link.get("href")
+
+        # Call the REST API for the next page
+        response = callrestapi(next_url, reqtype, acceptType, contentType, data, header, stoponerror)
+
+        # Check for items in the response and add them to the list
+        if "items" in response:
+            all_items.extend(response["items"])
+
+    return all_items
