@@ -6,6 +6,9 @@
 # Change History
 # 27MAY2026 Initial commit
 #
+# Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import argparse
 import os
 from sharedfunctions import callrestapi,getfolderid,getpath
