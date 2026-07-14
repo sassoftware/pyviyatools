@@ -260,6 +260,7 @@ The file sharedfunctions.py contains a set of generic functions that make it eas
 * acceptType: optinal accept type content header
 * contentType: optional content type content header
 * data: optionally a python dictionary created from the json for the rest request
+* params: optional dictionary of query parameters to pass to the rest request
 * stoponerror: whether the function will stop all further processing if an error occurs (default 0 to not stop)
 
 We suggest you use [listcaslibs_example.py](listcaslibs_example.py) as a simple example to copy from if you wish to develop your own python scripts, and are new to Python or some of the concepts we have used. If one of the other existing tools is similar to what you want, of course you could use that as the basis for a new tool too.
