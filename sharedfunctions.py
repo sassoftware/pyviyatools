@@ -135,7 +135,13 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # Serialize non-multipart payloads as json. Multipart requests pass raw files via
     # the requests "files" argument and must not be json-serialized.
     json_data=None
-    if reqtype!="postmultipart":
+    if reqtype in ["postmultipart","putmultipart"]:
+        json_data=None
+        if "Content-type" in head:
+            del head["Content-type"]
+        if "content-type" in head:
+            del head["content-type"]
+    else:
         json_data=json.dumps(data, ensure_ascii=True)
 
         #convert if python 2
@@ -169,14 +175,9 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     elif reqtype=="head":
         ret = requests.head(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="postmultipart":
-        # The requests package will use multipart if we use the "files" parameter instead of the "data" parameter, and we need to use that for file uploads. 
-        # This should take care of adding the necessary content-type header for multipart with the boundary and also properly format the body of the request for multipart. 
-        # The content-disposition header with the filename is added in the header parameter when this function is called.
-        if "Content-type" in head:
-            del head["Content-type"]
-        if "content-type" in head:
-            del head["content-type"]
         ret = requests.post(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
+    elif reqtype=="putmultipart":
+        ret = requests.put(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
     else:
         result=None
         print("NOTE: Invalid method")
