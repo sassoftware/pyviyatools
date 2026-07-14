@@ -96,13 +96,7 @@ for file in files_to_upload:
                 files_payload = {
                     'file': (file_name, f)
                 }
-                query_params = {
-                    'parentFolderUri': f"/folders/folders/{folder_id}"
-                }
-                if type_def_name:
-                    query_params['typeDefName'] = type_def_name
-
-                response = callrestapi(f"{file_uri}/content", "putmultipart", data=files_payload, params=query_params, header=headers)
+                response = callrestapi(f"{file_uri}/content", "putmultipart", data=files_payload, header=headers)
                 if response and response.get("id"):
                     logging.info(f"Successfully overwritten file: {file_name}")
                 else:
