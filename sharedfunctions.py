@@ -108,7 +108,7 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   15DEC2022 Added noprint, can be used to suppress the printing of the error messages when stoponerror is disabled, defaults to print for compatibility
 
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},params={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
 
 
     # get the url from the default profile
@@ -132,15 +132,24 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # maybe this can be removed
     global result
 
-    # serialize the data string for the request to json format
-    json_data=json.dumps(data, ensure_ascii=True)
+    # Serialize non-multipart payloads as json. Multipart requests pass raw files via
+    # the requests "files" argument and must not be json-serialized.
+    json_data=None
+    if reqtype in ["postmultipart","putmultipart"]:
+        json_data=None
+        if "Content-type" in head:
+            del head["Content-type"]
+        if "content-type" in head:
+            del head["content-type"]
+    else:
+        json_data=json.dumps(data, ensure_ascii=True)
 
-    #convert if python 2
-    # get python version
-    # if we don't do this any request with foreign characters fails
-    version=int(str(sys.version_info[0]))
-    #if version==2: json_data = json_data.encode(encoding='utf-8')
-    json_data.encode(encoding='utf-8')
+        #convert if python 2
+        # get python version
+        # if we don't do this any request with foreign characters fails
+        version=int(str(sys.version_info[0]))
+        #if version==2: json_data = json_data.encode(encoding='utf-8')
+        json_data.encode(encoding='utf-8')
 
     # call the rest api using the parameters passed in and the requests python library
 
@@ -154,17 +163,21 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
         verify_ssl=True
 
     if reqtype=="get":
-        ret = requests.get(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
+        ret = requests.get(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="post":
-        ret = requests.post(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)       
+        ret = requests.post(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="delete":
-        ret = requests.delete(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
+        ret = requests.delete(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="put":
-        ret = requests.put(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
+        ret = requests.put(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="patch":
-        ret = requests.patch(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
+        ret = requests.patch(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="head":
-        ret = requests.head(baseurl+reqval,headers=head,data=json_data,verify=verify_ssl)
+        ret = requests.head(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
+    elif reqtype=="postmultipart":
+        ret = requests.post(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
+    elif reqtype=="putmultipart":
+        ret = requests.put(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
     else:
         result=None
         print("NOTE: Invalid method")
