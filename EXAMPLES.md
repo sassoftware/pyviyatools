@@ -396,3 +396,16 @@ python3 getdefaultqkb.py -o json
 python3 getdefaultqkb.py --engine cas -o json
 python3 getdefaultqkb.py --engine compute -o json
 ```
+
+**setdefaultqkb.py**
+```bash
+python3 setdefaultqkb.py \
+  --engine compute \
+  --locale ENUSA \
+  --qkb "QKB CI 33"
+
+  python3 setdefaultqkb.py \
+  --engine cas \
+  --locale ENUSA \
+  --qkb "QKB CI 33"
+```
