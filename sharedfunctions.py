@@ -403,7 +403,7 @@ def getauthtoken(baseurl):
              refresh_data["grant_type"] =  "refresh_token"
              refresh_data["refresh_token"] = refreshToken
 
-             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify=False)
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify=verify_ssl)
 
              if (400 <= response.status_code <=599):
 
