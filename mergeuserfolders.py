@@ -112,7 +112,14 @@ def validate_user(user_id):
     ):
         logger.error("User ID '%s' not found in the Viya identities service.", user_id)
         sys.exit(1)
-    return response["items"][0]["id"]
+    validated_user_id = response["items"][0]["id"]
+    if validated_user_id != user_id:
+        logger.warning(
+            "User ID '%s' found in the Viya identities service as '%s'. Returning the validated ID.",
+            user_id,
+            validated_user_id,
+        )
+    return validated_user_id
 
 
 # Function: Get Users root folder ID
