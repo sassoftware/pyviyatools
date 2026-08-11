@@ -171,7 +171,9 @@ def get_user_folder_id(user_id, root_folder_id):
     )
     reqtype = "get"
     reqval = f"/folders/folders/{root_folder_id}/members"
-    params = {"filter": f"and(eq($tertiary,name,'{user_id}'),eq(contentType,'userFolder'))"}
+    params = {
+        "filter": f"and(eq($tertiary,name,'{user_id}'),eq(contentType,'userFolder'))"
+    }
     response = callrestapi(reqval, reqtype, params=params)
 
     # This should return a single item; extract folder ID from the member uri, not id (membership ID).
@@ -287,7 +289,9 @@ def validate_member_name(parent_id, content_type, object_name, type_def_name=Non
             "type": content_type,
             "typeDefName": type_def_name,
         }
-    response = callrestapi(reqval, reqtype, acceptType="application/vnd.sas.validation+json", params=params)
+    response = callrestapi(
+        reqval, reqtype, acceptType="application/vnd.sas.validation+json", params=params
+    )
     logger.debug(
         "validate_member_name: Validation response for new name '%s': %s",
         object_name,
@@ -512,7 +516,10 @@ def merge_folders(old_folder_id, new_folder_id):
                     new_folder_id,
                 )
                 is_valid_name = validate_member_name(
-                    new_folder_id, member_content_type, member_name, member_type_def_name
+                    new_folder_id,
+                    member_content_type,
+                    member_name,
+                    member_type_def_name,
                 )
                 if not is_valid_name:
                     logger.error(
