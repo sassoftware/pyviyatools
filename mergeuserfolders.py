@@ -1,31 +1,25 @@
 #!/usr/bin/env python3
-# Script to move or merge user folders from an old to new user ID provider in arguments (single user) or through a CSV.
+# In the SAS Viya Platform, user folders are named after the user's account ID. In some cases that account ID may change after the user's
+# folder has been created and content added. From the perspective of SAS Viya, the new account ID is a new user, so has no access to their
+# old content.
 
-# Import required packages
+# This script addresses this issue by either granting the new user access to the old user's folder, or by moving the old user ID folder content
+# into the new user folder.
+
+# Folders that have the "allowMove" property set to "false" cannot be moved or renamed. The folders service will prevent userFolders and delegate
+# folders from having this attribute changed, so can never be moved.
+
+# This script handles the following scenarios:
+# 1. The user never logged in with the old ID (no action required)
+# 2. The user has not logged in with the new ID (grant access to the old folder -- can rerun this script after the user logs in with the new ID to move content)
+# 3. The user has logged in with the new ID (move content from old folder to new folder)
+
+# Import required modules
 import argparse
 import logging
-import csv
 import sys
+import csv
 from sharedfunctions import callrestapi, callpagedrestapi
-
-# Define argument parser for command-line arguments
-parser = argparse.ArgumentParser(
-    description="Move or merge user folders from an old to new user ID provider."
-)
-parser.add_argument("--old-user", help="Old user ID")
-parser.add_argument("--new-user", help="New user ID")
-parser.add_argument("--csv", help="CSV file containing old and new user IDs")
-parser.add_argument(
-    "--merge",
-    action="store_true",
-    help="Merge folders instead of just setting permissions on them",
-)
-parser.add_argument(
-    "--dry-run",
-    action="store_true",
-    help="Log actions without making changes",
-)
-args = parser.parse_args()
 
 # Configure a basic logger to output timestamp/level/message.
 logging.basicConfig(
@@ -33,257 +27,406 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Evaluate supplied arguments, only one method of input should be used at a time (either command-line arguments or CSV). Both
-# old and new user must be specified when being used.
-if (args.old_user and not args.new_user) or (args.new_user and not args.old_user):
-    logger.error("Both --old-user and --new-user must be specified together.")
-    parser.print_help()
-    exit(1)
-if args.csv and (args.old_user or args.new_user):
-    logger.error("Specify either command-line arguments or a CSV file, not both.")
-    parser.print_help()
-    exit(1)
-if not args.csv and not (args.old_user and args.new_user):
-    logger.error("You must specify either command-line arguments or a CSV file.")
-    parser.print_help()
-    exit(1)
+# Parse command line arguments
+parser = argparse.ArgumentParser(
+    description="Merge user folders in SAS Viya Platform based on account ID changes."
+)
+parser.add_argument(
+    "--csv",
+    required=False,
+    help="Path to the CSV file containing old and new user IDs.",
+)
+parser.add_argument(
+    "--commit", action="store_true", help="Commit changes (default is dry run)."
+)
+parser.add_argument("--old-id", required=False, help="Old user account ID.")
+parser.add_argument("--new-id", required=False, help="New user account ID.")
+parser.add_argument(
+    "--merge",
+    action="store_true",
+    help="Merge content from old user folder to new user folder.",
+)
+parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
+parser.add_argument(
+    "--skip-identity-validation",
+    action="store_true",
+    help="Skip validation of user IDs in the Viya identities service.",
+)
+parser.add_argument(
+    "--original-root-folder-id",
+    required=False,
+    help="Folder ID for the /Users folder to move content from.",
+)
+parser.add_argument(
+    "--new-root-folder-id",
+    required=False,
+    help="Folder ID for the /Users folder to move content to.",
+)
+args = parser.parse_args()
 
-# Helper functions
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+    logger.debug("Debug logging enabled.")
 
-## Validate User - Call identities service to confirm the user exists. This will return the ID as it is defined in identities (for rules purposes)
+# Validate supplied options:
+if not args.csv and (not args.old_id or not args.new_id):
+    logger.error("Either --csv or both --old-id and --new-id must be provided.")
+    sys.exit(1)
+
+# Define helper functions
+
+
+# Function: Validate User
 def validate_user(user_id):
-    reqtype = "head"
-    reqval = "/identities/users/" + user_id
-    response,status_code = callrestapi(reqval, reqtype)
-    if status_code == 404:
-        logger.error(f"User '{user_id}' does not exist.")
-        exit(1)
-    return response.get("id")
+    """
+    Check that a user exists in the Viya identities service.
 
-## Get User Folder - Get the folder for a specific user by their ID
-def get_user_folder_id(user_id):
-    # The folders service creates folders with the user ID normalized (lowercase).
-    user_id_normal=user_id.lower()
+    Args:
+        user_id (str): The user account ID to validate.
+
+    Returns:
+        user_id (str): The validated user account ID.
+    """
+    logger.debug(
+        f"validate_user: Validating user ID '{user_id}' against identities service."
+    )
+    if args.skip_identity_validation:
+        logger.debug(
+            "validate_user: Skipping validation of user ID '%s' in the Viya identities service.",
+            user_id,
+        )
+        return user_id
+
+    # Perform a case-insensitive search ($primary) for the user ID in the Viya identities service
+    reqtype = "get"
+    params = {"filter": f"eq($primary,id,'{user_id}')"}
+    reqval = f"/identities/users"
+    response = callrestapi(reqval, reqtype, params=params)
+
+    # This response should contain a single item with "id" equal to the passed in user ID.
+    if (
+        not response
+        or "items" not in response
+        or len(response["items"]) == 0
+        or len(response["items"]) > 1
+    ):
+        logger.error("User ID '%s' not found in the Viya identities service.", user_id)
+        sys.exit(1)
+    return response["items"][0]["id"]
+
+
+# Function: Get Users root folder ID
+def get_users_root_folder_id():
+    """
+    Get the folder ID for the /Users root folder.
+
+    Returns:
+        str: The folder ID for the /Users root folder.
+    """
+    logger.debug(
+        "get_users_root_folder_id: Retrieving the folder ID for the /Users root folder."
+    )
     reqtype = "get"
     reqval = "/folders/folders"
-    filter = f"and(eq(type,'userFolder'),or(eq(name,'{user_id}'),eq(name,'{user_id_normal}')))"
-    params = {"filter": filter}
-    # Check if the object
+    params = {"filter": "eq(type,'userRoot')"}
     response = callrestapi(reqval, reqtype, params=params)
-    # If the response returns more than one item, fail.
-    if response.get("items") and len(response.get("items")) > 1:
-        logger.error(f"Multiple user folders found for user '{user_id}'.")
-        exit(1)
-    return response.get("items")[0].get("id") if response.get("items") else None
+
+    # This should return a single item with "id" equal to the /Users root folder ID.
+
+    if not response or "items" not in response or len(response["items"]) == 0:
+        logger.error("Could not find the /Users root folder.")
+        sys.exit(1)
+    if len(response["items"]) > 1:
+        logger.error(
+            "Multiple /Users root folders found. Use --original-root-folder-id and --new-root-folder-id to specify the desired source and destination."
+        )
+        sys.exit(1)
+    logger.debug("Found /Users root folder with ID: %s", response["items"][0]["id"])
+    return response["items"][0]["id"]
 
 
-## Create Rule - Given a folder ID and user ID, grant normal permissions to the user on the folder
+# Function Get User Folder ID
+def get_user_folder_id(user_id, root_folder_id):
+    """
+    Get the folder ID for a user's folder under the /Users root folder.
+
+    Args:
+        user_id (str): The user account ID.
+        root_folder_id (str): The folder ID for the /Users root folder.
+
+    Returns:
+        str: The folder ID for the user's folder.
+    """
+    logger.debug(
+        "get_user_folder_id: Retrieving the folder ID for user '%s' under userRoot folder ID '%s'.",
+        user_id,
+        root_folder_id,
+    )
+    reqtype = "get"
+    reqval = f"/folders/folders/{root_folder_id}/members"
+    params = {"filter": f"and(eq($tertiary,name,'{user_id}'),eq(contentType,'userFolder'))"}
+    response = callrestapi(reqval, reqtype, params=params)
+
+    # This should return a single item; extract folder ID from the member uri, not id (membership ID).
+    if not response or "items" not in response or len(response["items"]) == 0:
+        logger.debug("User folder for '%s' not found under /Users.", user_id)
+        return None
+    if len(response["items"]) > 1:
+        logger.error("Multiple user folders found for '%s' under /Users.", user_id)
+        return None
+    folder_id = response["items"][0]["uri"].split("/")[-1]
+    logger.debug(
+        "get_user_folder_id: Found user folder for '%s' with ID: %s",
+        user_id,
+        folder_id,
+    )
+    return folder_id
+
+
+# Function Create Rule
 def create_rule(folder_id, user_id):
+    """
+    Create a rule to grant access to a user's folder.
 
-    ident_user_id = validate_user(user_id)
-    if ident_user_id != user_id:
-        logger.warn(f"Supplied user ID '{user_id}' does not match Identities service record. Expected '{ident_user_id}', got '{user_id}'.")
+    Args:
+        folder_id (str): The folder ID for the user's folder.
+        user_id (str): The user account ID.
 
-    # Confirm a rule does not already exist for this user/folder.
+    Returns:
+        None
+    """
+    logger.debug(
+        "create_rule: Granting user '%s' access on folder '%s'.", user_id, folder_id
+    )
+
+    # Validate the user ID before creating the rule
+    validated_user_id = validate_user(user_id)
+
+    logger.debug(
+        "create_rule: Checking if a rule already exists for user '%s' on folder '%s'.",
+        validated_user_id,
+        folder_id,
+    )
     reqtype = "get"
     reqval = "/authorization/rules"
     params = {
-        "filter": f"and(or(eq(containerUri,'/folders/folders/{folder_id}'),eq(objectUri,'/folders/folders/{folder_id}/**')),eq(principal,'{ident_user_id}'))"
+        "filter": f"and(or(eq(containerUri,'/folders/folders/{folder_id}'),eq(objectUri,'/folders/folders/{folder_id}/**')),eq(principal,'{validated_user_id}'))"
     }
     response = callrestapi(reqval, reqtype, params=params)
-    if response.get("items") and len(response.get("items")) > 0:
+    if response and "items" in response and len(response["items"]) > 0:
         logger.info(
-            f"Rule already exists for user '{ident_user_id}' on folder '{folder_id}'."
+            "Rule already exists for user '%s' on folder '%s'.",
+            validated_user_id,
+            folder_id,
         )
-        return None
+        return
 
+    logger.debug(
+        "create_rule: No existing rule found for user '%s' on folder '%s'. Creating new rule.",
+        validated_user_id,
+        folder_id,
+    )
     reqtype = "post"
     reqval = "/authorization/rules"
     data = {
         "containerUri": f"/folders/folders/{folder_id}",
         "objectUri": f"/folders/folders/{folder_id}/**",
         "type": "grant",
-        "principal": ident_user_id,
+        "principal": validated_user_id,
         "principalType": "user",
         "permissions": ["delete", "read", "secure", "remove", "update", "add"],
-        "description": f"Created by mergeuserfolders pyviyatools to grant {ident_user_id} permission on the folder.",
-        "reason": f"Granting {ident_user_id} permission on the folder.",
+        "description": f"Created by mergeuserfolders pyviyatools to grant {validated_user_id} permission on the folder.",
+        "reason": f"Granting {validated_user_id} permission on the folder.",
     }
-    if args.dry_run:
+    if args.commit:
+        response = callrestapi(reqval, reqtype, data=data)
         logger.info(
-            f"DRY-RUN: Would create authorization rule for user '{ident_user_id}' on folder '{folder_id}'."
+            "Created rule for user '%s' on folder '%s'.", validated_user_id, folder_id
         )
-        return "dry-run"
-
-    response = callrestapi(reqval, reqtype, data=data)
-    return response.get("id") if response else None
-
-
-## Update Rule - Given a folder ID, old user ID and new user ID, locates the existing rule for the old user ID and replaces the principal with the new user ID.
-def update_rule(folder_id, old_user_id, new_user_id):
-    # We might not be able to find the old user in identities to validate, but we should do this for the new user.
-    ident_new_user_id = validate_user(new_user_id)
-    if ident_new_user_id != new_user_id:
-        logger.warn(f"Supplied new user ID '{new_user_id}' does not match Identities service record. Expected '{ident_new_user_id}', got '{new_user_id}'.")
-        
-
-    # Locate the existing rule for the old user
-    reqtype = "get"
-    reqval = "/authorization/rules"
-    params = {
-        "filter": f"and(eq(containerUri,'/folders/folders/{folder_id}'),eq(objectUri,'/folders/folders/{folder_id}/**'),eq(principal,'{old_user_id}'))"
-    }
-    response = callrestapi(reqval, reqtype, params=params)
-    if not response.get("items") or len(response.get("items")) == 0:
-        logger.error(
-            f"No existing rule found for old user '{old_user_id}' on folder '{folder_id}'."
-        )
-        sys.exit(1)
-    # Fail if we got more than one rule for the old user on this folder.
-    if len(response.get("items")) > 1:
-        logger.error(
-            f"Multiple existing rules found for old user '{old_user_id}' on folder '{folder_id}'."
-        )
-        sys.exit(1)
-    existing_rule = response.get("items")[0]
-
-    # The existing rule response is going to include some things we don't need (creationTimestamp, modifiedTimestamp, createdBy, modifiedBy, and the links)
-    # We can drop those and then replace the principal old user with the new user.
-
-    existing_rule_copy = existing_rule.copy()
-
-    for key in [
-        "creationTimestamp",
-        "modifiedTimestamp",
-        "createdBy",
-        "modifiedBy",
-        "links",
-        "id",
-    ]:
-        existing_rule_copy.pop(key, None)
-    existing_rule_copy["principal"] = ident_new_user_id
-
-    reqtype = "put"
-    reqval = f"/authorization/rules/{existing_rule.get('id')}"
-    if args.dry_run:
+    else:
         logger.info(
-            f"DRY-RUN: Would update authorization rule '{existing_rule.get('id')}' principal from '{old_user_id}' to '{ident_new_user_id}'."
+            "DRY-RUN: Would create rule for user '%s' on folder '%s'.",
+            validated_user_id,
+            folder_id,
         )
-        return "dry-run"
-
-    response = callrestapi(reqval, reqtype, data=existing_rule_copy)
-    return response.get("id") if response else None
 
 
-## Validate Member Name - This confirms we won't encounter a naming conflict before actually trying to rename a folder. The parent_id would be the new parent folder ID and member_id would be "@new" to indicate we are not renaming an existing member.
-def validate_member_name(
-    parent_id, member_id="@new", member_type=None, type_def_name=None, object_name=None
-):
+# Function Validate Member Name
+def validate_member_name(parent_id, content_type, object_name, type_def_name=None):
+    """
+    Validate that the new name for a folder is unique among its siblings.
+
+    Args:
+        parent_id (str): The parent folder ID.
+        content_type (str): The content type of the member (e.g., 'folder').
+        object_name (str): The name of the object to validate.
+        type_def_name (str, optional): The type definition name.
+     Returns:
+        bool: True if the new name is unique among its siblings, False otherwise.
+    """
+    logger.debug(
+        "validate_member_name: Validating that the new name '%s' for member type '%s' is unique under parent folder ID '%s'.",
+        object_name,
+        content_type,
+        parent_id,
+    )
     reqtype = "put"
-    reqval = f"/commons/validations/folders/{parent_id}/members/{member_id}/name"
+    reqval = f"/folders/commons/validations/folders/{parent_id}/members/@new/name"
     if type_def_name is None:
-        params = {"value": object_name, "type": member_type}
+        params = {"value": object_name, "type": content_type}
     else:
         params = {
             "value": object_name,
-            "type": member_type,
+            "type": content_type,
             "typeDefName": type_def_name,
         }
-    response = callrestapi(reqval, reqtype, params=params)
+    response = callrestapi(reqval, reqtype, acceptType="application/vnd.sas.validation+json", params=params)
+    logger.debug(
+        "validate_member_name: Validation response for new name '%s': %s",
+        object_name,
+        response.get("valid") if response else "No response",
+    )
     return response.get("valid") if response else False
 
 
-## Rename Folder - Given a folder ID and a new name, rename the folder.
-def rename_folder(folder_id, new_name):
-
-    # Get the etag for the folder
-    reqtype = "head"
-    reqval = f"/folders/folders/{folder_id}"
-    response, etag, status_code = callrestapi(reqval, reqtype, returnEtag=True)
-
-    # Rename the folder using a PATCH request
-    reqtype = "patch"
-    reqval = f"/folders/folders/{folder_id}"
-    data = {"name": new_name}
-    if args.dry_run:
-        logger.info(
-            f"DRY-RUN: Would rename folder '{folder_id}' to '{new_name}'."
-        )
-        return folder_id
-
-    response = callrestapi(reqval, reqtype, data=data, etagIn=etag)
-    return response.get("id") if response else None
-
-
-## Get folder members - Get all members of a folder recursively.
+# Function Get Folder Members
 def get_folder_members(folder_id):
+    """
+    Get the members of a folder.
+
+    Args:
+        folder_id (str): The folder ID.
+
+    Returns:
+        list: A list of members in the folder.
+    """
+    logger.debug(
+        "get_folder_members: Retrieving members for folder ID '%s'.", folder_id
+    )
     reqtype = "get"
     reqval = f"/folders/folders/{folder_id}/members"
     response = callpagedrestapi(reqval, reqtype)
+    logger.debug(
+        "get_folder_members: Retrieved %d members for folder ID '%s'.",
+        len(response) if response else 0,
+        folder_id,
+    )
     return response if response else []
 
 
+# Function move member
+def move_member(old_folder_id, new_folder_id, member_id):
+    """
+    Move a member from the old folder to the new folder.
+
+    Args:
+        old_folder_id (str): The folder ID of the old user folder.
+        new_folder_id (str): The folder ID of the new user folder.
+        member_id (str): The member ID to move.
+    """
+    logger.debug(
+        "move_member: Moving member ID '%s' from old folder ID '%s' to new folder ID '%s'.",
+        member_id,
+        old_folder_id,
+        new_folder_id,
+    )
+    reqtype = "get"
+    reqval = f"/folders/folders/{old_folder_id}/members/{member_id}"
+    response = callrestapi(reqval, reqtype)
+    if not response:
+        logger.error(
+            "Member ID '%s' not found in old folder ID '%s'.", member_id, old_folder_id
+        )
+        return
+    member_copy = response.copy()
+    member_copy["parentFolderUri"] = f"/folders/folders/{new_folder_id}"
+
+    reqtype = "put"
+    reqval = f"/folders/folders/{old_folder_id}/members/{member_id}"
+    data = member_copy
+    if args.commit:
+        response = callrestapi(reqval, reqtype, data=data)
+        logger.info(
+            "Moved member ID '%s' to new folder ID '%s'.", member_id, new_folder_id
+        )
+    else:
+        logger.info(
+            "DRY-RUN: Would move member ID '%s' to new folder ID '%s'.",
+            member_id,
+            new_folder_id,
+        )
+
+
+# Function Merge Folders
 def merge_folders(old_folder_id, new_folder_id):
-    logger.info(f"Merging folder '{old_folder_id}' into folder '{new_folder_id}'.")
+    """
+    Merge the contents of the old folder into the new folder.
 
-    # Get all members of the old folder recursively
-    old_folder_members = get_folder_members(old_folder_id)
-    new_folder_members = get_folder_members(new_folder_id)
+    Args:
+        old_folder_id (str): The folder ID of the old user folder.
+        new_folder_id (str): The folder ID of the new user folder.
 
-    # Each member item has the following attributes:
-    # creationTimeStamp, createdBy, modifiedTimeStamp, modifiedBy, version, id (this is the ID of the membership), name, parentFolderUri, uri, type, contentType, and (optionally) typeDefName, and a links array.
-    # There are special "delegate" folders at the top level, which have contentTypes: "trashFolder", "favoritesFolder", "applicationDataFolder", "myFolder" and "historyFolder". These cannot be moved, but should exist in the destination.
-    # The valid "types" for folder members are "child" and "reference". A "child" type can only be a member of one folder, while a "reference" is a shortcut, so it's URI may not even refer to something in the environment.
-    # Name uniqueness is enforced within a folder for a given type (so you could have a child and reference with the same name but not two child objects or two reference objects with the same name.)
-    # Our validate_member_name function can be used to check for naming conflicts before attempting to move a folder member. We'll skip any move that would result in a conflict.
-    # Nested folders show as contentType "folder". If a folder with the same name already exists in the destination, we should merge the contents of the old folder into the existing folder in the destination. We'll need recursion here
-    # In case that folder contains a folder that already exists in the destination. If the folder doesn't exist we can move the whole thing (with the exception of the delegate folders, which are immovable).
-    # There are two ways to effect a move.
-    # 1. A PUT request on /folders/folders/{folder_id}/members/{member_id}, specifying a new parentFolderUri will effect a move. The PUT should include the full member details with only the parentFolderUri changed.
-    # 2. A PATCH request on /folder/folders/@item, specifying the childUri and new parentFolderUri as query parameters. This is useful for moving a member without needing to provide the full member details, but can't be used for reference type members.
+    Returns:
+        None
+    """
+    logger.debug(
+        "merge_folders: Merging contents from old folder ID '%s' into new folder ID '%s'.",
+        old_folder_id,
+        new_folder_id,
+    )
 
-    # For each old folder member...
-    for member in old_folder_members:
-        # Grab our attributes for the member:
+    # Stop if the IDs are the same
+    if old_folder_id == new_folder_id:
+        logger.warning("Old folder ID and new folder ID are the same. Skipping.")
+        return
+
+    # Get the members of the old folder
+    old_members = get_folder_members(old_folder_id)
+    new_members = get_folder_members(new_folder_id)
+
+    # For each member, we need to pull some attributes
+    for member in old_members:
         member_id = member.get("id")
         member_name = member.get("name")
         member_uri = member.get("uri")
         member_type = member.get("type")
-        member_typedef_name = member.get("typeDefName")
         member_content_type = member.get("contentType")
+        # There may be a typeDefName attribute for some members, so we need to check for that
+        member_type_def_name = member.get("typeDefName", None)
 
-        # Split our process up for references versus child types:
+        # If the member is a reference, we can perform a name validation check and then move it to the new folder.
         if member_type == "reference":
-            # Validate the member name in the new folder to avoid naming conflicts
-            if not validate_member_name(
+            logger.debug(
+                "Validating member name '%s' for uniqueness in new folder ID '%s'.",
+                member_name,
                 new_folder_id,
-                member_id=member_id,
-                member_type=member_type,
-                type_def_name=member_typedef_name,
-                object_name=member_name,
-            ):
+            )
+            is_valid_name = validate_member_name(
+                new_folder_id, member_content_type, member_name, member_type_def_name
+            )
+            if not is_valid_name:
                 logger.error(
-                    f"Naming conflict detected for reference '{member_name}' in folder '{new_folder_id}'. Aborting merge."
+                    "Member name '%s' already exists in new folder ID '%s'. Skipping this member.",
+                    member_name,
+                    new_folder_id,
                 )
-                sys.exit(1)
+                continue
 
-            # Move the reference to the new folder.
-            reqtype = "put"
-            reqval = f"/folders/folders/{old_folder_id}/members/{member_id}"
-            member_copy = member.copy()
-            member_copy["parentFolderUri"] = f"/folders/folders/{new_folder_id}"
-            if args.dry_run:
-                logger.info(
-                    f"DRY-RUN: Would move reference '{member_name}' from folder '{old_folder_id}' to folder '{new_folder_id}'."
-                )
-            else:
-                callrestapi(reqval, reqtype, data=member_copy)
-                logger.info(
-                    f"Moved reference '{member_name}' from folder '{old_folder_id}' to folder '{new_folder_id}'."
-                )
-            continue
+            # Move the reference to the new folder
+            logger.debug(
+                "Moving reference '%s' (ID: %s) from old folder ID '%s' to new folder ID '%s'.",
+                member_name,
+                member_id,
+                old_folder_id,
+                new_folder_id,
+            )
+            move_member(old_folder_id, new_folder_id, member_id)
+
         elif member_type == "child":
-            # If it's a delegate folder, we need to run this same function against it. We need to identify the folder ID of the same content type folder in the new_folder_members list to do that. The folder ID can be extracted from the URI.
+            # Child members could be special "delegate" folders, normal folders, or normal content (reports, files, etc.). If we are working with a folder
+            # we need to check if we can move it. Delegate folders can't be moved, so we'd need to identify the delegate folder in the destination and then
+            # recursively run this function on the delegate folders.
+            # Delegate folders have special content types: "trashFolder","favoritesFolder", "applicationDataFolder", "myFolder", "historyFolder"
             if member_content_type in [
                 "trashFolder",
                 "favoritesFolder",
@@ -291,11 +434,18 @@ def merge_folders(old_folder_id, new_folder_id):
                 "myFolder",
                 "historyFolder",
             ]:
+                logger.debug(
+                    "Member '%s' (ID: %s) is a delegate folder of type '%s'. Recursively merging its contents.",
+                    member_name,
+                    member_id,
+                    member_content_type,
+                )
                 old_delegate_folder_id = member_uri.split("/")[-1]
+                # Find the corresponding delegate folder in the new folder
                 corresponding_new_member = next(
                     (
                         m
-                        for m in new_folder_members
+                        for m in new_members
                         if m.get("contentType") == member_content_type
                     ),
                     None,
@@ -304,21 +454,27 @@ def merge_folders(old_folder_id, new_folder_id):
                     new_delegate_folder_id = corresponding_new_member.get("uri").split(
                         "/"
                     )[-1]
+                    logger.debug(
+                        "Found corresponding delegate folder in new folder ID '%s' with ID '%s'. Merging contents.",
+                        new_folder_id,
+                        new_delegate_folder_id,
+                    )
                     merge_folders(old_delegate_folder_id, new_delegate_folder_id)
                 else:
-                    logger.error(
-                        f"No corresponding new member found for delegate folder '{member_content_type}' in folder '{new_folder_id}'. Aborting merge."
+                    logger.warning(
+                        "No corresponding delegate folder of type '%s' found in new folder ID '%s'. Skipping member.",
+                        member_content_type,
+                        new_folder_id,
                     )
-                    sys.exit(1)
-                continue
-
-            # If it's a folder, we need to check if a folder with the same name exists in the new folder. If it does, we merge them; if not, we move the old folder to the new location.
+                    continue
             elif member_content_type == "folder":
                 old_member_folder_id = member_uri.split("/")[-1]
+
+                # Check if a folder with the same name exists in the new folder
                 corresponding_new_member = next(
                     (
                         m
-                        for m in new_folder_members
+                        for m in new_members
                         if m.get("contentType") == "folder"
                         and m.get("name") == member_name
                     ),
@@ -328,76 +484,135 @@ def merge_folders(old_folder_id, new_folder_id):
                     new_member_folder_id = corresponding_new_member.get("uri").split(
                         "/"
                     )[-1]
+                    logger.debug(
+                        "Found corresponding folder in new folder ID '%s' with ID '%s'. Merging contents.",
+                        new_folder_id,
+                        new_member_folder_id,
+                    )
                     merge_folders(old_member_folder_id, new_member_folder_id)
                 else:
-                    # Validate that moving the folder won't cause a naming conflict (this shouldn't happen because we just looked for a member with that name to merge recursively)
-                    if not validate_member_name(
+                    logger.debug(
+                        "No corresponding folder named '%s' found in new folder ID '%s'. Moving the folder.",
+                        member_name,
                         new_folder_id,
-                        member_type=member_type,
-                        type_def_name=member_typedef_name,
-                        object_name=member_name,
-                    ):
-                        logger.error(
-                            f"Naming conflict detected for folder '{member_name}' in folder '{new_folder_id}'. Aborting merge."
-                        )
-                        sys.exit(1)
-                    # Move the old folder to the new location
-                    reqtype = "put"
-                    reqval = f"/folders/folders/{old_folder_id}/members/{member_id}"
-                    member_copy = member.copy()
-                    member_copy["parentFolderUri"] = f"/folders/folders/{new_folder_id}"
-                    if args.dry_run:
-                        logger.info(
-                            f"DRY-RUN: Would move folder '{member_name}' from folder '{old_folder_id}' to folder '{new_folder_id}'."
-                        )
-                    else:
-                        callrestapi(reqval, reqtype, data=member_copy)
-
+                    )
+                    move_member(old_folder_id, new_folder_id, member_id)
             else:
-                # Here we handle all the non-folder child members.
-                if not validate_member_name(
+                # This is where normal content would land, so we should confirm we're not going to hit a naming conflict, then move it.
+                logger.debug(
+                    "Validating member name '%s' for uniqueness in new folder ID '%s'.",
+                    member_name,
                     new_folder_id,
-                    member_id=member_id,
-                    member_type=member_type,
-                    type_def_name=member_typedef_name,
-                    object_name=member_name,
-                ):
+                )
+                is_valid_name = validate_member_name(
+                    new_folder_id, member_content_type, member_name, member_type_def_name
+                )
+                if not is_valid_name:
                     logger.error(
-                        f"Naming conflict detected for non-folder child member '{member_name}' in folder '{new_folder_id}'. Aborting merge."
+                        "Member name '%s' already exists in new folder ID '%s'. Skipping this member.",
+                        member_name,
+                        new_folder_id,
                     )
-                    sys.exit(1)
-                reqtype = "put"
-                reqval = f"/folders/folders/{old_folder_id}/members/{member_id}"
-                member_copy = member.copy()
-                member_copy["parentFolderUri"] = f"/folders/folders/{new_folder_id}"
-                if args.dry_run:
-                    logger.info(
-                        f"DRY-RUN: Would move non-folder child member '{member_name}' from folder '{old_folder_id}' to folder '{new_folder_id}'."
-                    )
-                else:
-                    callrestapi(reqval, reqtype, data=member_copy)
-                    logger.info(
-                        f"Moved non-folder child member '{member_name}' from folder '{old_folder_id}' to folder '{new_folder_id}'."
-                    )
-                continue
-
+                    continue
+                logger.debug(
+                    "Moving content '%s' (ID: %s) from old folder ID '%s' to new folder ID '%s'.",
+                    member_name,
+                    member_id,
+                    old_folder_id,
+                    new_folder_id,
+                )
+                move_member(old_folder_id, new_folder_id, member_id)
     return True
-# End Helper functions
 
+
+# Function Process User IDs
+def process_user_ids(old_id, new_id):
+    """
+    Process the merging of user folders based on old and new user IDs.
+
+    Args:
+        old_id (str): The old user account ID.
+        new_id (str): The new user account ID.
+    """
+    logger.debug(
+        "process_user_ids: Processing identity pair: '%s' -> '%s'", old_id, new_id
+    )
+
+    # Get the root folder IDs for the /Users folder
+    if not args.original_root_folder_id and not args.new_root_folder_id:
+        logger.debug(
+            "process_user_ids: No root folder IDs provided. Retrieving /Users root folder ID."
+        )
+        original_root_folder_id = get_users_root_folder_id()
+        new_root_folder_id = original_root_folder_id
+    else:
+        original_root_folder_id = args.original_root_folder_id
+        new_root_folder_id = args.new_root_folder_id
+
+    # Get the folder IDs for the old and new user folders
+    old_folder_id = get_user_folder_id(old_id, original_root_folder_id)
+    if not old_folder_id:
+        logger.warning(
+            "process_user_ids: Old user folder for '%s' not found. Skipping this identity pair.",
+            old_id,
+        )
+        return
+    new_folder_id = get_user_folder_id(new_id, new_root_folder_id)
+    if not new_folder_id:
+        if args.merge:
+            # Scenario 2: new user hasn't logged in yet, nothing to merge into
+            logger.warning(
+                "process_user_ids: New user folder for '%s' not found. Log in with the new ID first, then rerun with --merge.",
+                new_id,
+            )
+            return
+        # Scenario 2: grant access to old folder so new user can access content before logging in
+        logger.info(
+            "process_user_ids: New user folder for '%s' not found. Granting access to old folder '%s'.",
+            new_id,
+            old_folder_id,
+        )
+        create_rule(old_folder_id, new_id)
+        return
+
+    # If the --merge flag is set, merge the contents of the old folder into the new folder
+    if args.merge:
+        logger.debug(
+            "process_user_ids: Merging contents from old folder ID '%s' to new folder ID '%s'.",
+            old_folder_id,
+            new_folder_id,
+        )
+        merge_folders(old_folder_id, new_folder_id)
+    else:
+        # Otherwise, just grant access to the old folder for the new user
+        logger.debug(
+            "process_user_ids: Granting access to old folder ID '%s' for new user '%s'.",
+            old_folder_id,
+            new_id,
+        )
+        create_rule(old_folder_id, new_id)
+
+
+# End define helper functions
+
+
+# Main function
 def main():
-    if args.dry_run:
-        logger.info("Running in dry-run mode; no changes will be made.")
+    """
+    Main function to process user folder merging based on provided arguments.
+    """
+    # If commit isn't set, log that this is a dry run
+    if not args.commit:
+        logger.info(
+            "Dry run mode: No changes will be committed. Use --commit to apply changes."
+        )
 
-    # Scenarios we need to handle:
-    # 1. User has never logged in (no old or new user folder -- no action needed)
-    # 2. User has only logged in as new user (no old folder -- no action needed)
-    # 3. User has only logged in as old user (no new folder -- rename old folder and update existing rule)
-    # 4. User has logged in as both old and new user (merge old folder into new folder or create a new rule on old folder granting new user access)
-
-    # Build a list of identities to process either from the CSV or a list of one entry from the options:
     identities = []
+
+    # If a CSV file is provided, read the old and new user IDs from it
     if args.csv:
-        with open(args.csv, newline="") as csvfile:
+        logger.info("Reading user ID pairs from CSV file: %s", args.csv)
+        with open(args.csv, mode="r") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 identities.append(
@@ -407,49 +622,12 @@ def main():
                     }
                 )
     else:
-        identities.append(
-            {
-                "old_user_id": args.old_user,
-                "new_user_id": args.new_user,
-            }
-        )
-
-    # Process each identity
+        # If no CSV file is provided, use the command line arguments for old and new user IDs
+        identities.append({"old_user_id": args.old_id, "new_user_id": args.new_id})
     for identity in identities:
-
-        old_user_id = identity.get("old_user_id")
-        new_user_id = identity.get("new_user_id")
-
-        if not old_user_id or not new_user_id:
-            logger.warning(f"Missing old or new user ID for identity: {identity}")
-            continue
-
-        logger.info(f"Processing identity pair: '{old_user_id}' -> '{new_user_id}'")
-
-        old_user_folder_id = get_user_folder_id(old_user_id)
-
-        if not old_user_folder_id:
-            # Scenario 1 or 2: No old user folder, no action needed
-            logger.info(f"No old user folder found for '{old_user_id}'. Skipping.")
-            continue
-
-        new_user_folder_id = get_user_folder_id(new_user_id)
-
-        if not new_user_folder_id:
-            # Scenario 3: Only old user folder exists, rename it and update the rule
-            logger.info(
-                f"No new user folder found for '{new_user_id}'. Renaming old user folder and updating rule."
-            )
-            new_user_id_normal=new_user_id.lower()
-            rename_folder(old_user_folder_id, new_user_id_normal)
-            update_rule(old_user_folder_id, old_user_id, new_user_id)
-            continue
-
-        # Scenario 4: Both old and new user folders exist, merge if merge is set or if not, add rule for the old folder.
-        if args.merge:
-            merge_folders(old_user_folder_id, new_user_folder_id)
-        else:
-            create_rule(old_user_folder_id, new_user_id)
+        old_id = identity["old_user_id"]
+        new_id = identity["new_user_id"]
+        process_user_ids(old_id, new_id)
 
 
 if __name__ == "__main__":
