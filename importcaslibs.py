@@ -96,7 +96,32 @@ if areyousure.upper() =='Y':
                                     command=clicommand+' cas caslibs create path --source-file "'+fullfile+'"'
                               print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
                               print(command)
-                              subprocess.call(command, shell=True)
+                              
+                              try:
+                                    result = subprocess.run(
+                                          command,
+                                          shell=True,
+                                          capture_output=True,
+                                          text=True
+                                    )
+
+                                    print("RETURN CODE: "+str(result.returncode))
+
+                                    if result.stdout:
+                                          print("STDOUT:")
+                                          print(result.stdout)
+
+                                    if result.stderr:
+                                          print("STDERR:")
+                                          print(result.stderr)
+
+                                    if result.returncode != 0:
+                                          print("ERROR: Command failed for file "+filename)
+
+                              except Exception as e:
+                                    print("ERROR executing command for file "+filename)
+                                    print(str(e))
+
                               tryimport=tryimport+1
 
                               # apply the authorization if authorization file exists
