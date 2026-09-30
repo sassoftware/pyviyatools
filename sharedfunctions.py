@@ -403,7 +403,7 @@ def getauthtoken(baseurl):
              refresh_data["grant_type"] =  "refresh_token"
              refresh_data["refresh_token"] = refreshToken
 
-             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify=False)
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify=verify_ssl)
 
              if (400 <= response.status_code <=599):
 
@@ -1023,13 +1023,13 @@ def updateconfigurationproperty(command):
 # Change history
 #   10Jun2026 - Initial deployment
 
-def callpagedrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1):
+def callpagedrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},params={},stoponerror=1):
 
     # Initialize an empty list to store the items from all pages
     all_items = []
 
     # Call the REST API for the first page
-    response = callrestapi(reqval, reqtype, acceptType, contentType, data, header, stoponerror)
+    response = callrestapi(reqval, reqtype, acceptType=acceptType, contentType=contentType, data=data, header=header, params=params, stoponerror=stoponerror)
 
     # Check for items in the response and add them to the list
     if "items" in response:
@@ -1041,7 +1041,7 @@ def callpagedrestapi(reqval, reqtype, acceptType='application/json', contentType
         next_url = next_link.get("href")
 
         # Call the REST API for the next page
-        response = callrestapi(next_url, reqtype, acceptType, contentType, data, header, stoponerror)
+        response = callrestapi(next_url, reqtype, acceptType=acceptType, contentType=contentType, data=data, header=header, stoponerror=stoponerror)
 
         # Check for items in the response and add them to the list
         if "items" in response:
