@@ -43,7 +43,7 @@ parser = argparse.ArgumentParser(description="Import JSON files that define path
 parser.add_argument("-d","--directory", help="Directory that contains JSON caslib definition files to import",required=True)
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("-su","--superuser", help="Runs the CASLIB create process with superuser permissions.", action='store_true')
-parser.add_argument("-v","--verbose", help="Show merged stdout/stderr for successful commands.", action='store_true')
+parser.add_argument("-v","--verbose", help="Show merged stdout/stderr for successful commands and pass --verbose to CLI.", action='store_true')
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
@@ -99,6 +99,11 @@ if areyousure.upper() =='Y':
                               # creates then runs the caslib creation command, with superuser perms where selected
                               # build safe argument list for subprocess (avoid shell=True)
                               cmd_args = [clicommand, 'cas', 'caslibs', 'create', 'path', '--source-file', fullfile]
+
+                              # if verbose flag passed to this script, also pass it to the CLI (e.g. sas-viya --verbose ...)
+                              if verbose:
+                                    cmd_args.insert(1, '--verbose')
+
                               if su:
                                     cmd_args.append('--su')
                               print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
@@ -144,6 +149,11 @@ if areyousure.upper() =='Y':
                                     
                                     # build safe argument list for authorization replace (avoid shell=True)
                                     auth_args = [clicommand, 'cas', 'caslibs', 'replace-controls', '--server', casserver, '--name', caslibname, '--force', '--source-file', authfile]
+
+                                    # if verbose flag passed to this script, also pass it to the CLI
+                                    if verbose:
+                                          auth_args.insert(1, '--verbose')
+
                                     if su:
                                           auth_args.insert( auth_args.index('--source-file'), '--su')
 

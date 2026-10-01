@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description="Delete CASLIBs defined in JSON fil
 parser.add_argument("-d","--directory", help="Directory containing JSON caslib definition files", required=True)
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("-su","--superuser", help="Run commands with superuser permissions.", action='store_true')
-parser.add_argument("-v","--verbose", help="Show merged stdout/stderr for successful commands.", action='store_true')
+parser.add_argument("-v","--verbose", help="Show merged stdout/stderr for successful commands and pass --verbose to CLI.", action='store_true')
 args = parser.parse_args()
 
 basedir = args.directory
@@ -61,6 +61,11 @@ if areyousure.upper() == 'Y':
 
                 # build safe argument list for subprocess
                 cmd_args = [clicommand, 'cas', 'caslibs', 'delete', '--server', casserver, '--name', caslibname, '--force']
+
+                # if verbose flag passed to this script, also pass it to the CLI (e.g. sas-viya --verbose ...)
+                if verbose:
+                    cmd_args.insert(1, '--verbose')
+
                 if su:
                     # insert --su before --server
                     if '--server' in cmd_args:
