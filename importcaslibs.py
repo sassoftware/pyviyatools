@@ -117,10 +117,12 @@ if areyousure.upper() =='Y':
 
                                     if result.returncode != 0:
                                           print("ERROR: Command failed for file "+filename)
+                                          continue
 
                               except Exception as e:
                                     print("ERROR executing command for file "+filename)
                                     print(str(e))
+                                    continue
 
                               tryimport=tryimport+1
 
