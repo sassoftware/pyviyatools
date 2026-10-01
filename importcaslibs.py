@@ -43,10 +43,12 @@ parser = argparse.ArgumentParser(description="Import JSON files that define path
 parser.add_argument("-d","--directory", help="Directory that contains JSON caslib definition files to import",required=True)
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("-su","--superuser", help="Runs the CASLIB create process with superuser permissions.", action='store_true')
+parser.add_argument("-v","--verbose", help="Show merged stdout/stderr for successful commands.", action='store_true')
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
 su=args.superuser
+verbose=args.verbose
 
 
 # get cli location from properties, check that cli is there if not ERROR and stop
@@ -106,21 +108,25 @@ if areyousure.upper() =='Y':
                                     result = subprocess.run(
                                           cmd_args,
                                           capture_output=True,
-                                          text=True
+                                          text=True,
+                                          stderr=subprocess.STDOUT
                                     )
 
                                     print("RETURN CODE: "+str(result.returncode))
 
-                                    # Treat stderr as non-fatal, but always show it on failure
+                                    # On failure print merged output (stdout+stderr)
                                     if result.returncode != 0:
-                                          if result.stderr:
-                                                print("STDERR:")
-                                                print(result.stderr)
+                                          if result.stdout:
+                                                print("OUTPUT:")
+                                                print(result.stdout)
                                           print("ERROR: Command failed for file "+filename)
                                           continue
                                     else:
                                           if result.stdout:
-                                                print("STDOUT:")
+                                                if verbose:
+                                                      print("OUTPUT:")
+                                                else:
+                                                      print("STDOUT:")
                                                 print(result.stdout)
 
                               except Exception as e:
@@ -144,20 +150,19 @@ if areyousure.upper() =='Y':
                                     print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
                                     print("RUN: "+' '.join(shlex.quote(str(a)) for a in auth_args))
                                     try:
-                                          auth_result = subprocess.run(auth_args, capture_output=True, text=True)
-                                          if auth_result.stdout:
-                                                print("STDOUT:")
-                                                print(auth_result.stdout)
-
-                                          # Treat stderr as non-fatal, but always show it on failure
+                                          auth_result = subprocess.run(auth_args, capture_output=True, text=True, stderr=subprocess.STDOUT)
                                           if auth_result.returncode != 0:
-                                                if auth_result.stderr:
-                                                      print("STDERR:")
-                                                      print(auth_result.stderr)
+                                                if auth_result.stdout:
+                                                      print("OUTPUT:")
+                                                      print(auth_result.stdout)
                                                 print("ERROR: Authorization command failed for caslib "+caslibname)
                                           else:
-                                                # success: only show stderr when debugging (silent here)
-                                                pass
+                                                if auth_result.stdout:
+                                                      if verbose:
+                                                            print("OUTPUT:")
+                                                      else:
+                                                            print("STDOUT:")
+                                                      print(auth_result.stdout)
                                     except Exception as e:
                                           print("ERROR executing auth command for file "+filename)
                                           print(str(e))
