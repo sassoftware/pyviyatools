@@ -111,17 +111,17 @@ if areyousure.upper() =='Y':
 
                                     print("RETURN CODE: "+str(result.returncode))
 
-                                    if result.stdout:
-                                          print("STDOUT:")
-                                          print(result.stdout)
-
-                                    if result.stderr:
-                                          print("STDERR:")
-                                          print(result.stderr)
-
+                                    # Treat stderr as non-fatal, but always show it on failure
                                     if result.returncode != 0:
+                                          if result.stderr:
+                                                print("STDERR:")
+                                                print(result.stderr)
                                           print("ERROR: Command failed for file "+filename)
                                           continue
+                                    else:
+                                          if result.stdout:
+                                                print("STDOUT:")
+                                                print(result.stdout)
 
                               except Exception as e:
                                     print("ERROR executing command for file "+filename)
@@ -148,9 +148,16 @@ if areyousure.upper() =='Y':
                                           if auth_result.stdout:
                                                 print("STDOUT:")
                                                 print(auth_result.stdout)
-                                          if auth_result.stderr:
-                                                print("STDERR:")
-                                                print(auth_result.stderr)
+
+                                          # Treat stderr as non-fatal, but always show it on failure
+                                          if auth_result.returncode != 0:
+                                                if auth_result.stderr:
+                                                      print("STDERR:")
+                                                      print(auth_result.stderr)
+                                                print("ERROR: Authorization command failed for caslib "+caslibname)
+                                          else:
+                                                # success: only show stderr when debugging (silent here)
+                                                pass
                                     except Exception as e:
                                           print("ERROR executing auth command for file "+filename)
                                           print(str(e))
