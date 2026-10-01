@@ -37,7 +37,7 @@ trydelete = 0
 
 if areyousure.upper() == 'Y':
     if os.path.isdir(basedir):
-        for filename in os.listdir(basedir):
+        for filename in sorted(os.listdir(basedir), key=str.lower):
             fullfile = os.path.join(basedir, filename)
             if filename.lower().endswith('.json'):
                 if '_authorization_' in filename:
