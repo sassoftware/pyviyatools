@@ -107,9 +107,9 @@ if areyousure.upper() =='Y':
                               try:
                                     result = subprocess.run(
                                           cmd_args,
-                                          capture_output=True,
-                                          text=True,
-                                          stderr=subprocess.STDOUT
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.STDOUT,
+                                          text=True
                                     )
 
                                     print("RETURN CODE: "+str(result.returncode))
@@ -150,7 +150,7 @@ if areyousure.upper() =='Y':
                                     print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
                                     print("RUN: "+' '.join(shlex.quote(str(a)) for a in auth_args))
                                     try:
-                                          auth_result = subprocess.run(auth_args, capture_output=True, text=True, stderr=subprocess.STDOUT)
+                                          auth_result = subprocess.run(auth_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                                           if auth_result.returncode != 0:
                                                 if auth_result.stdout:
                                                       print("OUTPUT:")
