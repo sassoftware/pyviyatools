@@ -34,13 +34,13 @@
 #
 #
 # Import Python modules
-import argparse, sys, subprocess, os, json
+import argparse, sys, subprocess, os, json, shlex
 from sharedfunctions import callrestapi, getapplicationproperties, file_accessible, getclicommand
 
 
 # get input parameters
 parser = argparse.ArgumentParser(description="Import JSON files that define path-based CASLIBS from directory. All json files in directory will be imported.")
-parser.add_argument("-d","--directory", help="Directory that contains JSON caslib definition files to import",required='True')
+parser.add_argument("-d","--directory", help="Directory that contains JSON caslib definition files to import",required=True)
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 parser.add_argument("-su","--superuser", help="Runs the CASLIB create process with superuser permissions.", action='store_true')
 args= parser.parse_args()
@@ -86,21 +86,25 @@ if areyousure.upper() =='Y':
                               # get some caslib attributes for the authorization import
                               with open(fullfile) as json_file:
                                     data = json.load(json_file)
+
+                              # check if key 'name' and 'server' exist in the json data
+                              if 'name' not in data or 'server' not in data:
+                                    print("ERROR: Missing required keys in file "+filename)
+                                    continue
                               
                               caslibname=data['name']
                               casserver=data['server']
                               # creates then runs the caslib creation command, with superuser perms where selected
+                              # build safe argument list for subprocess (avoid shell=True)
+                              cmd_args = [clicommand, 'cas', 'caslibs', 'create', 'path', '--source-file', fullfile]
                               if su:
-                                    command=clicommand+' cas caslibs create path --source-file "'+fullfile+'" --su'
-                              else:
-                                    command=clicommand+' cas caslibs create path --source-file "'+fullfile+'"'
+                                    cmd_args.append('--su')
                               print("NOTE: Viya Caslib import attempted from json file "+filename+" in  directory "+basedir  )
-                              print(command)
-                              
+                              print("RUN: "+' '.join(shlex.quote(str(a)) for a in cmd_args))
+
                               try:
                                     result = subprocess.run(
-                                          command,
-                                          shell=True,
+                                          cmd_args,
                                           capture_output=True,
                                           text=True
                                     )
@@ -132,14 +136,24 @@ if areyousure.upper() =='Y':
 
                               if access_file==True:
                                     
+                                    # build safe argument list for authorization replace (avoid shell=True)
+                                    auth_args = [clicommand, 'cas', 'caslibs', 'replace-controls', '--server', casserver, '--name', caslibname, '--force', '--source-file', authfile]
                                     if su:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name "'+ caslibname+'" --force --su --source-file "'+authfile+'"'
-                                    else:
-                                          command=clicommand+' cas caslibs replace-controls --server '+casserver+' --name "'+ caslibname+'" --force --source-file "'+authfile+'"'
+                                          auth_args.insert( auth_args.index('--source-file'), '--su')
 
                                     print("NOTE: Viya Caslib authorization import attempted from json file "+filename+" in  directory "+basedir  )
-                                    print(command)
-                                    subprocess.call(command, shell=True)           
+                                    print("RUN: "+' '.join(shlex.quote(str(a)) for a in auth_args))
+                                    try:
+                                          auth_result = subprocess.run(auth_args, capture_output=True, text=True)
+                                          if auth_result.stdout:
+                                                print("STDOUT:")
+                                                print(auth_result.stdout)
+                                          if auth_result.stderr:
+                                                print("STDERR:")
+                                                print(auth_result.stderr)
+                                    except Exception as e:
+                                          print("ERROR executing auth command for file "+filename)
+                                          print(str(e))
 
             if not tryimport: print("NOTE: No caslib files available for import.")
 
