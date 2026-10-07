@@ -410,3 +410,35 @@ python3 setdefaultqkb.py \
   --locale ENUSA \
   --qkb "QKB CI 33"
 ```
+**sendnotifications.py**
+
+```bash
+# Send an info-level notification to all SAS Viya users
+./sendnotifications.py -m "The system will be going down in 30 minutes." -s "System outage" -l info
+
+# Preview the command without sending it
+./sendnotifications.py -m "The system will be going down in 30 minutes." -s "System outage" -l info --dryrun
+```
+
+**getnotifications.py**
+
+```bash
+# List all notifications
+./getnotifications.py
+
+# Show details for a single notification by ID
+./getnotifications.py -i 48c02a16-e348-4627-8000-70253c47cfee
+
+# Preview the list command without running it
+./getnotifications.py --dryrun
+```
+
+**readnotifications.py**
+
+```bash
+# Mark a notification as read by ID
+./readnotifications.py -i 48c02a16-e348-4627-8000-70253c47cfee
+
+# Preview the command without running it
+./readnotifications.py -i 48c02a16-e348-4627-8000-70253c47cfee --dryrun
+```
