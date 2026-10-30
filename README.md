@@ -1,6 +1,6 @@
 # Python Tools for SAS Viya <!-- omit in toc --> 
 
-The pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. The tools are designed to be used in conjunction with the SAS Administration command line interfaces(CLI). A subset of the tools also make calls to the cli.
+pyviyatools is a collection of command-line tools that call the SAS Viya REST APIs. The tools can make direct calls to REST endpoints or combine multiple calls to provide more complex functionality. They are designed to be used with the SAS Administration CLI; some tools also invoke the CLI directly.
 
 - [Getting Started](#getting-started)
 - [Documentation](#documentation)
@@ -37,7 +37,7 @@ Please use the installation instructions in the file [INSTALL.md](INSTALL.md)
 
 ## Running
 
-The pyviyatools use the SAS Administration CLI to authenticate to Viya. To use the tool you must create a profile and authenticate. The SAS Administration CLI is named sas-admin in Viya 3.x and sas-viya in Viya 4. 
+The pyviyatools use the SAS Administration CLI profile and authentication token to access Viya. Create a profile and authenticate before running the tools. The CLI executable is named `sas-admin` in Viya 3.x and `sas-viya` in Viya 4.
 
 This process is documented in the SAS Viya Administration guide here:
 
@@ -55,23 +55,19 @@ The tool will automatically use the default profile.
 
 1. To create a profile as a SAS Administrator logon to the machine that contains the Viya CLI's
 2. Run `/opt/sas/viya/home/bin/sas-admin profile init` and when prompted enter the base endpoint of your Viya server for example: http://myviyaserver.blah.com. You may enter your personal preference at the other prompts.
-3. After you create the profile there are two options to authenticate
- * Run `/opt/sas/viya/home/bin/sas-admin auth login` to authenticate to Viya enter the userid and password of the SAS Administrator when prompted.
- *  Create an `.authinfo` file in your home directory with your userid and password and use **loginviauthinfo.py** to authenticate with the credentials in the file (you can use different authinfo files with the -f option)
+3. After you create a profile, authenticate in one of two ways:
+   * Run `/opt/sas/viya/home/bin/sas-admin auth login` and follow the prompts.
+   * Create an `.authinfo` file in your home directory and run `python3 loginviauthinfo.py` to authenticate with it. Use its `-f` option to specify a different file.
 
 The CLI allows for multiple profiles. To use a profile other than the default profile, for example newprofile
 
-1. Create a named profile `sas-admin --profile newprofile profile init`
-2. 3. Logon with the named profile `sas-admin --profile newprofile auth login`
-4. Set the SAS_CLI_PROFILE environment variable to the name of the profile
-* LINUX: `export SAS_CLI_PROFILE=newprofile`
-* WINDOWS: `set SAS_CLI_PROFILE=newprofile`
+1. Create a named profile: `sas-admin --profile newprofile profile init`
+2. Log on with that profile: `sas-admin --profile newprofile auth login`
+3. Set `SAS_CLI_PROFILE` to `newprofile`:
+   * Linux/macOS: `export SAS_CLI_PROFILE=newprofile`
+   * Windows Command Prompt: `set SAS_CLI_PROFILE=newprofile`
 
-1. When the  SAS_CLI_PROFILE is set the tool will use the profile stored in the variable
-2. To revert to using the default variable reset the environment variable
-
-* LINUX: `unset SAS_CLI_PROFILE`
-* WINDOWS: `set SAS_CLI_PROFILE=`
+The tools use the profile named by `SAS_CLI_PROFILE` when it is set. To return to the default profile, unset the variable on Linux/macOS (`unset SAS_CLI_PROFILE`) or clear it in Windows Command Prompt (`set SAS_CLI_PROFILE=`).
 
 ### Certificates
 
@@ -90,20 +86,20 @@ export CAS_CLIENT_SSL_CA_LIST=/opt/sas/viya/config/etc/SASSecurityCertificateFra
 
 ### Running in insecure mode
 
-If you have problems using certificates pyvyatools, like the CLI, can run in insecure mode. This is not recommended for production usage. To run in insecure mode, set the environment variable PYVIYA_INSECURE.
+If you have problems with certificates, pyviyatools can run in insecure mode, like the CLI. This is not recommended for production use. To run in insecure mode, set the `PYVIYA_INSECURE` environment variable.
 
 ```sh
 export PYVIYA_INSECURE=True
 ```
 
-Set to `False` or unset the environment variable to use certificates.
+Set it to `False` or unset it to verify certificates.
 
 ### Using the tools
 
-The tools are self-documenting, for help on any tool call the tool passing `-h` or `--help`.
+Use Python 3 to run the tools. Each tool provides command-line help with `-h` or `--help`.
 
 ```sh
-python *\<pathtotool\>\<toolname.py\>* -h
+python3 <toolname.py> -h
 ```
 
 For example:
@@ -130,7 +126,7 @@ optional arguments:
 
 ```
 
-If you do not preface a tool with `python` the tools will automatically look for python im `/usr/bin/python` If your python is in a different path just call the tools using the `python` or `python3` command. For example.
+Run a tool from the repository directory, or provide its path. For example:
 
 ```
 python3 getfolderid.py -f /Public
@@ -145,7 +141,7 @@ callrestapi is a general tool, and the building block for all the other tools.
 callrestapi  will call the Viya REST API and return json or optionally a simplified output. It can call any viya REST method. (Like a curl command).
 
 ```sh
-usage: callrestapi.py [-h] -e ENDPOINT -m {get,put,post,delete,patch}
+usage: callrestapi.py [-h] -e ENDPOINT -m {get,put,post,delete,patch,head}
                       [-i INPUTFILE] [-a ACCEPTTYPE] [-c CONTENTTYPE]
                       [-o {csv,json,simple,simplejson}] [-t] [-hf HEADERFILE]
 
@@ -155,7 +151,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -e ENDPOINT, --endpoint ENDPOINT
                         Enter the REST endpoint e.g. /folders/folders
-  -m {get,put,post,delete,patch}, --method {get,put,post,delete,patch}
+  -m {get,put,post,delete,patch,head}, --method {get,put,post,delete,patch,head}
                         Enter the REST method.
   -i INPUTFILE, --inputfile INPUTFILE
                         Enter the full path to an input json file
@@ -175,42 +171,7 @@ optional arguments:
 
 You must pass a method and endpoint. You can optionally pass json, content type headers or the -t flag to change output from json to basic text.
 
-**List of some of the Additional Tools Available**
-
-Additional tools provide more complex functionality by combining multiple calls to the callrestapi function, and post-processing the output that is returned.
-
-* **getfolderid** returns the id of the folder based on the full folder path
-* **deletefolder** deletes a folder based on the full folder path
-* **deletefolderandcontent** deletes a folder and any reports that are stored in the folder
-* **movecontent** moves the content from a source to a target folder
-* **getconfigurationproperties** lists the name/value pairs of a configuration
-* **testfolderaccess** tests if a user or group has access to a folder
-* **createbinarybackup.py** creates a binary backup job
-* **createdomain.py** creates an authentication domain
-* **createpublishdest.py** creates CAS, Teradata or Hadoop publishing destinations
-* **detetepublishdest.py** deletes publishing destinations
-* **listrules.py** list authorization rules subset on a principal and/or a uri
-* **loginviauthinfo.py** use an authinfo file to authenticate to the CLI
-* **updateprefences.py** update preferences for a user or group of users
-* **updatedomain.py** load a set of userids and passwords to a Viya domain from a csv file
-* **createfolders.py** create a set of Viya folders from a csv file
-* **explainaccess.py** explains access for a folder, object or service endpoint
-* **getpath.py** return path of folder, report, or other object in folder
-* **listmemberswithpath.py** lists members of a folder, recursively if desired
-* **listcaslibs.py** list all CAS libraries on all servers
-* **listcastables.py** list all CAS tables in all CAS libraries on all servers
-* **listcaslibsandeffectiveaccess.py** list all effective access on all CAS libraries on all servers
-* **listcastablesandeffectiveaccess.py** list all effective access on all CAS tables in all CAS libraries on all servers
-* **listgroupsandmembers.py** list all groups and all their members
-* **getauditrecords.py** lists audit records from SAS Infrastructure Data Server in CSV or JSON format using REST calls.
-* **listmodelobjects.py** lists basic information about model content (models, projects and repositories).
-* **applyfolderauthorization.py** apply authorization rules to folders in bulk from a source CSV file.
-* **submit_jd_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job definition id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
-* **submit_jr_job.py** This file calls various functions from jobmodule.py. It will submit a job based on job request id. Based on other arguments, it will either provide the sasout and saslog information if available in the location provided or it will display more information based on if verbose was selected. It will also display more information if needed based on log level selected.
-* **setupcopilotcredentials.py** Creates or updates the OrdersAPIAuth client credential required for setup and activation of SAS Viya Copilot. 
-
-
-Check back for additional tools and if you build a tool feel free to contribute it to the collection.
+For the current tool list and descriptions, see the [tool inventory](INVENTORY.md). Run any tool with `-h` for its current options.
 
 **Examples**
 
@@ -226,7 +187,7 @@ To fix the problem generate a new access token: `/opt/sas/viya/home/bin/sas-admi
 
 To see the current setup, including python and package versions, environment variable settings, profile information and current user. Run
 
-`python showsetup.py`
+`python3 showsetup.py`
 
 If you get this error : Login failed. Error with security certificate.
 
@@ -246,9 +207,6 @@ Set the environment variable for the SSL certificate file. For example:
 
 `export REQUESTS_CA_BUNDLE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem`
 
-Encoding has been a problem. If you run into any encoding issues try using python3 the experience there is much better than python2.
-
-
 ## Developing with the existing functions
 
 The file sharedfunctions.py contains a set of generic functions that make it easy to build additional tools.
@@ -256,8 +214,8 @@ The file sharedfunctions.py contains a set of generic functions that make it eas
 *callrestapi* is the main function, called by many other programs and by the callrestapi program to make the REST calls. It accepts as parameters:
 
 * reqval: the request value which is the rest endpoint for the request
-* reqtype: the type of REST request, get,put, post, delete
-* acceptType: optinal accept type content header
+* reqtype: the type of REST request: `get`, `put`, `post`, `delete`, `patch`, or `head`
+* acceptType: optional Accept content type
 * contentType: optional content type content header
 * data: optionally a python dictionary created from the json for the rest request
 * params: optional dictionary of query parameters to pass to the rest request
@@ -272,4 +230,3 @@ We welcome your contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) fo
 ## License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
-
