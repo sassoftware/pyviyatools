@@ -227,6 +227,55 @@ We suggest you use [listcaslibs_example.py](listcaslibs_example.py) as a simple 
 
 We welcome your contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit contributions to this project.
 
+### Generating tool reference documentation
+
+Use [scripts/generate_tool_docs.py](scripts/generate_tool_docs.py) to generate
+the Markdown reference at [docs/TOOLS.md](docs/TOOLS.md):
+
+```sh
+python3 scripts/generate_tool_docs.py
+```
+
+The Markdown file is intended to be committed with documentation changes.
+Regenerate it after changing a tool's arguments, then review and commit the
+result with the source change.
+
+To also build an optional HTML version, install the documentation-only
+dependencies and use `--html`:
+
+```sh
+python3 -m pip install -r requirements-docs.txt
+python3 scripts/generate_tool_docs.py --html
+```
+
+Open `docs/tools/html/index.html` to view the HTML output. Generated HTML files
+under `docs/tools/` are ignored by Git; the tools' runtime dependencies are
+unchanged.
+
+Exclude particular tools by listing their exact filenames:
+
+```sh
+python3 scripts/generate_tool_docs.py \
+  --exclude call_rest_api.py listcaslibs_example.py \
+  --exclude setup.py
+```
+
+Use `--source-dir PATH` to scan another directory (not recursively),
+`--markdown-file PATH` to change the Markdown destination, and `--output-dir PATH`
+to change the optional HTML destination. Exclusion names must exist in the
+source directory; files without argparse parsers are reported and skipped.
+
+The generator reads Python syntax without importing tools, parsing their command
+lines, loading credentials, or making Viya calls. It supports the repository's
+literal argparse definitions, parent parsers, subcommands, argument groups, and
+Python-version-specific encoding options. Current-directory defaults reflect the
+directory where documentation is built; the command-line branch of
+`changeimportloc.py` is documented rather than its SAS Studio integration.
+Unsupported dynamic argument values and conditional declarations fail explicitly
+instead of executing code. This is a static extractor for the patterns above,
+not a general-purpose Python interpreter; new parser-building patterns may need
+extractor support. Existing tools are not modified.
+
 ## License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
