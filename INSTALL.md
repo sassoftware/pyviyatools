@@ -1,102 +1,67 @@
-# pyviyatools Install Intructions
+# Installing pyviyatools
 
-- [pyviyatools Install Intructions](#pyviyatools-install-intructions)
+- [Installing pyviyatools](#installing-pyviyatools)
 - [Install](#install)
-  - [Viya 3.x](#viya-3x)
-  - [Viya 4](#viya-4)
+  - [Download and install](#download-and-install)
   - [Configure](#configure)
-  - [Install Required Python Packages](#install-required-python-packages)
   - [Test](#test)
 
-The  pyviyatools are a set of command-line tools that call the SAS Viya REST API's from python. The tools can be used to make direct calls to any rest-endpoint (like a CURL command) or to build additional tools that make multiple rest calls to provide more complex functionality. A subset of the tools also call the SAS Administration CLI
+pyviyatools is a collection of command-line tools that call the SAS Viya REST APIs. The tools can make direct calls to REST endpoints or combine multiple calls to provide more complex functionality. Some tools also call the SAS Administration CLI.
 
-# Install
+## Install
 
-The tools are a package of files and should be downloaded as such. The individual files are not useable without the package.
+Download the repository as a whole; individual tools depend on shared files in the repository.
 
-The tools should be installed on the same machine that hosts the Viya command-line interfaces(CLI). The following commands will install a copy of the tools in a sub-directory (pyviyatools) of the current directory.
+The tools need access to a configured SAS Viya CLI profile and authentication token. For Viya 4, use the `sas-viya` CLI. If you are using Viya 3, use the `sas-admin` CLI instead. Install the repository on a machine that has access to the CLI, or configure the CLI profile and token for the account running the tools.
 
-## Viya 3.x
+### Download and install
 
-For Viya 3.x follow these steps.
-
-```sh
-cd $install-dir
-*git clone https://github.com/sassoftware/pyviyatools.git*
-```
-
-## Viya 4
-
-For Viya 4 follow these steps.
+Clone the repository and install its Python dependencies:
 
 ```sh
-cd $install-dir
-*git clone https://github.com/sassoftware/pyviyatools.git*
+git clone https://github.com/sassoftware/pyviyatools.git
 cd pyviyatools
-./setup.py
+python3 -m pip install -r requirements.txt
 ```
 
-## Configure
+Use Python 3 to run the tools. The repository does not currently declare a formal range of supported Python versions.
 
-What does .setup.py do?
+### Configure
 
-**NOTE. You do not need to run setup.py if you are using Viya 3.x and the tools are installed in the default location.**
+Use the `sas-viya` CLI for Viya 4. If you are using Viya 3, use `sas-admin`.
 
-Viya 3.5 the SAS Administration cli executable is `sas-admin` and the Viya 4 cli is `sas-viya`.
-
-The project contains an application.properties file that documents the name and location of the SAS Administation cli. The default application properties in the repository stores the values for Viya 3.x
-
-```log
-sascli.location=/opt/sas/viya/home/bin/
-sascli.executable=sas-admin
-```
-
-To configure the tools for Viya 4, or if you have your cli installed in a non-default location use ./setup.py. For example:
+The repository's `application.properties` file stores the CLI location and executable name. To configure the standard Viya 4 CLI, run `setup.py` with no arguments:
 
 ```sh
-./setup.py --clilocation /opt/bin/mycli --cliexecutable sas-viya
+python3 setup.py
 ```
 
-If you pass no parameters the defaults for the function are the Viya 4 default values.
-
-```log
-sascli.location=/opt/sas/viya/home/bin/
-sascli.executable=sas-viya
-```
-
-## Install Required Python Packages
-
-The required python packages are listed in the `requirements.txt` file and may be installed using the following command.
+For Viya 3, configure the tools to use `sas-admin`:
 
 ```sh
-cd pyviyatools
-pip install -r requirements.txt
+python3 setup.py --clilocation /opt/sas/viya/home/bin/ --cliexecutable sas-admin
 ```
 
-## Test
-
-1. Follow the steps to authenticate to Viya.
-
-1. Execute a test call. Change directory to your install directory and run the command below. The call should return the JSON for the folders in the viya deployment. Be patient it might take a few seconds the first time.
+If the CLI is installed in a non-default location, pass its location and executable name. For example, for Viya 4:
 
 ```sh
-./callrestapi.py -e /folders/folders -m get*
+python3 setup.py --clilocation /opt/bin --cliexecutable sas-viya
 ```
 
-3. To see the current setup, including python and package versions, environment variable settings, profile information and current user. Run
+Create and authenticate a profile with the matching CLI (`sas-viya` for Viya 4 or `sas-admin` for Viya 3) before running the tools. See the [README profile instructions](README.md#creating-a-profile-and-logging-on).
+
+### Test
+
+1. Configure and authenticate the appropriate CLI profile: use `sas-viya` for Viya 4, or `sas-admin` for Viya 3. See the [README profile instructions](README.md#creating-a-profile-and-logging-on).
+
+2. From the repository directory, make a test request. It should return JSON for folders in the Viya deployment:
 
 ```sh
-./showsetup.py
+python3 callrestapi.py -e /folders/folders -m get
 ```
-```log
-Python Version is: 2.7
-Requests Version is: 2.6.0
-SAS_CLI_PROFILE environment variable set to profile gelcorp
-SSL_CERT_FILE environment variable set to profile /home/cloud-user/.certs/gelcorp_trustedcerts.pem
-REQUESTS_CA_BUNDLE environment variable set to profile /home/cloud-user/.certs/gelcorp_trustedcerts.pem
-Note your authentication token expires at: 2023-12-21T18:13:39Z
-Endpoint is: https://gelcorp.pdcesx03191.com
-Logged on as id: geladm
-Logged on as name: geladm
-{u'sascli.location': u'/opt/sas/viya/home/bin/', u'sascli.executable': u'sas-viya'}
+
+3. To display the current setup and environment details, run:
+
+```sh
+python3 showsetup.py
 ```
