@@ -4,15 +4,16 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from scripts.generate_cli_docs import (
+from scripts.generate_tool_docs import (
     ParserExtractionError,
     generate_docs,
     load_parser,
     main,
+    write_markdown,
 )
 
 
-class GenerateCliDocsTests(unittest.TestCase):
+class GenerateToolDocsTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -119,48 +120,86 @@ if some_runtime_condition:
         with self.assertRaisesRegex(ParserExtractionError, "unsupported conditional"):
             load_parser(filename)
 
-    def test_excluded_files_are_not_read_and_rerun_removes_their_directives(self):
+    def test_generates_markdown_and_excludes_files(self):
         self.script("tool.py", "import argparse\nparser = argparse.ArgumentParser()\n")
         self.script("other.py", "import argparse\nparser = argparse.ArgumentParser()\n")
         self.script("support.py", "raise RuntimeError('must not run')\n")
-        output = self.directory / "output"
-        source, count = generate_docs(self.directory, output, set())
+        output = self.directory / "TOOLS.md"
+        markdown, source, count = generate_docs(self.directory, output, set())
+        self.assertEqual(markdown, output.resolve())
         self.assertEqual(count, 2)
-        self.assertIn("other.py", (source / "index.rst").read_text())
+        self.assertIsNone(source)
+        content = output.read_text()
+        self.assertIn("# pyviyatools Tool Reference", content)
+        self.assertIn("## tool.py", content)
+        self.assertIn("[Source](tool.py)", content)
+        self.assertIn("## other.py", content)
         self.script("other.py", "invalid Python !")
-        source, count = generate_docs(self.directory, output, {"other.py"})
+        markdown, source, count = generate_docs(
+            self.directory, output, {"other.py"}
+        )
         self.assertEqual(count, 1)
-        self.assertNotIn("other.py", (source / "index.rst").read_text())
-        self.assertNotIn("other.py", (source / "_cli_parsers.py").read_text())
-        self.assertIn("sphinxarg.ext", (source / "conf.py").read_text())
+        self.assertIsNone(source)
+        self.assertNotIn("other.py", markdown.read_text())
+
+    def test_markdown_documents_arguments_and_subcommands(self):
+        filename = self.script("tool.py", '''
+import argparse
+from pathlib import Path
+cwd = Path.cwd()
+parser = argparse.ArgumentParser(description="Manage sample tools.")
+parser.add_argument("--format", choices=["json", "csv"], default="json")
+parser.add_argument("--directory", default=cwd)
+subparsers = parser.add_subparsers(dest="action")
+create_parser = subparsers.add_parser(
+    "create", help="Create an item", description="Create an item with its required name."
+)
+create_parser.add_argument("--name", required=True, help="Item name")
+''')
+        parser = load_parser(filename)
+        output = write_markdown([(filename, parser)], self.directory / "TOOLS.md")
+        content = output.read_text()
+        self.assertIn("Manage sample tools.", content)
+        self.assertIn("Choices: `json, csv`", content)
+        self.assertIn("Default: `'json'`", content)
+        self.assertIn("Default: `current working directory`", content)
+        self.assertNotIn(str(Path.cwd()), content)
+        self.assertIn("### `create`", content)
+        self.assertIn("Create an item with its required name.", content)
+        self.assertIn("Item name", content)
+        self.assertIn("Required", content)
 
     def test_unknown_exclusion_is_an_error(self):
         with self.assertRaisesRegex(ValueError, "Excluded files not found"):
-            generate_docs(self.directory, self.directory / "out", {"typo.py"})
+            generate_docs(self.directory, self.directory / "TOOLS.md", {"typo.py"})
 
     def test_no_parsers_is_an_error(self):
         self.script("support.py", "import argparse\n")
         with self.assertRaisesRegex(ValueError, "No argparse tools"):
-            generate_docs(self.directory, self.directory / "out", set())
+            generate_docs(self.directory, self.directory / "TOOLS.md", set())
 
-    def test_cli_accepts_multiple_and_repeated_exclusions(self):
-        with patch("scripts.generate_cli_docs.generate_docs") as generate:
-            generate.return_value = (self.directory / "source", 1)
-            with patch("scripts.generate_cli_docs.subprocess.run") as run:
-                run.return_value.returncode = 0
-                self.assertEqual(main([
-                    "--exclude", "a.py", "b.py", "--exclude", "c.py",
-                ]), 0)
+    def test_tool_name_and_exclusions_in_command_line(self):
+        markdown = self.directory / "TOOLS.md"
+        with patch("scripts.generate_tool_docs.generate_docs") as generate:
+            generate.return_value = (markdown, None, 1)
+            self.assertEqual(main([
+                "--markdown-file", str(markdown),
+                "--exclude", "a.py", "b.py", "--exclude", "c.py",
+            ]), 0)
         self.assertEqual(generate.call_args.args[2], {"a.py", "b.py", "c.py"})
-        self.assertIn("-W", run.call_args.args[0])
+        self.assertEqual(generate.call_args.args[1], markdown)
 
     def test_sphinx_failure_is_propagated(self):
-        with patch("scripts.generate_cli_docs.generate_docs") as generate:
-            generate.return_value = (self.directory / "source", 1)
-            with patch("scripts.generate_cli_docs.subprocess.run") as run:
+        with patch("scripts.generate_tool_docs.generate_docs") as generate:
+            generate.return_value = (
+                self.directory / "TOOLS.md",
+                self.directory / "source",
+                1,
+            )
+            with patch("scripts.generate_tool_docs.subprocess.run") as run:
                 run.return_value.returncode = 2
                 with self.assertRaises(SystemExit) as failure:
-                    main([])
+                    main(["--html"])
         self.assertEqual(failure.exception.code, 2)
 
     def test_all_current_tools_can_be_extracted(self):

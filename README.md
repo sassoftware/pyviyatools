@@ -227,30 +227,42 @@ We suggest you use [listcaslibs_example.py](listcaslibs_example.py) as a simple 
 
 We welcome your contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit contributions to this project.
 
-### Generating CLI reference documentation
+### Generating tool reference documentation
 
-Use [scripts/generate_cli_docs.py](scripts/generate_cli_docs.py) to build an HTML
-reference from the tools' argparse definitions using Sphinx and sphinx-argparse:
+Use [scripts/generate_tool_docs.py](scripts/generate_tool_docs.py) to generate
+the Markdown reference at [docs/TOOLS.md](docs/TOOLS.md):
+
+```sh
+python3 scripts/generate_tool_docs.py
+```
+
+The Markdown file is intended to be committed with documentation changes.
+Regenerate it after changing a tool's arguments, then review and commit the
+result with the source change.
+
+To also build an optional HTML version, install the documentation-only
+dependencies and use `--html`:
 
 ```sh
 python3 -m pip install -r requirements-docs.txt
-python3 scripts/generate_cli_docs.py
+python3 scripts/generate_tool_docs.py --html
 ```
 
-Open `docs/cli/html/index.html` to view the result. Generated files under
-`docs/cli/` are ignored by Git. Documentation dependencies are separate from
-the tools' runtime dependencies.
+Open `docs/tools/html/index.html` to view the HTML output. Generated HTML files
+under `docs/tools/` are ignored by Git; the tools' runtime dependencies are
+unchanged.
 
 Exclude particular tools by listing their exact filenames:
 
 ```sh
-python3 scripts/generate_cli_docs.py \
+python3 scripts/generate_tool_docs.py \
   --exclude call_rest_api.py listcaslibs_example.py \
   --exclude setup.py
 ```
 
-Use `--source-dir PATH` to scan another directory (not recursively), and
-`--output-dir PATH` to change the destination. Exclusion names must exist in the
+Use `--source-dir PATH` to scan another directory (not recursively),
+`--markdown-file PATH` to change the Markdown destination, and `--output-dir PATH`
+to change the optional HTML destination. Exclusion names must exist in the
 source directory; files without argparse parsers are reported and skipped.
 
 The generator reads Python syntax without importing tools, parsing their command
