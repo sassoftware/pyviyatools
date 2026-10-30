@@ -227,6 +227,43 @@ We suggest you use [listcaslibs_example.py](listcaslibs_example.py) as a simple 
 
 We welcome your contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit contributions to this project.
 
+### Generating CLI reference documentation
+
+Use [scripts/generate_cli_docs.py](scripts/generate_cli_docs.py) to build an HTML
+reference from the tools' argparse definitions using Sphinx and sphinx-argparse:
+
+```sh
+python3 -m pip install -r requirements-docs.txt
+python3 scripts/generate_cli_docs.py
+```
+
+Open `docs/cli/html/index.html` to view the result. Generated files under
+`docs/cli/` are ignored by Git. Documentation dependencies are separate from
+the tools' runtime dependencies.
+
+Exclude particular tools by listing their exact filenames:
+
+```sh
+python3 scripts/generate_cli_docs.py \
+  --exclude call_rest_api.py listcaslibs_example.py \
+  --exclude setup.py
+```
+
+Use `--source-dir PATH` to scan another directory (not recursively), and
+`--output-dir PATH` to change the destination. Exclusion names must exist in the
+source directory; files without argparse parsers are reported and skipped.
+
+The generator reads Python syntax without importing tools, parsing their command
+lines, loading credentials, or making Viya calls. It supports the repository's
+literal argparse definitions, parent parsers, subcommands, argument groups, and
+Python-version-specific encoding options. Current-directory defaults reflect the
+directory where documentation is built; the command-line branch of
+`changeimportloc.py` is documented rather than its SAS Studio integration.
+Unsupported dynamic argument values and conditional declarations fail explicitly
+instead of executing code. This is a static extractor for the patterns above,
+not a general-purpose Python interpreter; new parser-building patterns may need
+extractor support. Existing tools are not modified.
+
 ## License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
