@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 #
 # listrules.py
-# May 2026
+# Nov 2026
 #
 # Change History
-# May 2026 - Initial release
+# November 2026 - Initial release
 #
 # Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -91,19 +91,25 @@ def join_and(expressions: List[str]) -> str:
 def contains(field: str, value: str) -> str:
     return f"contains({field},'{value}')"
 
-def cmp(field: str, value: str, operator: str = 'eq') -> str:
+def cmp_static_eq(field: str, value: str, operator: str = 'eq') -> str:
+    op = 'eq'
+    return f"{op}({field},'{value}')"
+
+def cmp_def_eq(field: str, value: str, operator: str = 'eq') -> str:
     op = operator.lower()
     if op not in ('eq','ne','contains'):
         raise ValueError("Unsupported operator: must be 'eq', 'ne' or 'contains")
     return f"{op}({field},'{value}')"
 
-def cmpdefault(field: str, value: str, operator: str = 'eq') -> str:
-    op = 'eq'
+def cmp_def_contains(field: str, value: str, operator: str = 'contains') -> str:
+    op = operator.lower()
+    if op not in ('eq','ne','contains'):
+        raise ValueError("Unsupported operator: must be 'eq', 'ne' or 'contains")
     return f"{op}({field},'{value}')"
 
 def in_list(field: str, values: List[str], operator: str = 'eq') -> str:
     # build or(eq(field,val1),eq(field,val2),...) or or(ne(...))
-    return join_or([cmp(field, v, operator) for v in values])
+    return join_or([cmp_def_eq(field, v, operator) for v in values])
 
 def get_rules_count(rules_result_json):
     """
@@ -121,40 +127,46 @@ def get_rules_count(rules_result_json):
 # --- Build filter expression ---
 def build_filter(args) -> str:
     clauses = []
-    operator = args.operator.lower() if args.operator else 'eq'
-
-    # objectUri (use cmp)
+    operator = args.operator.lower() if args.operator else 'None'
+#    operator = args.operator.lower() if args.operator else 'eq'
+  
+    # objectUri (use cmp_def_contains)
     if args.uri and args.uri.lower() != 'none':
-        clauses.append(cmp('objectUri', args.uri, operator))
-
-    # containerUri (use cmp)
+#        clauses.append(cmp_def_contains('objectUri', args.uri))
+        clauses.append(cmp_def_contains('objectUri', args.uri, operator))
+#        print(operator)
+    # containerUri (use cmp_def_contains)
     if args.container and args.container.lower() != 'none':
-        clauses.append(cmp('containerUri', args.container, operator))
+        clauses.append(cmp_def_contains('containerUri', args.container))
+#        clauses.append(cmp_def_contains('containerUri', args.container, operator))
 
     # description contains (CASE SENSITIVE as original)
-    if args.description and args.description != 'none':
+    if args.description != 'none':
         clauses.append(contains('description', args.description))
 
-    # principal or principalType (use cmp for eq/ne)
+    # principal or principalType (use cmp_def_eq for eq/ne)
     if args.principal and args.principal.lower() != 'none':
         p = args.principal
         if p.lower() == 'authenticatedusers':
             p = 'authenticatedUsers'
         if p in PRINCIPAL_TYPES:
             if operator in ['eq','ne']:
-                clauses.append(cmp('principalType', p, operator))
+#                clauses.append(cmp_def_eq('principalType', p))
+                clauses.append(cmp_def_eq('principalType', p, operator))
             else:       
-                clauses.append(cmpdefault('principalType', p, operator))
+                clauses.append(cmp_static_eq('principalType', p, operator))
         else:
-            clauses.append(cmp('principal', p, operator))
+#            clauses.append(cmp_def_eq('principal', p))
+            clauses.append(cmp_def_eq('principal', p, operator))
 
-    # enabled boolean (use cmp if operator is 'eq' or 'ne')
+    # enabled boolean (use cmp_def_eq if operator is 'eq' or 'ne')
     if args.enabled and args.enabled.lower() != 'none':
         b = parse_bool(args.enabled)
         if b is not None and operator in ['eq','ne']:
-            clauses.append(cmp('enabled', 'true' if b else 'false', operator))
+            clauses.append(cmp_def_eq('enabled', 'true' if b else 'false'))
+#            clauses.append(cmp_def_eq('enabled', 'true' if b else 'false', operator))
         else:
-            clauses.append(cmpdefault('enabled', 'true' if b else 'false', operator))
+            clauses.append(cmp_static_eq('enabled', 'true' if b else 'false', operator))
 
     ''' YET TO BE DEVELOPED
     # permissions: ensure valid and build contains/any logic
@@ -177,15 +189,18 @@ def build_filter(args) -> str:
     if args.modified_before:
         clauses.append(f"lt(modifiedTimeStamp,'{args.modified_before}')")
 
-    # created/modified by (use cmpdefault)
+    # created/modified by (use cmp_static_eq)
     if args.created_by and args.created_by.lower() != 'none':
-        clauses.append(cmpdefault('createdBy', args.created_by, operator))
+        clauses.append(cmp_static_eq('createdBy', args.created_by))
+#        clauses.append(cmp_static_eq('createdBy', args.created_by, operator))
     if args.modified_by and args.modified_by.lower() != 'none':
-        clauses.append(cmpdefault('modifiedBy', args.modified_by, operator))
+        clauses.append(cmp_static_eq('modifiedBy', args.modified_by))
+#        clauses.append(cmp_static_eq('modifiedBy', args.modified_by, operator))
 
-    # mediaType exact match (use cmp)
+    # mediaType exact match (use cmp_def_eq)
     if args.media_type and args.media_type.lower() != 'none':
-        clauses.append(cmp('mediaType', args.media_type, operator))
+        clauses.append(cmp_def_eq('mediaType', args.media_type))
+#        clauses.append(cmp_def_eq('mediaType', args.media_type, operator))
 
     # condition free text (use contains)
     if args.condition:
@@ -210,7 +225,7 @@ parser = argparse.ArgumentParser(
     description='''
 listrules.py\n
 \033[4;34m\033[1mUSAGE NOTE\033[0m
-All search filters use the \033[1;33m"eq"\033[0m filter unless otherwise stated.
+All search filters use the \033[1;33m"contains"\033[0m filter unless otherwise stated.
 When using the date/time based filters the format can be either:
 \033[1;33m2026-01-01\033[0m
 or
@@ -223,8 +238,10 @@ parser.add_argument("-p","--principal", help="Principal/Group ID (CASE SENSITIVE
 parser.add_argument("-d","--description", help="description search ('contains' only and CASE SENSITIVE)", default='none')
 parser.add_argument("--condition", help="condition search ('contains' only and CASE SENSITIVE)")
 parser.add_argument("--media-type", dest='media_type', help="mediaType search, can be used with operator")
-parser.add_argument("-e","--enabled", help="Show rules enabled/true or disabled/false", default='none')
-parser.add_argument("--operator", help="Filter operator", choices=['eq','ne','contains'], default='eq')
+parser.add_argument("-e","--enabled", help="Show rules enabled/true or disabled/false (uses 'eq' unless 'ne' is specified)", default='none')
+parser.add_argument("--operator", help="Filter operator", choices=['eq','ne','contains'], default='contains')
+##10OCT commenting out and changeing row above
+#parser.add_argument("--operator", help="Filter operator", choices=['eq','ne','contains'], default='eq')
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'], default='json')
 parser.add_argument("--header-off", dest='headeroff', action='store_true', help="(Optional) Disables header when Output Style is csv")
 parser.add_argument("--print-filter", dest='printfilter', action='store_true', help="Returns the filter string without executing it")
@@ -234,8 +251,8 @@ parser.add_argument("--created-after", dest='created_after', type=parse_date, he
 parser.add_argument("--created-before", dest='created_before', type=parse_date, help="Created before datetime (see usage note above)")
 parser.add_argument("--modified-after", dest='modified_after', type=parse_date, help="Modified after datetime (see usage note above)")
 parser.add_argument("--modified-before", dest='modified_before', type=parse_date, help="Modified before datetime (see usage note above)")
-parser.add_argument("--created-by", dest="created_by", help="createdBy search (exact match only)")
-parser.add_argument("--modified-by", dest="modified_by", help="modifiedBy search (exact match only)")
+parser.add_argument("--created-by", dest="created_by", help="createdBy search ('eq' only and CASE SENSITIVE)")
+parser.add_argument("--modified-by", dest="modified_by", help="modifiedBy search ('eq' only and CASE SENSITIVE)")
 #parser.add_argument("--match-params", dest='match_params', help="Filter by matchParams contains text")
 parser.add_argument("--count-only", dest='countonly', action='store_true', help="Displays the number of rules found only")
 parser.add_argument("--limit", type=int, help="(Optional) Overrides the default 10000 return limit with a custom value")
