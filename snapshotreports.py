@@ -23,6 +23,7 @@
 # 10aug2020 add option to auto delete transport file after download completes
 # 09dec2020 add get_valid_filename function to deal with invalid characters for Linux filesystem
 # 20jul2022 add option to include dependencies for reports
+# 06Nov2026 Add support to progress past Orphaned Content
 #
 # Copyright Ã‚Â© 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
@@ -149,7 +150,7 @@ if areyousure.upper() =='Y':
 
 				path_to_report=getpath("/reports/reports/"+id)
 
-				if path_to_report.startswith(folderpath):
+				if path_to_report and path_to_report.startswith(folderpath):
 
 					path_to_report=path_to_report.replace("/","_")
 

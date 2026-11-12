@@ -1,19 +1,13 @@
-# How to Contribute
+# Contributing
+Maintainers are accepting patches and contributions to this project.
+Please note the following contribution guidelines, and see the [SAS Open Source Contributor Handbook](https://sassoftware.github.io/contributor-handbook.html) for additional guidance.
 
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+## Contributor Agreement
+Contributors to this project must comply with the [Contributor Agreement](ContributorAgreement.txt).
+This agreement permits the project maintainers to use and redistribute your contributions as part of the project.
+You (or your employer) retain the copyright to your contribution.
 
-## Contributor License Agreement
-
-Contributions to this project must be accompanied by a signed
-[Contributor Agreement](ContributorAgreement.txt).
-You (or your employer) retain the copyright to your contribution,
-this simply gives us permission to use and redistribute your contributions as
-part of the project.
-
-## Code reviews
-
-All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult
-[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
-information on using pull requests.
+## Code Reviews
+All submissions, including submissions by project members, require review.
+Maintainers use GitHub pull requests are used for this purpose.
+Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more information about using pull requests.

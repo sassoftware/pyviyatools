@@ -49,10 +49,12 @@ version=int(str(sys.version_info[0]))
 parser = argparse.ArgumentParser(description="Export each geo providers to it's own unique transfer package")
 parser.add_argument("-d","--directory", help="Directory to store report packages",required='True')
 parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 
 args= parser.parse_args()
 basedir=args.directory
 quietmode=args.quiet
+limit=args.limit
 
 # get cli location from properties, check that cli is there if not ERROR and stop
 clicommand=getclicommand()
@@ -86,7 +88,7 @@ if areyousure.upper() =='Y':
 
 	# retrieve all geographic providers in the system
 	reqtype='get'
-	reqval='/maps/providers?limit=10000'
+	reqval='/maps/providers?limit='+str(limit)
 
 	resultdata=callrestapi(reqval,reqtype)
 	# loop root proviers
@@ -106,9 +108,9 @@ if areyousure.upper() =='Y':
 
 				providerID=resultdata['items'][i]["name"]
 				
-				print("The map provder: '"+providerID+"' will be exported to: "+basedir+providerID+".json")
+				print("The map provider: '"+providerID+"' will be exported to: "+basedir+providerID+".json")
 
-				command=clicommand+' reports map-providers export --map-provider-name '+providerID+' --output-location '+basedir+''
+				command=clicommand+' reports map-providers export --map-provider-name "'+providerID+'" --output-location "'+basedir+'"'
 				print(command)
 
 				subprocess.call(command, shell=True)

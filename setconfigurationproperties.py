@@ -1,22 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
+#
 # setconfigurationproperties.py
-# November 2025
+# March 2026
 #
 # Provide a JSON configuration file; the script validates it before applying updates.
 # Requires the admin CLI and ensures JSON files match valid Viya configuration definitions.
 #
 # Change History
-#
-# 25NOV2025 Initial version
+# 25NOV2025 - Initial version
+# 10MAR2026 - Add functionality to accept stdin for the json configuration
+# 20JUL2026 - Finalized version before commit 
 
 
-# Import Python modules
 import argparse
 import json
 import logging
 import os
+import sys
 import tempfile
 
 from deepdiff import DeepDiff
@@ -28,19 +30,24 @@ from sharedfunctions import (
 )
 
 # get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
+clicommand = getclicommand()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Import JSON files that update Viya configuration."
+        description=(
+            "Import JSON files that update Viya configuration. Read JSON from a file (-f) "
+            "or from STDIN (pipe) using -f - or by piping without -f."
+        )
     )
     parser.add_argument("-o", "--output", choices=["csv", "json", "simple", "simplejson"], default="json")
     parser.add_argument("-f", "--file", help="The JSON configuration definition to import")
     parser.add_argument("--ignore-items-keys", nargs="*", default=["id", "links"])
-    parser.add_argument("--ignore-metadata-keys", nargs="*", default=["createdBy","creationTimeStamp", "modifiedBy", "modifiedTimeStamp"])
-    parser.add_argument("--include-keys", nargs="*", default=["version", "accept", "name", "items"])
+    parser.add_argument("--ignore-metadata-keys", nargs="*", default=["createdBy", "creationTimeStamp", "modifiedBy", "modifiedTimeStamp"])
+    parser.add_argument("--include-keys", nargs="*", default=["version", "accept", "name", "items"])  
     parser.add_argument("--dryrun", action="store_true", help="Simulate the operation without applying changes")
     return parser.parse_args()
+
 
 # Extracts the config definition from a json file.
 # Example sas.identities.providers.ldap.user
@@ -48,6 +55,7 @@ def parse_args():
 def extract_config_definition(data):
     media_type = data["items"][0]["metadata"]["mediaType"]
     return media_type.split(".config.")[-1].split("+")[0]
+
 
 # Filters json by include top level keys, ignoring keys in items, and ignoring keys under metadata.
 
@@ -71,6 +79,7 @@ def filter_json(data, include_keys, ignore_items_keys=None, ignore_metadata_keys
         else:
             result[key] = data[key]
     return result
+
 
 # validate_changes
 # Function to compare current to target json and validate the changes before processing
@@ -97,7 +106,9 @@ def validate_changes(diff):
             old_version = change['old_value']
             new_version = change['new_value']
             if new_version <= old_version:
-                raise SystemExit("❌: Attempted to set version to {new_version}, but current version is {old_version}. The new version must be greater.")
+                raise SystemExit(
+                    f"❌: Attempted to set version to {new_version}, but current version is {old_version}. The new version must be greater."
+                )
 
 
 def apply_changes(filtered_data):
@@ -118,20 +129,45 @@ def apply_changes(filtered_data):
         updateconfigurationproperty(command)
 
 
+def load_target_data(args):
+    """
+    Load target JSON from:
+      - file path (if -f provided and not '-'),
+      - STDIN (if -f == '-' or if no file is provided and STDIN is not a TTY).
+    """
+    # --- Case 1: explicit file path (normal behavior) ---
+    if args.file and args.file != "-":
+        if not os.path.isfile(args.file):
+            raise SystemExit(f"❌ File not found: {args.file}")
+        return getinputjson(args.file)
+
+    # --- Case 2: explicit '-' OR implicit STDIN (pipe) ---
+    stdin_has_data = not sys.stdin.isatty()
+    if args.file == "-" or (args.file is None and stdin_has_data):
+        try:
+            raw = sys.stdin.read()
+            if not raw.strip():
+                raise SystemExit("❌ No JSON detected on STDIN. Pipe JSON or provide -f <file>.")
+            return json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise SystemExit(f"❌ Failed to parse JSON from STDIN: {e}")
+
+    # --- No input provided at all ---
+    raise SystemExit("❌ No input provided. Use -f <file>, -f -, or pipe JSON into STDIN.")
+
+
 def main():
     args = parse_args()
     logging.basicConfig(level=logging.INFO)
 
-    if args.file and not os.path.isfile(args.file):
-        raise FileNotFoundError(f"File not found: {args.file}")
-
-    target_data = getinputjson(args.file)
+    # IMPORTANT: Do not pre-check args.file here; load_target_data handles '-' and STDIN cases correctly.
+    target_data = load_target_data(args)
 
     config_definition = extract_config_definition(target_data)
     logging.info(f"config definition = {config_definition}")
 
     current_data = getconfigurationproperty(config_definition)
-
+    
     # Filter the current and target json to include only the keys we require when updating.
     # Include the following keys at the top level - include_keys
     # Exclude the following keys at the items level - ignore_items_keys

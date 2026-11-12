@@ -29,21 +29,31 @@ from sharedfunctions import printresult, callrestapi
 parser = argparse.ArgumentParser(description="Display POSIX attributes for group or all groups of no groups specified")
 
 parser.add_argument("-g","--group", help="Enter the group id",default='all')
+parser.add_argument("-c","--custom", action='store_true', help="Display local (custom) groups as well")
+parser.add_argument("-l","--limit", type=int,help="Specify the number of records to pull. Default is 1000.",default=1000)
 parser.add_argument("-d","--debug", action='store_true', help="Debug")
 parser.add_argument("-o","--output", help="Output Style", choices=['csv','json','simple','simplejson'],default='simplejson')
 
 args = parser.parse_args()
 group=args.group
+local=args.custom
+limit=args.limit
 debug=args.debug
 output_style=args.output
 
 if group=='all':
 
 
-   # get all groups that are not custom
    reqtype='get'
-   #reqval='/identities/groups'
-   reqval='/identities/groups/?filter=ne(providerId,"local")&limit=10000'
+   if local:
+      # get all groups even the custom ones
+      reqval='/identities/groups/?limit='+str(limit)
+   else:
+      # get all groups that are not custom
+      reqval='/identities/groups/?filter=ne(providerId,"local")&limit='+str(limit)
+
+   if debug: print(reqval)
+
    groupslist_result_json=callrestapi(reqval,reqtype)
 
    groups = groupslist_result_json['items']
@@ -51,12 +61,15 @@ if group=='all':
    for group in groups:
        groupid=group['id']
        reqval='/identities/groups/'+groupid+'/identifier'
+
+       if debug: print(reqval)
+
        posixinfo_result_json=callrestapi(reqval,reqtype)
 
        # get gid
        group["gid"]=posixinfo_result_json["gid"]
 
-   cols=['id','gid','name']
+   cols=['id','gid','name','state','providerId']
    printresult(groupslist_result_json,output_style,cols)
 
 else:

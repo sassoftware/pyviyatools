@@ -379,3 +379,34 @@ For example:
 ./setupcopilotcredentials.py --client-id xxxxxxxxxx --client-secret xxxxxxxxxxxxxxxxx
 ./setupcopilotcredentials.py --input-file /tmp/credentials.txt --force
 ```
+
+**setconfigurationproperties.py**
+```bash
+python3 getconfigurationproperties.py -c server -o json \
+| jq '
+  .items[0]["servlet.session.timeout"] = "2700"
+  | .items[0]["http.session.maxAge"] = "2700"
+' \
+| python3 setconfigurationproperties.py
+```
+
+**getdefaultqkb.py**
+
+```bash
+python3 getdefaultqkb.py -o json
+python3 getdefaultqkb.py --engine cas -o json
+python3 getdefaultqkb.py --engine compute -o json
+```
+
+**setdefaultqkb.py**
+
+```bash  
+python3 setdefaultqkb.py \
+  --engine compute \
+  --locale ENUSA \
+  --qkb "QKB CI 33"
+python3 setdefaultqkb.py \
+  --engine cas \
+  --locale ENUSA \
+  --qkb "QKB CI 33"
+```

@@ -42,8 +42,10 @@
 #  14OCT2022 Added getobjectdetails and updated the array returned by getfolderid
 #  25MAR2025 Modified csvresults to fix mismatch between 'count' and actual returned items.
 #  18JUL2025 if the clilocation path contains a tilde expand it
+#  02APR2026 Modified connection tests to account for removal of SASDrive
+#  10JUN2026 Add callpagedrestapi function
 #
-# Copyright © 2018, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
+# Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -105,7 +107,8 @@ def validaterestapi(baseurl, reqval, reqtype, data={}):
 #   28Feb2022 Added functionality to optionally pass in etags, and to request they be returned, for API endpoints that use them
 #   15DEC2022 Added noprint, can be used to suppress the printing of the error messages when stoponerror is disabled, defaults to print for compatibility
 
-def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
+
+def callrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},params={},stoponerror=1,returnEtag=False,etagIn='',noprint=0):
 
 
     # get the url from the default profile
@@ -129,34 +132,56 @@ def callrestapi(reqval, reqtype, acceptType='application/json', contentType='app
     # maybe this can be removed
     global result
 
-    # serialize the data string for the request to json format
-    json_data=json.dumps(data, ensure_ascii=True)
+    # Serialize non-multipart payloads as json. Multipart requests pass raw files via
+    # the requests "files" argument and must not be json-serialized.
+    json_data=None
+    if reqtype in ["postmultipart","putmultipart"]:
+        json_data=None
+        if "Content-type" in head:
+            del head["Content-type"]
+        if "content-type" in head:
+            del head["content-type"]
+    else:
+        json_data=json.dumps(data, ensure_ascii=True)
 
-    #convert if python 2
-    # get python version
-    # if we don't do this any request with foreign characters fails
-    version=int(str(sys.version_info[0]))
-    #if version==2: json_data = json_data.encode(encoding='utf-8')
-    json_data.encode(encoding='utf-8')
+        #convert if python 2
+        # get python version
+        # if we don't do this any request with foreign characters fails
+        version=int(str(sys.version_info[0]))
+        #if version==2: json_data = json_data.encode(encoding='utf-8')
+        json_data.encode(encoding='utf-8')
 
     # call the rest api using the parameters passed in and the requests python library
 
+    # read an environment variable PYVIYAINSECURE default to False even if variable does not exist
+    pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't') 
+
+    if pyviya_insecure:
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        verify_ssl=False
+    else:
+        verify_ssl=True
+
     if reqtype=="get":
-        ret = requests.get(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.get(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="post":
-        ret = requests.post(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.post(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="delete":
-        ret = requests.delete(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.delete(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="put":
-        ret = requests.put(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.put(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="patch":
-        ret = requests.patch(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.patch(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
     elif reqtype=="head":
-        ret = requests.head(baseurl+reqval,headers=head,data=json_data)
+        ret = requests.head(baseurl+reqval,headers=head,data=json_data, params=params, verify=verify_ssl)
+    elif reqtype=="postmultipart":
+        ret = requests.post(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
+    elif reqtype=="putmultipart":
+        ret = requests.put(baseurl+reqval,headers=head,files=data, params=params, verify=verify_ssl)
     else:
         result=None
         print("NOTE: Invalid method")
-        sys.exit()
+        sys.exit()  
 
 
     # response error if status code between these numbers
@@ -333,8 +358,17 @@ def getauthtoken(baseurl):
         # test a connection to rest api if it fails try using the refresh token to re-authenticate
         # this code runs on each rest call so we trap errors here
 
+        # read environment variable PYVIYAINSECURE to determine if we should verify ssl certificates or not
+        pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+        if pyviya_insecure:
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            verify_ssl=False
+        else:
+            verify_ssl=True
+
+
         try:
-            r = requests.get(baseurl, headers=head, timeout=10)
+            r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, timeout=10,verify=verify_ssl)
         except (SSLError, OSError) as e:
             print("ERROR: SSL or CA Bundle Error occurred.")
             print(f"Error details: {e}")
@@ -369,7 +403,7 @@ def getauthtoken(baseurl):
              refresh_data["grant_type"] =  "refresh_token"
              refresh_data["refresh_token"] = refreshToken
 
-             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret))
+             response = requests.request("POST", url=baseurl+"/SASLogon/oauth/token", data=refresh_data, headers=refresh_headers,auth=(client_id, client_secret),verify=verify_ssl)
 
              if (400 <= response.status_code <=599):
 
@@ -420,7 +454,15 @@ def getauthtoken(baseurl):
         # test a connection to rest api again if it fails exit
         # tell user to re-authenticate with the sas-viya CLI
 
-        r = requests.get(baseurl, headers=head)
+        # read environment variable PYVIYAINSECURE to determine if we should verify ssl certificates or not
+        pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+        if pyviya_insecure:
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            verify_ssl=False
+        else:
+            verify_ssl=True     
+
+        r = requests.get(baseurl + "/identities/users/@currentUser", headers=head, verify=verify_ssl)
         
         if (400 <= r.status_code <=599):
 
@@ -917,6 +959,9 @@ def getclicommand():
     propertylist=getapplicationproperties()
     clidir=propertylist["sascli.location"]
 
+    # read an environment variable PYVIYAINSECURE default to False even if variable does not exist
+    pyviya_insecure=os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+    
     # if the path contains a tilde expand it
     # this is useful for the user home directory
     if '~' in clidir:
@@ -936,6 +981,10 @@ def getclicommand():
         print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
         clicommand=None
         sys.exit()
+    
+    # if pviya_insecure is true, add the --insecure flag to the command
+    if pyviya_insecure:
+        clicommand=clicommand+" --insecure"
    
     return clicommand
 
@@ -969,3 +1018,33 @@ def updateconfigurationproperty(command):
     print(command)
     subprocess.call(command, shell=True)
 
+# callpagedrestapi
+# Built in support for paging in the REST API, will loop through and get all pages of results
+# Change history
+#   10Jun2026 - Initial deployment
+
+def callpagedrestapi(reqval, reqtype, acceptType='application/json', contentType='application/json',data={},header={},params={},stoponerror=1):
+
+    # Initialize an empty list to store the items from all pages
+    all_items = []
+
+    # Call the REST API for the first page
+    response = callrestapi(reqval, reqtype, acceptType=acceptType, contentType=contentType, data=data, header=header, params=params, stoponerror=stoponerror)
+
+    # Check for items in the response and add them to the list
+    if "items" in response:
+        all_items.extend(response["items"])
+    
+    # Check for a rel "next" link to see if there are more pages of results
+    while "links" in response and any(link.get("rel") == "next" for link in response["links"]):
+        next_link = next(link for link in response["links"] if link.get("rel") == "next")
+        next_url = next_link.get("href")
+
+        # Call the REST API for the next page
+        response = callrestapi(next_url, reqtype, acceptType=acceptType, contentType=contentType, data=data, header=header, stoponerror=stoponerror)
+
+        # Check for items in the response and add them to the list
+        if "items" in response:
+            all_items.extend(response["items"])
+
+    return all_items
