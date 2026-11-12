@@ -159,21 +159,6 @@ payload = {
 }
 
 
-
-if debug:
-    print("DEBUG: PUT", endpoint)
-    print(
-        "DEBUG: payload metadata:",
-        {
-            "domainId": DOMAIN_ID,
-            "identityType": IDENTITY_TYPE,
-            "identityId": CLIENT,
-            "domainType": "token",
-            "clientIdLength": len(values[CLIENT_ID_KEY]),
-            "clientSecretLength": len(values[CLIENT_SECRET_KEY])
-        }
-    )
-
 sharedfunctions.callrestapi(
     endpoint,
     "put",
