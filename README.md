@@ -14,6 +14,7 @@ pyviyatools is a collection of command-line tools that call the SAS Viya REST AP
 - [Troubleshooting](#troubleshooting)
 - [Developing with the existing functions](#developing-with-the-existing-functions)
 - [Contributing](#contributing)
+  - [Generating tool reference documentation](#generating-tool-reference-documentation)
 - [License](#license)
 ## Getting Started
 

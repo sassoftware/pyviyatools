@@ -1,4 +1,4 @@
-#!/usr/bin/python
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # setupcopilotcredentials.py
 # April 2026
@@ -11,7 +11,7 @@
 # Optionally specify these in an input file with the format:
 # ```
 # SAS_ORDERS_API_CLIENT_ID=xxxxxxxxxxxxxx
-# SAS_ORDERS_API_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxx # base64 (no special characters)
+# SAS_ORDERS_API_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxx 
 # ````
 #
 # More information: https://go.documentation.sas.com/doc/en/sasadmincdc/default/callicense/p1ii465hpdnkoan1fx3ybdin9q5s.htm
@@ -29,7 +29,7 @@
 #
 
 # Import Python modules
-import argparse, sys
+import argparse, sys, base64
 import sharedfunctions
 
 debug = False
@@ -124,7 +124,10 @@ result = sharedfunctions.callrestapi(list_endpoint, "get")
 credential_exists = False
 
 for item in result.get("items", []):
-    if item.get("identityType") == "client":
+    if (
+        item.get("identityType") == IDENTITY_TYPE
+        and item.get("identityId") == CLIENT
+    ):
         credential_exists = True
         break
 
@@ -149,13 +152,12 @@ payload = {
         CLIENT_ID_KEY: values[CLIENT_ID_KEY]
     },
     "secrets": {
-        CLIENT_SECRET_KEY: values[CLIENT_SECRET_KEY]
+        CLIENT_SECRET_KEY: base64.b64encode(
+            values[CLIENT_SECRET_KEY].encode("utf-8")
+        ).decode("ascii")
     }
 }
 
-if debug:
-    print("DEBUG: PUT", endpoint)
-    print("DEBUG: payload =", payload)
 
 sharedfunctions.callrestapi(
     endpoint,
@@ -167,4 +169,4 @@ print(
     f"SAS Viya Copilot Orders API credential '{CLIENT}' configured in domain '{DOMAIN_ID}'."
 )
 
-sys.exit()
+sys.exit(0)
