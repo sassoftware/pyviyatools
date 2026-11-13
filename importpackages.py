@@ -4,143 +4,173 @@
 # importpackages.py
 # March 2018
 #
-# Pass in a directory and this tool will import all the json files in the directory. It depends on the admin CLI
+# Import package files from a directory using the Viya transfer REST API.
 #
-# Change History
+# Copyright © 2019, SAS Institute Inc., Cary, NC, USA. All Rights Reserved.
 #
-# 12feb2020 added --output text to the import command so that status will show
+# Licensed under the Apache License, Version 2.0 (the License); you may not use
+# this file except in compliance with the License. You may obtain a copy of the
+# License at http://www.apache.org/licenses/LICENSE-2.0
 #
-# Copyright © 2019, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
-#
-#  Licensed under the Apache License, Version 2.0 (the License); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-#  OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-#
-# change log
-# renamed to importpackages.py to be more descriptive of actual usage
-# DEC202023 added the ability to use a mapping file
-# APR2024 remove hardcoding of /tmp
-# SEP2025 add support for .egp and .spk files
-#
-# Import Python modules
-import argparse, sys, subprocess, os, json, tempfile
-from sharedfunctions import callrestapi, getapplicationproperties,getclicommand
+import argparse
+import json
+import os
+import sys
+import time
+
+from sharedfunctions import callrestapi
 
 
+IMPORT_REQUEST_CONTENT_TYPE = "application/vnd.sas.transfer.import.request+json"
+RUNNING_IMPORT_STATES = {"pending", "queued", "running"}
 
-# get input parameters
-parser = argparse.ArgumentParser(description="Import JSON files from directory. All json files in directory will be imported.")
-parser.add_argument("-d","--directory", help="Directory that contains JSON files to import",required='True')
-parser.add_argument("-m","--mapping", help="A mapping file to use with the import.",default=None)
-parser.add_argument("-ea","--excludeauthorization", help="Exclude the import of authorization rules.", action='store_true')
-parser.add_argument("-q","--quiet", help="Suppress the are you sure prompt.", action='store_true')
 
-args= parser.parse_args()
-basedir=args.directory
-quietmode=args.quiet
-noauth=args.excludeauthorization
-mapping=args.mapping
-
-# get python version
-version=int(str(sys.version_info[0]))
-
-tempfilepath=tempfile.gettempdir()
-#build tempfile names
-tmppackageidfile=os.path.join(tempfilepath,"packageid.json")
-tmpmappingfile=os.path.join(tempfilepath,"mapping_json.json")
-
-if mapping: mapping_file=mapping
-else: mapping_file=tmpmappingfile
-
-# get cli location from properties, check that cli is there if not ERROR and stop
-clicommand=getclicommand()
-
-# if the quiet mode flag is not passed then prompt to continue
-if not quietmode:
-
-	if version  > 2:
-		areyousure=input("WARNING: If content from the packages already exists in folders it will be replaced. Continue? (Y)")
+def load_mapping(mapping_path, exclude_authorization):
+	if mapping_path:
+		with open(mapping_path) as map_file:
+			mapping_data = json.load(map_file)
+		if not isinstance(mapping_data, dict):
+			raise ValueError("Mapping file must contain a JSON object.")
 	else:
-		areyousure=raw_input("WARNING:If content from the packages already exists in folders it will be replaced. Continue? (Y)")
-else:
-	areyousure="Y"
+		mapping_data = None
 
-if areyousure.upper() =='Y':
+	if exclude_authorization:
+		no_authorization_options = {
+			"version": 1,
+			"options": {"promoteAuthorization": False},
+		}
+		if mapping_data is None:
+			mapping_data = no_authorization_options
+		else:
+			mapping_data.update(no_authorization_options)
 
-	# check that directory exists
-	if os.path.isdir(basedir):
-
-		# loop files in the directory
-		for filename in os.listdir( basedir ):
-
-			# only process json, egp or spk files
-			if filename.lower().endswith(('.json', '.spk', '.egp')):
-
-				#upload the json package
-				command=clicommand+' --output fulljson transfer upload --file "'+os.path.join(basedir,filename)+'" > '+tmppackageidfile
-				print(command)
-				subprocess.call(command, shell=True)
-
-				# create or use mapping file if we need to
-
-				# no mapping required
-				if not mapping and not noauth:
-					mapping_options=""
-				# create mapping file to exclude authorization
-				elif not mapping and noauth:
-					
-					#create no authorization mapping file 
-					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
-					json_object = json.dumps(mappingdict, indent=4)
-					with open (mapping_file,'w') as outfile:
-						outfile.write(json_object)				
-					mapping_options=" --mapping "+tmpmappingfile
-
-				# need to merge mapping file and noauth	
-				elif noauth and mapping:
-
-					mappingdict={"version": 1,"options": {"promoteAuthorization":False}}
-					json_object = json.dumps(mappingdict, indent=4)
-					with open(mapping) as map_file:
-						map_dict = json.load(map_file)
-					
-					#newmap={**mappingdict,**map_dict} #only in python3
-					newmap=map_dict.copy()
-					newmap.update(mappingdict)
-					print(newmap)
-
-					json_map = json.dumps(newmap, indent=4)					
-					with open (mapping_file,'w') as outfile:
-						outfile.write(json_map)
-					mapping_options=" --mapping "+tmpmappingfile
-				
-				elif mapping and not noauth:
-					mapping_options=" --mapping "+mapping
-				
-							
-				#print the json from the upload
-				with open(tmppackageidfile) as json_file:
-					package_data = json.load(json_file)
-
-				print(json.dumps(package_data,indent=2))
-
-				# get the packageid and import the package
-				packageid=package_data["id"]
-
-				command=clicommand+' --output text -q transfer import --id '+packageid+' '+mapping_options
-				print(command)
-
-				subprocess.call(command, shell=True)
-				print("NOTE: Viya content imported from json files in "+basedir)
-
-				if noauth:	os.remove(tmpmappingfile)
-					
-				os.remove(tmppackageidfile)
-
-	else: print("ERROR: Directory does not exist")
-else:
-	 print("NOTE: Operation cancelled")
+	return mapping_data
 
 
+def upload_and_start_import(package_path, mapping_data=None):
+	filename = os.path.basename(package_path)
+	with open(package_path, "rb") as package_file:
+		package_data = callrestapi(
+			"/transfer/packages",
+			"postmultipart",
+			acceptType="application/json",
+			data={"file": (filename, package_file, "application/json")},
+		)
+
+	package_id = package_data.get("id") if isinstance(package_data, dict) else None
+	if not package_id:
+		raise RuntimeError("Transfer service did not return an uploaded package ID.")
+
+	package_name = package_data.get("name") or os.path.splitext(filename)[0]
+	import_request = {
+		"version": 2,
+		"name": package_name,
+		"description": "",
+		"packageUri": "/transfer/packages/" + package_id,
+		"options": {},
+	}
+	if mapping_data is not None:
+		import_request["mapping"] = mapping_data
+
+	return callrestapi(
+		"/transfer/importJobs",
+		"post",
+		acceptType="application/json",
+		contentType=IMPORT_REQUEST_CONTENT_TYPE,
+		data=import_request,
+	)
+
+
+def import_job_uri(job):
+	for link in job.get("links", []):
+		if link.get("rel") == "self":
+			return link["href"]
+
+	job_id = job.get("id")
+	if not job_id:
+		raise RuntimeError("Transfer service did not return an import job ID.")
+	return "/transfer/importJobs/" + job_id
+
+
+def wait_for_import(job, timeout=600, poll_interval=2):
+	if not isinstance(job, dict):
+		raise RuntimeError("Transfer service returned no import job status.")
+	deadline = time.monotonic() + timeout
+	while str(job.get("state", "")).lower() in RUNNING_IMPORT_STATES:
+		if time.monotonic() >= deadline:
+			raise RuntimeError("Timed out waiting for transfer import job " + str(job.get("id")))
+		time.sleep(poll_interval)
+		job = callrestapi(import_job_uri(job), "get")
+		if not isinstance(job, dict):
+			raise RuntimeError("Transfer service returned no import job status.")
+	return job
+
+
+def report_import(job):
+	state = str(job.get("state", "unknown"))
+	print("Import job ID: " + str(job.get("id", "unknown")))
+	print("Import job state: " + state)
+
+	tasks = callrestapi(import_job_uri(job) + "/tasks", "get")
+	has_task_errors = False
+	for task in tasks.get("items", []) if isinstance(tasks, dict) else []:
+		task_state = str(task.get("state", "unknown"))
+		if task_state.lower() != "completed":
+			has_task_errors = True
+			name = task.get("name") or task.get("resourceName") or task.get("id", "unknown")
+			message = task.get("message", "")
+			print("Import task " + str(name) + " state: " + task_state)
+			if message:
+				print(message)
+
+	return 0 if state.lower() == "completed" and not has_task_errors else 1
+
+
+def main(argv=None):
+	parser = argparse.ArgumentParser(
+		description="Import JSON files from directory. All package files in directory will be imported."
+	)
+	parser.add_argument("-d", "--directory", help="Directory that contains package files to import", required=True)
+	parser.add_argument("-m", "--mapping", help="A mapping file to use with the import.", default=None)
+	parser.add_argument("-ea", "--excludeauthorization", help="Exclude the import of authorization rules.", action="store_true")
+	parser.add_argument("-q", "--quiet", help="Suppress the are you sure prompt.", action="store_true")
+	args = parser.parse_args(argv)
+
+	if not os.path.isdir(args.directory):
+		print("ERROR: Directory does not exist")
+		return 1
+
+	if not args.quiet:
+		prompt = "WARNING: If content from the packages already exists in folders it will be replaced. Continue? (Y)"
+		if input(prompt).upper() != "Y":
+			print("NOTE: Operation cancelled")
+			return 0
+
+	try:
+		mapping_data = load_mapping(args.mapping, args.excludeauthorization)
+	except (OSError, ValueError) as error:
+		print("ERROR: Cannot read mapping file: " + str(error))
+		return 1
+
+	status = 0
+	for filename in os.listdir(args.directory):
+		if not filename.lower().endswith((".json", ".spk", ".egp")):
+			continue
+
+		package_path = os.path.join(args.directory, filename)
+		try:
+			job = upload_and_start_import(package_path, mapping_data)
+			job = wait_for_import(job)
+			if report_import(job):
+				status = 1
+			else:
+				print("NOTE: Viya content imported from package " + filename)
+		except (OSError, ValueError, RuntimeError) as error:
+			print("ERROR: Import failed for " + filename + ": " + str(error))
+			status = 1
+
+	return status
+
+
+if __name__ == "__main__":
+	sys.exit(main())
