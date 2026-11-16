@@ -7,7 +7,7 @@
 #
 # Change History
 #
-# 16NOV26  Initial development
+# 16NOV26  Initial development - AI assisted
 #
 # Format of input csv file is 6 columns
 # Column 1: Object URI
@@ -51,7 +51,6 @@ from datetime import datetime
 from sharedfunctions import callrestapi, getfolderid, file_accessible, printresult, getapplicationproperties, getclicommand
 
 
-
 ## setup command-line arguements
 parser = argparse.ArgumentParser(description="Apply bulk auths from a CSV file to folders and contents")
 parser.add_argument("-f","--file", help="Full path to CSV file. Format of csv: 'objecturi,principaltype,principalid,grant_or_prohibit,perms,enabled,condition",required='True')
@@ -67,8 +66,6 @@ check=file_accessible(file,'r')
 constructed_bulk_rules_list=[]
 runtime = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-
-#newrules=file
 print('\napplyconditionalrules.py running...\n')
 
 def nonewrules():
@@ -82,19 +79,13 @@ cwd = os.getcwd()
 results_dir = os.path.join(cwd, "applyconditionalrules_results")
 os.makedirs(results_dir, exist_ok=True)
 
-##########################################################
-## Temporary section 1
-##########################################################
-## Runs a comparison of the file submitted by the user against existing_rules.csv
-## This section may be removed once PMCPFR-1363 is resolved.
 
+## Runs a comparison of the file submitted by the user against existing_rules.csv
 ## Runs listrules.py and compiles exisiting_rules.csv
 print('Documenting existing rules... \n')
 existing_rules_verbose = os.path.join(results_dir, 'existing_rules_verbose.csv')
 existingrules = './listrules.py -o csv > \"' + existing_rules_verbose + '\"'
 subprocess.call(existingrules, shell=True)
-
-#pd.set_option('display.max_columns', None)
 
 ## Reads in and trims the existing_rules_verbose.csv file into existing_rules.csv
 df = pd.read_csv(existing_rules_verbose,usecols=['objectUri','principalType','principal','setting','permissions','enabled','condition'])
@@ -112,21 +103,10 @@ with open(existing_rules, 'r') as exr:
 newrules=os.path.join(results_dir, 'rulesapplied_'+runtime+'.csv')
 
 print("Checking for new rules to apply... \n")
-#print("Printing results (CSV format) to: \033[1;34m"+newrules+"\033[0m \n")
 grepcom='grep -Fiv -f "' + existing_rules + '" "' + file + '" > "' + newrules + '"'
 subprocess.call(grepcom, shell=True)
-##########################################################
-# End of Temporary section 1
-##########################################################
 
-
-##########################################################
-# Temporary section 2
-##########################################################
 ## Sorts the rules by 'grants' and 'conditional grants' and
-## send rules containing conditions to 'conditional_rules.csv'
-## for manual implementation.
-## This section may be removed once PMCPFR-1364 is resolved.
 conditionalrules=os.path.join(results_dir, 'conditional_rules_'+runtime+'.csv')
 df2 = pd.read_csv(newrules, quoting=csv.QUOTE_ALL, names=['objectUri','principalType','principal','setting','permissions','enabled','condition'])
 df2.sort_values(by=['setting'],inplace=True, ascending=False)
@@ -135,14 +115,10 @@ df2= df2.groupby('setting')
 dfcondgrants=None
 
 try:
-    ### 11Nov26 - Enhancement to include 'conditional' when filtering rules
-    ###           (the filter includes "grant" to ensure back-compatability with older Supplement docs)
-    #dfcondgrants= df2.get_group("grant")
     dfcondgrants = pd.concat(
     [df2.get_group(name) for name in df2.groups
      if str(name).lower() == "grant" or "conditional" in str(name).lower()]
     )
-    ### End of enhancement
 except:
     nonewrules()
 else:
@@ -155,10 +131,6 @@ if  dfcondgrants is not None :
     
 else:
     nonewrules()
-##########################################################
-# End of Temporary section 2
-##########################################################
-
 
 ## Loops through the 'conditionalrules' file and converts each CSV row
 ## into its own JSON file, then applies each rule individually.
@@ -186,10 +158,6 @@ if check:
 
             pattern = str(row)[1:-1]
             pattern = f'{pattern}'
-
-            ## debug ##
-            # print('printing pattern: = ' + pattern)
-            # print("Creating auth rule for " + objecturi)
 
             reqval = objecturi
             rule_count += 1
@@ -228,12 +196,7 @@ if check:
             )
 
             ## Apply this rule before moving to the next one
-            command = (
-                clicommand +
-                ' authorization create-rules --file "' +
-                single_rule_json +
-                '"'
-            )
+            command = (clicommand +' authorization create-rules --file "' + single_rule_json +'"')
 
             print("Applying conditional rule " + str(rule_count) + "...")
             print("Executing command: " + command)
