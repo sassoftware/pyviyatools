@@ -193,29 +193,41 @@ if dfgrants is not None and not dfgrants.empty:
             constructed_rule_dict_object
         )
 
-#if dfgrants is not None and not dfgrants.empty:
-if dfgrants is not None and dfgrants.empty:
-    newrulesjson=os.path.join(results_dir, 'rulesapplied_'+runtime+'.json')
 
-    ## Construct JSON schema containing rules
-    bulk_rules_list_string=json.dumps(constructed_bulk_rules_list,indent=2)
+if constructed_bulk_rules_list:
+
+    newrulesjson = os.path.join(
+        results_dir,
+        'rulesapplied_' + runtime + '.json'
+    )
+
     with open(newrulesjson, "w") as text_file:
-        text_file.write(bulk_rules_list_string+'\n')
+        json.dump(
+            constructed_bulk_rules_list,
+            text_file,
+            indent=2
+        )
+        text_file.write('\n')
 
-    ## Execute sas-admin CLI to apply rules from JSON schema
-    command=clicommand+' authorization create-rules --file '+newrulesjson
-    print("Applying new rules...\n")
-    print("Executing command: "+command)
+    command = (
+        clicommand +
+        ' authorization create-rules --file ' +
+        newrulesjson
+    )
+
+    print(f"Applying {len(constructed_bulk_rules_list)} new rules...\n")
+    print("Executing command: " + command)
+
     subprocess.call(command, shell=True)
-   
+
 else:
-    newrulesjson= None
-    pass
+    newrulesjson = None
 
 ## Apply conditional rules using applyconditionalrules.py
 if dfcondgrants is not None and not dfcondgrants.empty:
+    #print("file = "+file)
     command=os.path.join(cwd, 'applyconditionalrules.py -f ')
-    os.system(command+file)
+    os.system(command+"'"+file+"'")
 
 else:
     pass
