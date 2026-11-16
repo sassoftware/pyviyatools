@@ -10,6 +10,7 @@
 # 15May23 Initial development
 # 25May23 First release
 # 01AUG23 Major update - rule replacement functionality added
+# 21OCT26 Added the 'yes to all' global option as default for when disabling rules
 #
 #
 # Basic Usage
@@ -137,7 +138,9 @@ with open("ruleids.csv", "r", newline='') as input:
     reader = csv.reader(input)
     for row in reader:
         id=row[0]
-        command = clicommand+ ' authorization '+operator+'-rule --id '+id
+        ## added a 'yes to all parameter'
+        #command = clicommand+ ' authorization '+operator+'-rule --id '+id
+        command = clicommand+ ' authorization -y '+operator+'-rule --id '+id
         print("Executing command: "+command)
         subprocess.call(command, shell=True)
 input.close()
