@@ -18,6 +18,11 @@
 #          implementation.
 #          (PMCPFR-1364)
 # 18Oct23  Fixed a bug that was stopping the conditional rules from being filtered off correctly.
+# 11Nov26  Changed the dfcondgrants get_groups lookup to search for the terms "conditional" or "grant",
+#          instead of just "grant".
+# 16Nov26  New functionality: apply conditional rules through integration with applyconditionalrules.py
+#          Updated filter to include prohibit rules
+#          Removal of all 'temporary section ...' headers/commentary
 #
 # Format of input csv file is 6 columns
 # Column 1: Object URI
@@ -76,23 +81,26 @@ reqtype="post"
 check=file_accessible(file,'r')
 constructed_bulk_rules_list=[]
 runtime = datetime.now().strftime("%Y%m%d_%H%M%S")
+cwd=os.getcwd()
+results_dir="applyviyarules_results"
+os.makedirs(results_dir, exist_ok=True)
 
-
-#newrules=file
 print('\napplyviyarules.py running...\n')
 
-##########################################################
-## Temporary section 1
-##########################################################
-## Runs a comparison of the file submitted by the user against existing_rules.csv
-## This section may be removed once PMCPFR-1363 is resolved.
+def cleanup():
+    try:
+        os.system('rm existing_rules.csv existing_rules_verbose.csv')
+        sys.exit()
+    except:
+        sys.exit()
+
+
 
 ## Runs listrules.py and compiles exisiting_rules.csv
 print('Documenting existing rules... \n')
 existingrules = './listrules.py ' +'-o csv > existing_rules_verbose.csv'
 subprocess.call(existingrules, shell=True)
 
-#pd.set_option('display.max_columns', None)
 
 ## Reads in and trims the existing_rules_verbose.csv file into existing_rules.csv
 df = pd.read_csv('existing_rules_verbose.csv',usecols=['objectUri','principalType','principal','setting','permissions','enabled','condition'])
@@ -106,25 +114,15 @@ with open('existing_rules.csv', 'r') as exr:
     for line in csvrow:
         rules=line.split("]") 
 
-newrules='rulesapplied_'+runtime+'.csv'
+newrules=os.path.join(results_dir, 'rulesapplied_'+runtime+'.csv')
 
 print("Checking for new rules to apply... \n")
-print("Printing results (CSV format) to: \033[1;34m"+newrules+"\033[0m \n")
-grepcom='grep -Fiv -f existing_rules.csv '+'"'+ file +'"' + ' > '+newrules
+grepcom = f'grep -Fiv -f existing_rules.csv "{file}" > "{newrules}"'
 subprocess.call(grepcom, shell=True)
-##########################################################
-# End of Temporary section 1
-##########################################################
 
-
-##########################################################
-# Temporary section 2
-##########################################################
 ## Sorts the rules by 'grants' and 'conditional grants' and
 ## send rules containing conditions to 'conditional_rules.csv'
-## for manual implementation.
-## This section may be removed once PMCPFR-1364 is resolved.
-conditionalrules='conditional_rules_'+runtime+'.csv'
+conditionalrules=os.path.join(results_dir, 'conditional_rules_'+runtime+'.csv')
 df2 = pd.read_csv(newrules, quoting=csv.QUOTE_ALL, names=['objectUri','principalType','principal','setting','permissions','enabled','condition'])
 df2.sort_values(by=['setting'],inplace=True, ascending=False)
 df2= df2.fillna("")
@@ -132,135 +130,124 @@ df2= df2.groupby('setting')
 dfgrants=None
 dfcondgrants=None
 try:
-    dfgrants= df2.get_group("grant")
+    dfgrants = pd.concat( 
+    [df2.get_group(name) for name in df2.groups
+        if str(name).lower() in ("grant", "prohibit")]
+    )
 except:
     print("There are \033[1;33mNO NEW RULES\033[0m to be applied. \n ")
 else:
     mask= dfgrants['condition'] != ""
     dfgrants= dfgrants[~mask]
-    dfgrants.to_csv(newrules, header=False, index=None, quoting=csv.QUOTE_ALL)
     print("\033[1;32mFound",len(dfgrants),"\033[0mNEW RULE(S) to be applied \033[1;32mautomatically. \033[0m \n")
 
 try:
-    dfcondgrants= df2.get_group("grant")
+    ### 11Nov26 - Update to include 'conditional' when filtering rules
+    ###           (the filter includes "grant" to ensure back-compatability with older Supplement docs)
+    dfcondgrants = pd.concat(
+    [df2.get_group(name) for name in df2.groups
+     if str(name).lower() == "grant" or "conditional" in str(name).lower()]
+    )
 except:
     pass
 else:
     mask= dfcondgrants['condition'] != ""
     dfcondgrants= dfcondgrants[mask]
-    dfcondgrants.to_csv(open(conditionalrules,'w'), header=False, index=None, quoting=csv.QUOTE_NONNUMERIC)
-    print("\033[1;32mFound",len(dfcondgrants),"\033[0mNEW CONDITIONAL RULE(S) to be applied \033[1;31mmanually. \033[0m \n")
+    print("\033[1;32mFound",len(dfcondgrants),"\033[0mNEW CONDITIONAL RULE(S) to be applied. \033[0m\n")
 
 if dfgrants is None and dfcondgrants is None :
-    sys.exit()
-##########################################################
-# End of Temporary section 2
-##########################################################
+    cleanup()
 
 
-## Loops through the 'newrules' file and converts the CSV rows into JSON entries
-if check:
-    with open(newrules, 'r') as f:
-        filecontents = csv.reader(f, skipinitialspace=True)
-        for row in filecontents:
-            objecturi=row[0]
-            principaltype=row[1]
-            principalname=row[2]
-            accesssetting=row[3]
-            perms=row[4]
-            enabled=row[5]
-            condition=row[6]
-            pattern=str(row)[1:-1]
-            pattern=f'{pattern}'
+## Loops through the 'dfgrants' file and outputs JSON entries
+if dfgrants is not None and not dfgrants.empty:
+    for row in dfgrants.itertuples(index=False):
+        objecturi = row.objectUri
+        principaltype = row.principalType
+        principalname = row.principal
+        accesssetting = row.setting
+        perms = row.permissions
+        enabled = row.enabled
+        condition = row.condition
 
-            ## debug ##
-            #print('printing pattern: = '+pattern)
-            #print("Creating auth rules for "+objecturi)
+        reqval = objecturi
 
-            reqval=objecturi
-        
+        ## Construct JSON objects from auth rules in dfgrants
+        value_dict_object = {
+            "description": "Created by applyviyarules.py",
+            "objectUri": reqval,
+            "permissions": perms.split(','),
+            "principalType": principaltype,
+            "principal": principalname,
+            "type": accesssetting,
+            "enabled": str(enabled),
+            "condition": condition
+        }
 
-            ## Construct JSON objects from auth rules defined in CSV
-            value_dict_object={"description":"Created by applyviyarules.py",
-                        "objectUri":reqval,
-                        "permissions":perms.split(','),
-                        "principalType":principaltype,
-                        "principal":principalname,
-                        "type":accesssetting,
-                        "enabled":enabled,
-                        "condition":condition                        
-                       }
+        constructed_rule_dict_object = {
+            "op": "add",
+            "value": value_dict_object
+        }
 
-            constructed_rule_dict_object={
-                                   "op":"add",
-                                    "value":value_dict_object
-                                   }
+        constructed_bulk_rules_list.append(
+            constructed_rule_dict_object
+        )
 
-            constructed_bulk_rules_list.append(constructed_rule_dict_object)
 
-else:
-    print("ERROR: cannot read "+file)
+if constructed_bulk_rules_list:
 
-## This if/else statement can be removed and the following section dedented
-## once PMCPFR-1364 is resolved.
-if dfgrants is not None:
-    newrulesjson='rulesapplied_'+runtime+'.json'
-    print("Printing new rules (JSON format) to: \033[1;34m" +newrulesjson+" \033[0m \n")
+    newrulesjson = os.path.join(
+        results_dir,
+        'rulesapplied_' + runtime + '.json'
+    )
 
-    ## Construct JSON schema containing rules
-    bulk_rules_list_string=json.dumps(constructed_bulk_rules_list,indent=2)
     with open(newrulesjson, "w") as text_file:
-        text_file.write(bulk_rules_list_string+'\n')
+        json.dump(
+            constructed_bulk_rules_list,
+            text_file,
+            indent=2
+        )
+        text_file.write('\n')
 
-    ## Execute sas-admin CLI to apply rules from JSON schema
-    command=clicommand+' authorization create-rules --file '+newrulesjson
-    print("Applying new rules...\n")
-    print("Executing command: "+command)
+    command = (
+        clicommand +
+        ' authorization create-rules --file ' +
+        newrulesjson
+    )
+
+    print(f"Applying {len(constructed_bulk_rules_list)} new rules...\n")
+    print("Executing command: " + command)
+
     subprocess.call(command, shell=True)
 
 else:
-    pass
+    newrulesjson = None
 
-##########################################################
-# Temporary section 3
-##########################################################
-## Prints a note to inform the user that the conditional
-## rules have been output to a CSV file and NOT applied.
-## This section may be removed once PMCPFR-1364 is resolved.
-if dfcondgrants is not None:
-    print(
-     '''
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !!!                                    !!!
-     !!!\033[1;31m    IMPORTANT NOTE - PLEASE READ\033[0m    !!!
-     !!!                                    !!!
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     Due to a known issue currently affecting
-     the Viya CLI, it is recommended that all
-     Viya rules that include a condition/
-     conditional grant, be implemented manually
-     through SAS Environment Manager interface.
+## Apply conditional rules using applyconditionalrules.py
+if dfcondgrants is not None and not dfcondgrants.empty:
+    #print("file = "+file)
+    command=os.path.join(cwd, 'applyconditionalrules.py -f ')
+    os.system(command+"'"+file+"'")
 
-     A list of rules for manual implementation
-     has been output to:
-
-     ''')
-    print('     \033[1;33m'+conditionalrules+'\033[0m')
-    print(
-     '''
-
-     (September 2023 - PMCPFR-1364)
-
-     '''
-              )
 else:
-    print("\n\033[1;33mNo conditional rules found in: "+file+"\033[0m")
-##########################################################
-# End of Temporary section 3
-##########################################################
-
-## Cleans up tmp files
-try:
-    os.system('rm existing_rules.csv existing_rules_verbose.csv')
-except:
     pass
+
+if dfgrants is None:
+    print(
+        "\033[1;32mFinished processing no standard rules (non-conditional) rules have been applied.\033[0m"
+        )
+
+elif newrulesjson is not None:
+    print("\nStandard rules (non-conditional) rules applied JSON: \033[1;34m"+newrulesjson+"\033[0m")
+    print("Standard rules (non-conditional) rules applied CSV: \033[1;34m" +newrules+" \033[0m")
+    print(
+        "\033[1;32mFinished processing " + str(len(dfgrants)) +
+        " standard (non-conditional) rule(s): "+ str(len(dfgrants))+ " new rules applied.\033[0m"
+    )
+else:
+    print(
+        "\033[1;32mFinished processing " + str(len(dfgrants)) +
+        " standard (non-conditional) rule(s): No new rules applied.\033[0m"
+    )
+
+cleanup()
