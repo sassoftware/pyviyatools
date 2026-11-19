@@ -7,6 +7,7 @@
 # usage python loginviauthinfo.py
 #              loginviauthinfo.py -f /tmp/myfile
 #
+# Exit status: 0 on successful login, CLI failure status otherwise, or 1 if login is skipped.
 #
 # Authinfo file uses .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
 #
@@ -46,6 +47,7 @@ import platform
 import os
 import argparse
 import json
+import sys
 
 from sharedfunctions import file_accessible,getapplicationproperties,getclicommand
 
@@ -129,7 +131,10 @@ if profileexists:
        #quote the password string for posix systems
        if (os.name =='posix'): command=clicommand+"  --profile "+myprofile+ " auth login -u "+username+ " -p '"+password+"'"
        else: command=clicommand+' --profile '+myprofile+ ' auth login -u '+username+ ' -p '+password
-       subprocess.call(command, shell=True)
+       sys.exit(subprocess.call(command, shell=True))
 
     else:
        print('ERROR: '+fname+' does not exist')
+
+print('ERROR: Login was not attempted. Check the CLI profile and authinfo file.', file=sys.stderr)
+sys.exit(1)
