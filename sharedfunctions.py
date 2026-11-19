@@ -980,7 +980,7 @@ def getclicommand():
     if not file_accessible(filetocheck,'r'):
         print("ERROR: cannot find CLI at "+clicommand+" check and update values in application.properties.")
         clicommand=None
-        sys.exit()
+        sys.exit(1)
     
     # if pviya_insecure is true, add the --insecure flag to the command
     if pyviya_insecure:
