@@ -2,6 +2,25 @@
 
 loginviauthinfo.py is used to read the credentials from a secure location and authenticate. The secure location is a authinfo file stored in the users home directory. Authinfo files are currently used in Viya to authenticate from any of the programming interfaces (Python,Java, Lua, Base SAS).  The use of the Authinfo file makes the code far easier to share and means the credentials are stored in one secure file rather than hundreds of unsecured code files."
 
+By default, the script always logs in, preserving its existing behavior.
+Use `--skip-if-authenticated` to skip login only when the saved access token
+for the selected CLI profile is valid and its user ID matches the username
+read from the authinfo file. The profile is selected using `SAS_CLI_PROFILE`,
+or `Default` when that variable is unset.
+
+```bash
+python3 loginviauthinfo.py
+SAS_CLI_PROFILE=myprofile python3 loginviauthinfo.py --skip-if-authenticated
+python3 loginviauthinfo.py --skip-if-authenticated -f ~/.authinfo_geladm
+```
+
+A missing token, HTTP 401, or a different authenticated user triggers the
+normal login. Connection, TLS, permission, server, and malformed-response
+errors are reported with exit status 1 rather than triggering login.
+The check honors `PYVIYA_INSECURE` and the Requests CA bundle settings.
+A matching authenticated session exits with status 0; an attempted login
+retains the CLI's exit status.
+
 SAS Documents creating authinfo files:
 
 In the documnettation it says 

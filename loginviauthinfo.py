@@ -6,8 +6,10 @@
 #
 # usage python loginviauthinfo.py
 #              loginviauthinfo.py -f /tmp/myfile
+#              loginviauthinfo.py --skip-if-authenticated
 #
-# Exit status: 0 on successful login, CLI failure status otherwise, or 1 if login is skipped.
+# Exit status: 0 on successful login or a matching authenticated session,
+# CLI failure status otherwise, or 1 if login cannot be attempted or checked.
 #
 # Authinfo file uses .netrc format https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/filesreference/netrc.html
 #
@@ -49,6 +51,8 @@ import argparse
 import json
 import sys
 
+import requests
+
 from sharedfunctions import file_accessible,getapplicationproperties,getclicommand
 
 try:
@@ -57,6 +61,47 @@ try:
 except ImportError:
     # Python 2
     from urlparse import urlparse
+
+
+def is_authenticated(baseurl, profile, username):
+    credential_file = os.path.join(
+        os.path.expanduser('~'), '.sas', 'credentials.json'
+    )
+    if not os.path.isfile(credential_file):
+        return False
+
+    with open(credential_file) as json_file:
+        credentials = json.load(json_file)
+
+    if not isinstance(credentials, dict):
+        raise ValueError('CLI credentials must contain a JSON object.')
+    profile_credentials = credentials.get(profile, {})
+    if not isinstance(profile_credentials, dict):
+        raise ValueError('CLI profile credentials must contain a JSON object.')
+    token = profile_credentials.get('access-token')
+    if not token:
+        return False
+
+    insecure = os.getenv('PYVIYA_INSECURE', 'False').lower() in ('true', '1', 't')
+    response = requests.get(
+        baseurl.rstrip('/') + '/identities/users/@currentUser',
+        headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'},
+        timeout=10,
+        verify=not insecure,
+        allow_redirects=False
+    )
+    if response.status_code == 401:
+        return False
+
+    response.raise_for_status()
+    if response.status_code != 200:
+        raise ValueError(
+            'Unexpected authentication-check status: {0}'.format(
+                response.status_code
+            )
+        )
+
+    return response.json()['id'] == username
 
 
 # get cli location from properties, check that cli is there if not ERROR and stop
@@ -69,6 +114,10 @@ profileexists=0
 # get input parameters
 parser = argparse.ArgumentParser(description="Authinfo File")
 parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",default='.authinfo')
+parser.add_argument(
+    "--skip-if-authenticated", action="store_true",
+    help="Reuse a valid session for the authinfo user and selected profile; otherwise log in."
+)
 args = parser.parse_args()
 authfile=args.file
 
@@ -121,7 +170,24 @@ if profileexists:
 
        secrets = netrc.netrc(fname)
        username, account, password = secrets.authenticators( host )
-       
+
+       if args.skip_if_authenticated:
+          try:
+             authenticated = is_authenticated(
+                 data[myprofile]['sas-endpoint'], myprofile, username
+             )
+          except (requests.exceptions.RequestException,
+                  OSError, ValueError, KeyError, TypeError) as error:
+             print('ERROR: Could not check authentication: {0}'.format(error),
+                   file=sys.stderr)
+             sys.exit(1)
+
+          if authenticated:
+             print('Already authenticated as {0} with profile {1}.'.format(
+                 username, myprofile
+             ))
+             sys.exit(0)
+
        print('Logging in as user: '+username)
        if debug:
           print('user: '+username)

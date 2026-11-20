@@ -1463,7 +1463,7 @@ usage: loadcasformats.py [-h] -f FILE [--debug] [--skipfirstrow]
 Authinfo File
 
 ```text
-usage: loginviauthinfo.py [-h] [-f FILE]
+usage: loginviauthinfo.py [-h] [-f FILE] [--skip-if-authenticated]
 ```
 
 ### optional arguments
@@ -1471,6 +1471,7 @@ usage: loginviauthinfo.py [-h] [-f FILE]
 | Option | Description | Details |
 | --- | --- | --- |
 | `-f, --file FILE` | Enter the path to the authinfo file. | Default: `'.authinfo'` |
+| `--skip-if-authenticated` | Reuse a valid session for the authinfo user and selected profile; otherwise log in. | Default: `False` |
 
 ## mergeuserfolders.py
 
