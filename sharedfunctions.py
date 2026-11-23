@@ -73,6 +73,8 @@ import inspect
 import re
 import platform
 import subprocess
+# Create restricted-access temporary files for atomic credential updates.
+import tempfile
 from datetime import datetime as dt, timedelta as td
 from requests.exceptions import SSLError, RequestException
 
@@ -430,22 +432,36 @@ def getauthtoken(baseurl):
 
                 filecontent=json.dumps(data,indent=2)
 
-                # check if we can write to the credential file
-                # if we cannot just skip
-                # new token will be used with request anyway
-
-                if os.access(credential_file,os.W_OK):
-                    try:
-                        with open(credential_file, "w") as outfile:
-                            outfile.write(filecontent)
-                    except:
-                        message="NOTE: Cannot open file just skip update of tokens."
-                        #print(message)
-                else:
-
-                    # fail silently if cannot write to credential file
-                    message="NOTE: Cannot write to credential file."
-                    #print(message)
+                # Preserve the original credentials until the replacement is ready.
+                temporary_file = None
+                try:
+                    # Stage credentials securely on the same filesystem.
+                    with tempfile.NamedTemporaryFile(
+                            mode="w", dir=os.path.dirname(credential_file),
+                            prefix="credentials.json.", delete=False) as outfile:
+                        temporary_file = outfile.name
+                        outfile.write(filecontent)
+                        # Flush to disk before closing and replacing the original.
+                        outfile.flush()
+                        os.fsync(outfile.fileno())
+                    # Atomically publish the complete file at the existing path.
+                    os.replace(temporary_file, credential_file)
+                    temporary_file = None
+                except OSError as error:
+                    # Report persistence failures while retaining the in-memory token.
+                    print("WARNING: Could not save refreshed CLI credentials: {0}. "
+                          "Using the refreshed token for this request only.".format(error),
+                          file=sys.stderr)
+                finally:
+                    # Remove staged credentials if writing or replacement failed.
+                    if temporary_file is not None:
+                        try:
+                            os.unlink(temporary_file)
+                        except OSError as error:
+                            # Report cleanup failures rather than hiding leftover credentials.
+                            print("WARNING: Could not remove temporary credentials file "
+                                  "{0}: {1}".format(temporary_file, error),
+                                  file=sys.stderr)
 
 
         head= {'Content-type':'application/json','Accept':'application/json' }

@@ -70,8 +70,14 @@ def is_authenticated(baseurl, profile, username):
     if not os.path.isfile(credential_file):
         return False
 
+    # Read first so a zero-byte file can be distinguished from malformed JSON.
     with open(credential_file) as json_file:
-        credentials = json.load(json_file)
+        content = json_file.read()
+    # Allow normal login to restore credentials when the file is empty.
+    if content == '':
+        return False
+    # Keep reporting nonempty malformed credentials as an error.
+    credentials = json.loads(content)
 
     if not isinstance(credentials, dict):
         raise ValueError('CLI credentials must contain a JSON object.')
@@ -114,6 +120,7 @@ profileexists=0
 # get input parameters
 parser = argparse.ArgumentParser(description="Authinfo File")
 parser.add_argument("-f","--file", help="Enter the path to the authinfo file.",default='.authinfo')
+# the default is to always log in unless --skip-if-authenticated is specified
 parser.add_argument(
     "--skip-if-authenticated", action="store_true",
     help="Reuse a valid session for the authinfo user and selected profile; otherwise log in."
