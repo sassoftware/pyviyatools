@@ -167,7 +167,7 @@ if not badprofile:
 
     else: #without a profile don't know the hostname
         profileexists=0
-        print("ERROR: profile "+myprofile+" does not exist. Recreate profile with sas-admin profile init.")
+        print("ERROR: profile "+myprofile+" does not exist. Recreate profile with "+clicommand+" profile init.")
 
 
 if profileexists:
