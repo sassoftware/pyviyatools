@@ -8,6 +8,11 @@
 # Change History
 #
 # 12Nov26  Initial development
+# 26Nov26  Updated to have better error handling and meaningful messaging when
+#          rules don't apply, or the script is re-run without re-enabling previously disabled rules.
+#          Added the ability to re-enable rules disabled by a previous run of this script. 
+#          To re-enable rules, provide the list of disabled rule IDs and use the -o enable option.
+#          e.g. ./disableviyarules.py -o enable -f disabled_rule_ids20261126_170528.txt
 #
 # Format of input csv file is 6 columns
 # Column 1: Object URI
@@ -76,11 +81,21 @@ def rule_matches(rule1, rule2):
             == normalise_type(rule2["type"])
         and set(rule1["permissions"])
             == set(rule2["permissions"])
-        and str(rule1["enabled"]).lower()
-            == str(rule2["enabled"]).lower()
         and rule1.get("condition", "")
             == rule2.get("condition", "")
     )
+
+def scan_results():
+    print("\nRule scan results:\n")
+    print(f" -> {len(rule_ids)} rule(s) found and disabled")
+    print(f" -> {len(rules_already_disabled)} rule(s) already disabled")
+    print(f" -> {len(rules_not_found)} input rule(s) do not exist in the target Viya environment\n")
+
+def reasoning1():
+    print(f"Rules not found have been saved to: \033[1;34m{rulesnotfound}\033[0m\n")
+    print("These rules may not have disabled due to one of the following reasons:\n\033[1;33m"+
+          " -> the rule contains a container URI - which this tool does not support\n"+
+          " -> the rule has different permissions to those of the rule that it's intended to disable\n\033[0m")
 
 ### Sets command-line arguements
 parser = argparse.ArgumentParser(description="Disables specified Viya rules")
@@ -103,6 +118,23 @@ offrules=file
 
 ### Start of processing
 print('\ndisableviyarules.py running...\n')
+
+if operator !='disable':
+    ## Compiles and runs the Viya CLI commands to change the rules' status
+    with open(offrules, "r", newline='') as input:
+        reader = csv.reader(input)
+        for row in reader:
+            id=row[0]
+            ## added a 'yes to all parameter'
+            #command = clicommand+ ' authorization '+operator+'-rule --id '+id
+            command = clicommand+ ' authorization -y enable-rule --id '+id
+            print("Executing command: "+command)
+            subprocess.call(command, shell=True)
+    input.close()
+    sys.exit()
+else:
+    pass
+
 
 ### Loops through the 'offrules' file and converts the CSV rows into JSON entries
 if check:
@@ -176,24 +208,52 @@ with open("existing_rules_verbose.json", "r") as f:
     existing_rules = ruleid_data["items"]
 
 rule_ids = []
+rules_already_disabled = []
+rules_not_found = []
+
 for rule_to_disable in rules_to_disable:
     rule = rule_to_disable["value"]
+    matched = False
 
     for existing_rule in existing_rules:
-        
         # Ignore container rules
         if existing_rule.get("containerUri"):
             continue
 
         if rule_matches(rule, existing_rule):
-            rule_id = existing_rule["id"]
-            # Add the ID to a list
-            rule_ids.append(rule_id)
-            #print("Matched rule ID:", rule_id)
+            matched = True
 
+            # The rule exists. Only add its ID when it is currently enabled.
+            if str(existing_rule.get("enabled", "")).lower() == "false":
+                rules_already_disabled.append(rule)
+            else:
+                rule_ids.append(existing_rule["id"])
             break
-        else:
-            pass
+
+    # No matching non-container rule exists in the target Viya environment
+    if not matched:
+        rules_not_found.append(rule)
+
+### Write rules that genuinely do not exist in the target environment
+rulesnotfound = 'rules_not_found_'+runtime+'.csv'
+if rules_not_found:
+    with open(rulesnotfound, "w", newline="") as f:
+        writer = csv.writer(f)
+        for rule in rules_not_found:
+            writer.writerow([
+                rule.get("objectUri", ""),
+                rule.get("principalType", ""),
+                normalise_principal(rule.get("principal")),
+                rule.get("type", ""),
+                ",".join(rule.get("permissions", [])),
+                rule.get("enabled", ""),
+                rule.get("condition", "")
+            ])
+
+scan_results()
+
+if rules_not_found and rule_to_disable is None:
+    reasoning1()
 
 ### Write matched rule IDs out to a txt file, one per line
 ruleslist='disabled_rule_ids'+runtime+'.txt'
@@ -201,9 +261,12 @@ with open(ruleslist, "w") as f:
     for rule_id in rule_ids:
         f.write(rule_id + "\n")
 
+
 if not rule_ids:
-   print(f"\033[1;33mNo rules were found, or all rules provided have already been disabled.\033[0m")
-   sys.exit()
+    if rules_not_found:
+        reasoning1()
+    print(f"\033[1;32mNo new rules to be disabled.\n\033[0m")
+    sys.exit()
 else:
     print(f"Successfully retrieved IDs of \033[1;32m{len(rule_ids)} rule(s).\033[0m\n")
 
@@ -222,3 +285,7 @@ with open(ruleslist, "r") as f:
         print("Executing command:" +command)
         subprocess.call(command, shell=True)
 print(f"\ndisableviyarules.py completed, \033[1;32m{len(rule_ids)} rule(s)\033[0m were disabled.\n\nAll rule IDs disabled have been saved to: \033[1;34m" +ruleslist + "\033[0m \n")
+scan_results()
+
+if rules_not_found:
+    reasoning1()
